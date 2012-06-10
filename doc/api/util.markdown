@@ -5,22 +5,38 @@
 These functions are in the module `'util'`. Use `require('util')` to access
 them.
 
+이 함수들은 `'util'` 모듈에 있다. 이 모듈에 접근하려면 `require('util')`를 사용해야
+한다.
+
 
 ## util.format()
 
 Returns a formatted string using the first argument as a `printf`-like format.
 
+`printf`같은 형식으로 첫 아규먼트를 사용해서 포매팅된 문자열을 리턴한다.
+
 The first argument is a string that contains zero or more *placeholders*.
 Each placeholder is replaced with the converted value from its corresponding
 argument. Supported placeholders are:
+
+첫 아규먼트는 *플레이스홀더*가 포함된 문자열이다.(플레이스 홀더는 없어도 된다.)
+각 플레이스 홀더는 대응되는 아규먼트의 값으로 대체된다. 플레이스 홀더는
+다음을 지원한다.
 
 * `%s` - String.
 * `%d` - Number (both integer and float).
 * `%j` - JSON.
 * `%%` - single percent sign (`'%'`). This does not consume an argument.
 
+* `%s` - 문자열.
+* `%d` - 숫자 (integer 와 float를 모두 지원한다.).
+* `%j` - JSON.
+* `%%` - 퍼센트기호 (`'%'`). 이 기호는 플레이스홀더 아규먼트를 사용하지 않는다.
+
 If the placeholder does not have a corresponding argument, the placeholder is
 not replaced.
+
+플레이스 홀더에 대응되는 아규먼트가 없으면 플레이스홀더는 치환되지 않는다.
 
     util.format('%s:%s', 'foo'); // 'foo:%s'
 
@@ -28,11 +44,17 @@ If there are more arguments than placeholders, the extra arguments are
 converted to strings with `util.inspect()` and these strings are concatenated,
 delimited by a space.
 
+플레이스홀더보다 많은 수의 아규먼트가 있으면 남는 아규먼트들은 `util.inspect()`를 사용해서
+문자열로 변환되고 스페이스를 구분자로 이 문자열들을 이어붙힌다.
+
     util.format('%s:%s', 'foo', 'bar', 'baz'); // 'foo:bar baz'
 
 If the first argument is not a format string then `util.format()` returns
 a string that is the concatenation of all its arguments separated by spaces.
 Each argument is converted to a string with `util.inspect()`.
+
+첫 아규먼트가 문자열이 아니라면 `util.format()`은 모든 아규먼트를 공백문자로 이어붙혀서
+리턴한다. 각 아규먼트는 `util.inspect()`를 통해 문자열로 변환한다.
 
     util.format(1, 2, 3); // '1 2 3'
 
@@ -42,12 +64,17 @@ Each argument is converted to a string with `util.inspect()`.
 A synchronous output function. Will block the process and
 output `string` immediately to `stderr`.
 
+동기적인 출력함수. 프로세스를 블락할 것이고 `stderr`에 즉각적으로
+`string`을 출력한다.
+
     require('util').debug('message on stderr');
 
 
 ## util.log(string)
 
 Output with timestamp on `stdout`.
+
+`stdout`에 타임스탬프를 출력한다.
 
     require('util').log('Timestamped message.');
 
@@ -56,19 +83,33 @@ Output with timestamp on `stdout`.
 
 Return a string representation of `object`, which is useful for debugging.
 
+디버깅에 유용한 `object`의 문자열 표현을 리턴한다.
+
 If `showHidden` is `true`, then the object's non-enumerable properties will be
 shown too. Defaults to `false`.
+
+`showHidden`가 `true`이면 객체의 enumerable하지 않는 프로퍼티도 보여준다.
+기본값은 `false`이다.
 
 If `depth` is provided, it tells `inspect` how many times to recurse while
 formatting the object. This is useful for inspecting large complicated objects.
 
+`depth`는 객체를 포매팅할 때 `inspect`가 몇 번 재귀를 할 것인지를 지정한다.
+이 값은 크고 복잡한 객체를 검사할 때 유용하다.
+
 The default is to only recurse twice.  To make it recurse indefinitely, pass
 in `null` for `depth`.
+
+기본값은 딱 두번만 재귀한다. 무한대로 재귀하려면 `depth`에 `null`을 지정한다.
 
 If `colors` is `true`, the output will be styled with ANSI color codes.
 Defaults to `false`.
 
+`colors`가 `true`이면 ANSI 색상코드로 스타일을 입혀서 출력한다.
+
 Example of inspecting all properties of the `util` object:
+
+다음은 `util`객체의 모든 프로퍼티를 검사하는 예제다:
 
     var util = require('util');
 
@@ -78,6 +119,9 @@ Example of inspecting all properties of the `util` object:
 ## util.isArray(object)
 
 Returns `true` if the given "object" is an `Array`. `false` otherwise.
+
+주어진 "object"가 `Array`이면 `true`를 리턴하고 `Array`가 아니면 `false`를
+리턴한다.
 
     var util = require('util');
 
@@ -93,6 +137,9 @@ Returns `true` if the given "object" is an `Array`. `false` otherwise.
 
 Returns `true` if the given "object" is a `RegExp`. `false` otherwise.
 
+주어진 "object"가 `RegExp`이면 `true`를 리턴하고 `RegExp`가 아니면 
+`false`를 리턴한다.
+
     var util = require('util');
 
     util.isRegExp(/some regexp/)
@@ -107,6 +154,9 @@ Returns `true` if the given "object" is a `RegExp`. `false` otherwise.
 
 Returns `true` if the given "object" is a `Date`. `false` otherwise.
 
+주어진 "object"가 `Date`이면 `true`를 리턴하고 `Date`가 아니면 
+`false`를 리턴한다.
+
     var util = require('util');
 
     util.isDate(new Date())
@@ -120,6 +170,9 @@ Returns `true` if the given "object" is a `Date`. `false` otherwise.
 ## util.isError(object)
 
 Returns `true` if the given "object" is an `Error`. `false` otherwise.
+
+주어진 "object"가 `Error`이면 `true`를 리턴하고 `Error`가 아니면 
+`false`를 리턴한다.
 
     var util = require('util');
 
@@ -141,6 +194,12 @@ paused until the `drain` event occurs on the `writableStream`. `callback` gets
 an error as its only argument and is called when `writableStream` is closed or
 when an error occurs.
 
+`readableStream`에서 데이터를 읽어서 읽은 데이터를 `writableStream`으로 보낸다.
+`writableStream.write(data)`가 `false`를 리턴하면 `writableStream`에서 
+`drain`이벤트가 발생할 때까지 `readableStream`은 멈출 것이다. `callback`은 유일한
+아규먼트로 error를 받고 `writableStream`이 닫히거나 오류가 발생했을 때 호출된다.
+
+
 
 ## util.inherits(constructor, superConstructor)
 
@@ -149,8 +208,16 @@ Inherit the prototype methods from one
 into another.  The prototype of `constructor` will be set to a new
 object created from `superConstructor`.
 
+한 객체의 
+[생성자](https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/constructor)
+에서 다른 객체로 프로토타입 메서드를 상속 받는다. `constructor`의 프로토타입은 
+`superConstructor`에서 생성된 새로운 객체로 설정될 것이다.
+
 As an additional convenience, `superConstructor` will be accessible
 through the `constructor.super_` property.
+
+`superConstructor`는 `constructor.super_` 프로퍼티를
+통해서 편리하게 접근할 수 있다.
 
     var util = require("util");
     var events = require("events");
