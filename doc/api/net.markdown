@@ -664,6 +664,8 @@ emits a `'data'` event.
 데이터의 인코딩은 `socket.setEncoding()`로 설정한다. 
 (더 자세한 내용은 [Readable Stream](stream.html#readable_stream)를 봐라.)
 
+`Socket`이 `'data'` 이벤트를 발생시켰을 때 리스너가 없으면 __데이터를 잃어버릴 것이다.__
+
 ### Event: 'end'
 
 Emitted when the other end of the socket sends a FIN packet.

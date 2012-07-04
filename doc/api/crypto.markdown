@@ -10,6 +10,8 @@ of a secure HTTPS net or http connection.
 
 It also offers a set of wrappers for OpenSSL's hash, hmac, cipher, decipher, sign and verify methods.
 
+    안정성: 3 - Stable
+
 이 모듈에 접근하려면 `require('crypto')`를 사용해라.
 
 crypto 모듈은 의존 플랫폼에서 이용할 수 있는 OpenSSL을 필요로 한다.

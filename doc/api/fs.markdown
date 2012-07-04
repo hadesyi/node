@@ -594,6 +594,8 @@ If no encoding is specified, then the raw buffer is returned.
 
 콜백에는 두 아규먼트 `(err, data)`를 전달하고 `data`는 파일의 내용이다.
 
+인코딩을 지정하지 않으면 로우(raw) 버퍼를 반환한다.
+
 
 ## fs.readFileSync(filename, [encoding])
 
@@ -727,7 +729,7 @@ the event.
 리스너 콜백은 두 아규먼트 `(event, filename)`를 받는다. `event`는 'rename'나 'change'이고 
 `filename`은 이벤트를 발생시킨 파일의 이름이다.
 
-### 경고(Caveats)
+### Caveats
 
 <!--type=misc-->
 
@@ -739,7 +741,7 @@ unavailable in some situations.
 `fs.watch` API는 모든 플랫폼에서 100% 일치하지 않고 몇몇 상황에서는 
 사용할 수 없다.
 
-#### 가용성(Availability)
+#### Availability
 
 <!--type=misc-->
 
@@ -769,7 +771,7 @@ reliable.
 stat 폴링(polling)을 사용하지만 더 느리고 덜 신뢰적인 `fs.watchFile`는 여전히 
 사용할 수 있다.
 
-#### 파일명 아규먼트(Filename Argument)
+#### Filename Argument
 
 <!--type=misc-->
 
@@ -843,6 +845,10 @@ the number of milliseconds elapsed since _1 January 1970
 any comparison, however there additional methods which can
 be used for displaying fuzzy information. More details can
 be found in the [MDN JavaScript Reference][MDN-Date] page.
+
+[MDN-Date]: https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Date
+[MDN-Date-getTime]: https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Date/getTime
+
 
 `fs.stat()`, `fs.lstat()`, `fs.fstat()`가 리턴하는 객체고 이 함수들의 동기함수들도 
 이 타입을 리턴한다.
@@ -979,7 +985,7 @@ default mode `w`.
 
 Emitted when the WriteStream's file is opened.
 
-* ReadStream는 `fd` {Integer} 파일 디스크립터를 사용한다.
+* `fd` {Integer} ReadStream이 사용하는 파일 디스크립터.
 
 WriteStream의 파일이 열렸을 때 발생한다.
 

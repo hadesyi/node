@@ -11,7 +11,7 @@ logically be found in the fs module as they do access the file system.
 
 Use `require('path')` to use this module.  The following methods are provided:
 
-    Stability: 3 - Stable
+    안정성: 3 - Stable
 
 이 모듈에는 파일 경로를 다루고 변경하는 유틸리티가 포함되어 있다. 이 모듈 대부분의 
 메서드들은 문자열 변경만 수행한다. 파일시스템은 경로가 유효한치 확인하지 않는다.

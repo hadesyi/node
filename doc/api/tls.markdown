@@ -38,6 +38,8 @@ To create .pfx or .p12, do this:
   - `certfile`: all CA certs concatenated in one file like
     `cat ca1-cert.pem ca2-cert.pem > ca-cert.pem`
 
+    안정성: 3 - Stable
+
 이 모듈에 접근하려면 `require('tls')`를 사용해라.
 
 `tls` 모듈은 TLS(Transport Layer Security)나 SSL(Secure Socket Layer)을 
@@ -74,7 +76,7 @@ CSR로 자체서명 인증서를 생성하려면 다음과 같이 한다.
     CA 인증서를 하나의 파일로 연결한다.
 
 
-## 클라이언트가 시작하는 재협상 공격 완화(Client-initiated renegotiation attack mitigation)
+## Client-initiated renegotiation attack mitigation
 
 <!-- type=misc -->
 
@@ -97,6 +99,8 @@ Don't change the defaults unless you know what you are doing.
 To test your server, connect to it with `openssl s_client -connect address:port`
 and tap `R<CR>` (that's the letter `R` followed by a carriage return) a few
 times.
+
+<!-- type=misc -->
 
 TLS 프로토콜는 클라이언트가 TLS 세션의 어떤 관점을 재협상하게 한다. 불행히도 세션 재협상은 
 DoS(denial-of-service) 공격의 잠재적인 요소인 서버측 리소스의 양의 불균형을 야기시킨다.
@@ -126,6 +130,8 @@ handshake extensions allowing you:
   * NPN - to use one TLS server for multiple protocols (HTTP, SPDY)
   * SNI - to use one TLS server for multiple hostnames with different SSL
     certificates.
+
+<!-- type=misc -->
 
 NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
 핸드쉐이크 확장이다.
@@ -667,6 +673,7 @@ See [net.Server.address()](net.html#server.address) for more information.
 Add secure context that will be used if client request's SNI hostname is
 matching passed `hostname` (wildcards can be used). `credentials` can contain
 `key`, `cert` and `ca`.
+
 클라이언트 요청의 SNI 호스트이름이 전달한 `hostname`(와일드카드도 사용할 수 있다.)와 
 일치하는 경우 사용할 안전한 컨텍스트를 추가한다. `credentials`은 `key`, `cert`, `ca`를 
 포함할 수 있다.

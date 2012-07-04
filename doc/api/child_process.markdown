@@ -311,8 +311,6 @@ undocumented APIs in Node, they should not be used.
 
 See also: `child_process.exec()` and `child_process.fork()`
 
----
-
 * `command` {문자열} 실행할 명령어
 * `args` {배열} 문자열 아규먼트의 리스트
 * `options` {객체}

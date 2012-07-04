@@ -1,9 +1,11 @@
-# 전역 객체(Global Objects)
+# Global Objects
 
 <!-- type=misc -->
 
 These objects are available in all modules. Some of these objects aren't
 actually in the global scope but in the module scope - this will be noted.
+
+<!-- type=misc -->
 
 이 객체들은 모든 모듈에서 이용할 수 있다. 이 객체들 중 일부는 실제로 전역 범위를 가지지
 않고 모듈 범위를 가진다. - 이는 따로 표시할 것이다.
@@ -14,12 +16,14 @@ actually in the global scope but in the module scope - this will be noted.
 
 * {Object} The global namespace object.
 
-* {Object} 전역 네임스페이스 객체.
-
 In browsers, the top-level scope is the global scope. That means that in
 browsers if you're in the global scope `var something` will define a global
 variable. In Node this is different. The top-level scope is not the global
 scope; `var something` inside a Node module will be local to that module.
+
+<!-- type=global -->
+
+* {Object} 전역 네임스페이스 객체.
 
 브라우저에서 최상위 범위는 전역 번위이다. 이는 브라우저의 전역 범위에서 `var something`가
 전역 변수를 정의한다는 것을 의미한다. Node에서는 다르다. 최상위 범위는 전역 범위가 아니다.
@@ -33,6 +37,10 @@ Node 모듈에서 `var something`는 해당 모듈의 지역 범위가 된다.
 
 The process object. See the [process object](process.html#process) section.
 
+<!-- type=global -->
+
+* {Object}
+
 process 객체. [process object](process.html#process)부분을 봐라.
 
 ## console
@@ -42,6 +50,10 @@ process 객체. [process object](process.html#process)부분을 봐라.
 * {Object}
 
 Used to print to stdout and stderr. See the [stdio](stdio.html) section.
+
+<!-- type=global -->
+
+* {Object}
 
 stdout와 stderr에 출력하는 데 사용한다. [stdio](stdio.html)부분을 봐라.
 
@@ -53,6 +65,10 @@ stdout와 stderr에 출력하는 데 사용한다. [stdio](stdio.html)부분을 
 
 Used to handle binary data. See the [buffer section](buffer.html).
 
+<!-- type=global -->
+
+* {Object}
+
 바이너리 데이터를 다루는데 사용한다. [buffer section](buffer.html)를 봐라.
 
 ## require()
@@ -63,6 +79,11 @@ Used to handle binary data. See the [buffer section](buffer.html).
 
 To require modules. See the [Modules](modules.html#modules) section.
 `require` isn't actually a global but rather local to each module.
+
+
+<!-- type=var -->
+
+* {Function}
 
 모듈을 require한다. [Modules](modules.html#modules) 부분을 봐라.
 `require`는 실제로 전역이 아니라 각 모듈의 지역범위다.
@@ -83,6 +104,8 @@ but rather than loading the module, just return the resolved filename.
 Modules are cached in this object when they are required. By deleting a key
 value from this object, the next `require` will reload the module.
 
+* {Object}
+
 모듈을 require했을 때 모듈은 이 객체에 캐시된다. 이 객체에서 키 값을 삭제하면 다음 번
 `require`에서 해당 모듈을 다시 로드할 것이다.
 
@@ -97,21 +120,25 @@ of this code file.  For a main program this is not necessarily the same
 filename used in the command line.  The value inside a module is the path
 to that module file.
 
-실행되는 코드의 파일명이다. 이 코드 파일을 처리한 절대경로이다. 메인 프로그램에서 이는
-커맨드라인에서 사용한 것과 반드시 같은 파일명은 아니다. 모듈내부에서 이 값은 해당 모듈 파일에
-대한 경로이다. 
-
 Example: running `node example.js` from `/Users/mjr`
 
     console.log(__filename);
     // /Users/mjr/example.js
 
+`__filename` isn't actually a global but rather local to each module.
+
+<!-- type=var -->
+
+* {String}
+
+실행되는 코드의 파일명이다. 이 코드 파일을 처리한 절대경로이다. 메인 프로그램에서 이는
+커맨드라인에서 사용한 것과 반드시 같은 파일명은 아니다. 모듈내부에서 이 값은 해당 모듈 파일에
+대한 경로이다. 
+
 예제: `/Users/mjr`에서 `node example.js`를 실행한다.
 
     console.log(__filename);
     // /Users/mjr/example.js
-
-`__filename` isn't actually a global but rather local to each module.
 
 `__filename`은 실제로 전역이 아니라 각 모듈의 지역범위이다.
 
@@ -123,19 +150,24 @@ Example: running `node example.js` from `/Users/mjr`
 
 The name of the directory that the currently executing script resides in.
 
-현재 실행되는 스크립트가 존재하는 디렉토리 이름이다.
-
 Example: running `node example.js` from `/Users/mjr`
 
     console.log(__dirname);
     // /Users/mjr
 
+`__dirname` isn't actually a global but rather local to each module.
+
+
+<!-- type=var -->
+
+* {String}
+
+현재 실행되는 스크립트가 존재하는 디렉토리 이름이다.
+
 예제: `/Users/mjr`에서 `node example.js`를 실행한다.
 
     console.log(__dirname);
     // /Users/mjr
-
-`__dirname` isn't actually a global but rather local to each module.
 
 `__dirname`는 실제로 전역이 아니라 각 모듈의 지역범위이다.
 
@@ -150,6 +182,11 @@ A reference to the current module. In particular
 `module.exports` is the same as the `exports` object. See `src/node.js`
 for more information.
 `module` isn't actually a global but rather local to each module.
+
+
+<!-- type=var -->
+
+* {Object}
 
 현재 모듈에 대한 참조이다. 특히 `module.exports`는 `exports` 객체와 같다.
 더 자세한 내용은 `src/node.js`를 봐라.
@@ -166,16 +203,18 @@ made accessible through `require()`.
 for more information.
 `exports` isn't actually a global but rather local to each module.
 
+See the [module system documentation](modules.html) for more
+information.
+
+See the [module section](modules.html) for more information.
+
+<!-- type=var -->
+
 현재 모듈과 `require()`로 접근가능하게 된 모듈의 모든 인스턴스 사이에서 공유되는 객체다.
 `exports`는 `module.exports`객체와 동일하다. 더 자세한 내용은 `src/node.js`를 봐라.
 `exports`는 실제로 전역이 아니라 각 모듈의 지역범위이다. 
 
-See the [module system documentation](modules.html) for more
-information.
-
 더 자세한 내용은 [module system documentation](modules.html)를 봐라.
-
-See the [module section](modules.html) for more information.
 
 더 자세한 내용은 [module section](modules.html)를 봐라.
 
@@ -187,5 +226,7 @@ See the [module section](modules.html) for more information.
 <!--type=global-->
 
 The timer functions are global variables. See the [timers](timers.html) section.
+
+<!--type=global-->
 
 timer 함수는 전역 변수이다. [timers](timers.html)부분을 봐라.

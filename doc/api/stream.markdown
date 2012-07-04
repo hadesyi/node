@@ -8,6 +8,8 @@ are readable, writable, or both. All streams are instances of `EventEmitter`.
 
 You can load up the Stream base class by doing `require('stream')`.
 
+    안정성: 2 - Unstable
+
 스프림은 Node에서 여러 가지 객체로 구현되는 추상 인터페이스다. 예를 들어 HTTP 서버에 대한
 요청은 stout과 같은 스트림이다. 스트림은 읽을수 있거나 쓸 수 있도 때로는 둘 다 가능하다.
 모든 스트림은 `EventEmitter`의 인스턴스다.
@@ -19,6 +21,8 @@ You can load up the Stream base class by doing `require('stream')`.
 <!--type=class-->
 
 A `Readable Stream` has the following methods, members, and events.
+
+<!--type=class-->
 
 `Readable Stream`에는 다음과 같은 메서드, 멤버, 이벤트가 있다.
 

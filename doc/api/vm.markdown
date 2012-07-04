@@ -1,4 +1,4 @@
-# 자바스크립트 실행(Executing JavaScript)
+# Executing JavaScript
 
     Stability: 3 - Stable
 
