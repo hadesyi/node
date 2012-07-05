@@ -10,7 +10,7 @@ Datagram sockets are available through `require('dgram')`.
 
 <!--english end-->
 
-    안정성: 3 - Stable
+    Stability: 3 - Stable
 
 <!-- name=dgram -->
 

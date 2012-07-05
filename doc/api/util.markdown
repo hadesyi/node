@@ -9,7 +9,7 @@ them.
 
 <!--english end-->
 
-    안정성: 5 - Locked
+    Stability: 5 - Locked
 
 이 함수들은 `'util'` 모듈에 있다. 이 모듈에 접근하려면 `require('util')`를 사용해야
 한다.

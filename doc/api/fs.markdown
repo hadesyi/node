@@ -66,7 +66,7 @@ to `process.cwd()`.
 
 <!--english end-->
 
-    안정성: 3 - Stable
+    Stability: 3 - Stable
 
 <!--name=fs-->
 
@@ -899,7 +899,7 @@ you need to compare `curr.mtime` and `prev.mtime`.
 
 <!--english end-->
 
-    안정성: 2 - Unstable.  가능하다면 대신 fs.watch를 사용해라.
+    Stability: 2 - Unstable.  가능하다면 대신 fs.watch를 사용해라.
 
 `filename`의 변경사항을 감시한다. 콜백 `listener`는 파일이 접근될 때마다 호출될 
 것이다.
@@ -933,7 +933,7 @@ Stop watching for changes on `filename`.
 
 <!--english end-->
 
-    안정성: 2 - Unstable.  가능하다면 대신 fs.watch를 사용해라.
+    Stability: 2 - Unstable.  가능하다면 대신 fs.watch를 사용해라.
 
 `filename`의 변경사항을 감시하는 것을 멈춘다.
 
@@ -957,7 +957,7 @@ the event.
 
 <!--english end-->
 
-    안정성: 2 - Unstable.  모든 플랫폼에서 사용할 수 있는 것은 아니다.
+    Stability: 2 - Unstable.  모든 플랫폼에서 사용할 수 있는 것은 아니다.
 
 `filename`의 변경사항을 감시하고 `filename`은 파일이나 디렉토리가 될 수 있다. 
 반환객체는 [fs.FSWatcher](#fs_class_fs_fswatcher)이다.

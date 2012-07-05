@@ -40,7 +40,7 @@ The module system is implemented in the `require("module")` module.
 
 <!--english end-->
 
-    안정성: 5 - Locked
+    Stability: 5 - Locked
 
 <!--name=module-->
 

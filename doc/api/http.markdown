@@ -28,7 +28,7 @@ parse the actual headers or the body.
 
 <!--english end-->
 
-    안정성: 3 - Stable
+    Stability: 3 - Stable
 
 HTTP 서버와 클라이언트를 사용하려면 `require('http')`를 사용해라.
 

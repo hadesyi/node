@@ -9,7 +9,7 @@ access it with `require('assert')`.
 
 <!--english end-->
 
-    안정성: 5 - Locked
+    Stability: 5 - Locked
 
 이 모듈을 어플리케이션에서 유닛 테스트를 작성하는데 사용하고 `require('assert')`로 
 이 모듈을 사용할 수 있다.

@@ -10,7 +10,7 @@ Use `require('os')` to access this module.
 
 <!--english end-->
 
-    안정성: 4 - API Frozen
+    Stability: 4 - API Frozen
 
 OS 유틸리티 함수를 몇 개 제공한다.
 

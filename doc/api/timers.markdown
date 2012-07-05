@@ -9,7 +9,7 @@ this module in order to use them.
 
 <!--english end-->
 
-    안정성: 5 - Locked
+    Stability: 5 - Locked
 
 timer 함수는 모두 전역객체이다. timer를 사용하기 위해 이 모듈을 `require()`할
 필요가 없다.

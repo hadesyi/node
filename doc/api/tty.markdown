@@ -20,7 +20,7 @@ Example:
 
 <!--english end-->
 
-    안정성: 3 - Stable
+    Stability: 3 - Stable
 
 이 모듈에 접근하려면 `require('tty')`를 사용해라.
 

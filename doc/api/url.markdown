@@ -65,7 +65,7 @@ The following methods are provided by the URL module:
 
 <!--english end-->
 
-    안정성: 3 - Stable
+    Stability: 3 - Stable
 
 이 모듈은 URL 처리와 파싱에 관한 유틸리티 모듈이다.
 사용하려면 `require('url')`를 호출해라.

@@ -26,7 +26,7 @@ to allow your program to gracefully terminate:
 
 <!--english end-->
 
-    안정성: 3 - Stable
+    Stability: 3 - Stable
 
 이 모듈을 사용하려면 `require('readline')`를 실행해라. Readline은 줄마다 
 스트림(STDIN같은)으로 읽을 수 있다.

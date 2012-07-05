@@ -10,7 +10,7 @@ this module with `require('net');`
 
 <!--english end-->
 
-    안정성: 3 - Stable
+    Stability: 3 - Stable
 
 `net` 모듈은 비동기적인 네트워크 레퍼다. 서버와 클라이언트(스트림이라고 부른다.)를 모두 
 생성하는 메서드들이 포함되어 있다. `require('net');`로 이 모듈을 사용할 수 있다.

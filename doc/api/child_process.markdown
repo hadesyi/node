@@ -16,7 +16,7 @@ different, and explained below.
 
 <!--english end-->
 
-    안정성: 3 - Stable
+    Stability: 3 - Stable
 
 Node는 `child_process` 모듈로 세 가지 방향의 `popen(3)` 기능을 
 제공한다.

@@ -42,7 +42,7 @@ To create .pfx or .p12, do this:
 
 <!--english end-->
 
-    안정성: 3 - Stable
+    Stability: 3 - Stable
 
 이 모듈에 접근하려면 `require('tls')`를 사용해라.
 
@@ -473,7 +473,7 @@ Or
 
   - `servername`: SNI (Server Name Indication) TLS 확장에 대한 Servername이다.
 
-  - `socket`: 새로운 소켓을 생성하는 대신 전달한 소켓으로 안정한 연결을 만든다.
+  - `socket`: 새로운 소켓을 생성하는 대신 전달한 소켓으로 안전한 연결을 만든다.
     이 옵션을 지정하면 `host`와 `port`는 무시한다. 이 옵션은 *내부적으로 사용하기
     위해서* 만들어진 것이다. Node에서 문서화되지 않은 모든 API와 같이 사용하지 말아야
     한다.
@@ -560,7 +560,7 @@ and the cleartext one is used as a replacement for the initial encrypted stream.
 
 <!--english end-->
 
-두 스트림으로 새 안정한 쌍(pair) 객체를 생성한다. 두 스트림 중 하나는 암호화된 데이터를 
+두 스트림으로 새 안전한 쌍(pair) 객체를 생성한다. 두 스트림 중 하나는 암호화된 데이터를 
 읽고 쓰고 다른 하나는 평문 데이터를 읽고 쓴다.
 보통 암호화된 쪽은 들어오는 암호화된 데이터 스트림에 파이프로 연결되고 평문 쪽은 초기 
 암호화 스트림에 대한 대체용으로 사용된다.
@@ -670,7 +670,7 @@ established - it will be forwarded here.
 
 `function (exception) { }`
 
-안정한 연결이 이뤄지기 전에 클라이언트 연결이 'error' 이벤트를 발생시켰을 때 발생하는 
+안전한 연결이 이뤄지기 전에 클라이언트 연결이 'error' 이벤트를 발생시켰을 때 발생하는 
 이벤트다.
 
 

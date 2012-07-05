@@ -14,7 +14,7 @@ It also offers a set of wrappers for OpenSSL's hash, hmac, cipher, decipher, sig
 
 <!--english end-->
 
-    안정성: 3 - Stable
+    Stability: 3 - Stable
 
 이 모듈에 접근하려면 `require('crypto')`를 사용해라.
 

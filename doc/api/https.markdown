@@ -9,7 +9,7 @@ separate module.
 
 <!--english end-->
 
-    안정성: 3 - Stable
+    Stability: 3 - Stable
 
 HTTPS는 TLS/SSL를 사용하는 HTTP 프로토콜이다. Node에서 HTTPS는 별도의 모듈로 
 구현되었다.

@@ -20,7 +20,7 @@ is emitted. These functions are called _listeners_.
 
 <!--english end-->
 
-    안정성: 4 - API Frozen
+    Stability: 4 - API Frozen
 
 <!--type=module-->
 

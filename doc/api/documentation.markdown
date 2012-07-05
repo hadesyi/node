@@ -91,7 +91,7 @@ change.  Please do not suggest changes in this area; they will be refused.
 
 이 표시는 다음과 같다:
 
-    안정성: 1 Experimental
+    Stability: 1 Experimental
 
 안정성 지표는 다음과 같다:
 
@@ -128,7 +128,7 @@ This feature is new as of node v0.6.12.  It is experimental.
 
 <!--english end-->
 
-    안정성: 1 - Experimental
+    Stability: 1 - Experimental
 
 마크다운의 모든 HTML파일은 같은 데이터를 가진 대응되는 JSON 파일이 있다.
 

@@ -37,7 +37,7 @@ resolves the IP addresses which are returned.
 
 <!--english end-->
 
-    안정성: 3 - Stable
+    Stability: 3 - Stable
 
 이 모듈을 접근하려면 `require('dns')`를 사용해라. 쓰레드 풀에서 `getaddrinfo(3)`를 
 사용하는 `dns.lookup`를 제외한 dns 모듈의 모든 메서드들은 C-Ares를 사용한다.

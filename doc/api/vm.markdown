@@ -14,7 +14,7 @@ JavaScript code can be compiled and run immediately or compiled, saved, and run 
 
 <!--english end-->
 
-    안정성: 3 - Stable
+    Stability: 3 - Stable
 
 <!--name=vm-->
 

@@ -11,7 +11,7 @@ It provides the following methods:
 
 <!--english end-->
 
-    안정성: 3 - Stable
+    Stability: 3 - Stable
 
 <!--name=querystring-->
 

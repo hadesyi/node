@@ -82,7 +82,7 @@ to come. Type `help` to see others.
 
 <!--english end-->
 
-    안정성: 3 - Stable
+    Stability: 3 - Stable
 
 <!-- type=misc -->
 

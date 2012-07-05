@@ -78,7 +78,7 @@ in the master process via message passing:
 
 <!--english end-->
 
-    안정성: 1 Experimental - 차후 버전에서 많은 변경이 있을 예정
+    Stability: 1 Experimental - 차후 버전에서 많은 변경이 있을 예정
 
 Node 프로세스 하나는 쓰레드 하나로 동작한다. 멀티 코어 시스템을 이용해서 부하를 처리하려면 Node 프로세스를 여러개 띄울 필요가 있다.
 

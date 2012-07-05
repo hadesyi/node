@@ -41,7 +41,7 @@ encoding method.  Here are the different string encodings.
 
 <!--english end-->
 
-    안정성: 3 - Stable
+    Stability: 3 - Stable
 
 자바스크립트 자체는 유니코드에 친화적이지만 바이너리 데이터에는 별로 좋지 않다. TCP 
 스트림이나 파일시스템을 다룰 때 옥텟(octet) 스트림을 다룰 필요가 있다. Node에는

@@ -14,7 +14,7 @@ is a readable/writable Stream.
 
 <!--english end-->
 
-    안정성: 3 - Stable
+    Stability: 3 - Stable
 
 이 모듈은 다음과 같은 방법으로 접근한다:
 

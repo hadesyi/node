@@ -14,7 +14,7 @@ provided by most web browsers, here the output is sent to stdout or stderr.
 
 <!--english end-->
 
-    안정성: 4 - API Frozen
+    Stability: 4 - API Frozen
 
 * {Object}
 
