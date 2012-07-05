@@ -1,10 +1,14 @@
 # os
 
+<!--english start-->
+
     Stability: 4 - API Frozen
 
 Provides a few basic operating-system related utility functions.
 
 Use `require('os')` to access this module.
+
+<!--english end-->
 
     안정성: 4 - API Frozen
 
@@ -14,59 +18,97 @@ OS 유틸리티 함수를 몇 개 제공한다.
 
 ## os.hostname()
 
+<!--english start-->
+
 Returns the hostname of the operating system.
+
+<!--english end-->
 
 OS의 호스트 이름을 리턴한다.
 
 ## os.type()
 
+<!--english start-->
+
 Returns the operating system name.
+
+<!--english end-->
 
 OS 이름을 리턴한다(역주, 'Linux').
 
 ## os.platform()
 
+<!--english start-->
+
 Returns the operating system platform.
+
+<!--english end-->
 
 OS 플랫폼을 리턴한다(역주, 'linux').
 
 ## os.arch()
 
+<!--english start-->
+
 Returns the operating system CPU architecture.
+
+<!--english end-->
 
 OS CPU 아키텍처를 리턴한다(역주, 'x64').
 
 ## os.release()
 
+<!--english start-->
+
 Returns the operating system release.
+
+<!--english end-->
 
 OS 버전을 리턴한다(역주, '3.2.0-26-generic').
 
 ## os.uptime()
 
+<!--english start-->
+
 Returns the system uptime in seconds.
+
+<!--english end-->
 
 시스템 구동시간을 초 단위로 리턴한다(역주, 50515.673530518).
 
 ## os.loadavg()
 
+<!--english start-->
+
 Returns an array containing the 1, 5, and 15 minute load averages.
+
+<!--english end-->
 
 1, 5, 15 분 로드 평균값을 배열에 담아 리턴한다.
 
 ## os.totalmem()
 
+<!--english start-->
+
 Returns the total amount of system memory in bytes.
+
+<!--english end-->
 
 시스템 메모리의 총량을 바이트 단위로 리턴한다.
 
 ## os.freemem()
 
+<!--english start-->
+
 Returns the amount of free system memory in bytes.
+
+<!--english end-->
 
 시스템의 여유 메모리를 바이트 단위로 리턴한다.
 
 ## os.cpus()
+
+<!--english start-->
 
 Returns an array of objects containing information about each CPU/core installed: model, speed (in MHz), and times (an object containing the number of CPU ticks spent in: user, nice, sys, idle, and irq).
 
@@ -136,6 +178,8 @@ Example inspection of os.cpus:
            sys: 34920,
            idle: 1072572010,
            irq: 30 } } ]
+
+<!--english end-->
 
 모든 CPU/코어에 대한 정보를 배열에 담아서 그 배열을 리턴한다. CPU/코어에 대한 정보는 model, speed(MHz 단위), times(user, nide, sys, idle, irq로 분류해서 각각 사용한 CPU 타임(CPU 틱의 수.)이다.
 
@@ -208,6 +252,8 @@ os.cpus의 결과:
 
 ## os.networkInterfaces()
 
+<!--english start-->
+
 Get a list of network interfaces:
 
     { lo0: 
@@ -222,6 +268,8 @@ Get a list of network interfaces:
       vmnet8: [ { address: '10.88.88.1', family: 'IPv4', internal: false } ],
       ppp0: [ { address: '10.2.0.231', family: 'IPv4', internal: false } ] }
 
+
+<!--english end-->
 
 네트워크 인터페이스의 목록을 리턴한다:
 

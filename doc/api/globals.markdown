@@ -1,9 +1,13 @@
 # Global Objects
 
+<!--english start-->
+
 <!-- type=misc -->
 
 These objects are available in all modules. Some of these objects aren't
 actually in the global scope but in the module scope - this will be noted.
+
+<!--english end-->
 
 <!-- type=misc -->
 
@@ -11,6 +15,8 @@ actually in the global scope but in the module scope - this will be noted.
 않고 모듈 범위를 가진다. - 이는 따로 표시할 것이다.
 
 ## global
+
+<!--english start-->
 
 <!-- type=global -->
 
@@ -20,6 +26,8 @@ In browsers, the top-level scope is the global scope. That means that in
 browsers if you're in the global scope `var something` will define a global
 variable. In Node this is different. The top-level scope is not the global
 scope; `var something` inside a Node module will be local to that module.
+
+<!--english end-->
 
 <!-- type=global -->
 
@@ -31,11 +39,15 @@ Node 모듈에서 `var something`는 해당 모듈의 지역 범위가 된다.
 
 ## process
 
+<!--english start-->
+
 <!-- type=global -->
 
 * {Object}
 
 The process object. See the [process object](process.html#process) section.
+
+<!--english end-->
 
 <!-- type=global -->
 
@@ -45,11 +57,15 @@ process 객체. [process object](process.html#process)부분을 봐라.
 
 ## console
 
+<!--english start-->
+
 <!-- type=global -->
 
 * {Object}
 
 Used to print to stdout and stderr. See the [stdio](stdio.html) section.
+
+<!--english end-->
 
 <!-- type=global -->
 
@@ -59,11 +75,15 @@ stdout와 stderr에 출력하는 데 사용한다. [stdio](stdio.html)부분을 
 
 ## Buffer
 
+<!--english start-->
+
 <!-- type=global -->
 
 * {Object}
 
 Used to handle binary data. See the [buffer section](buffer.html).
+
+<!--english end-->
 
 <!-- type=global -->
 
@@ -73,6 +93,8 @@ Used to handle binary data. See the [buffer section](buffer.html).
 
 ## require()
 
+<!--english start-->
+
 <!-- type=var -->
 
 * {Function}
@@ -80,6 +102,8 @@ Used to handle binary data. See the [buffer section](buffer.html).
 To require modules. See the [Modules](modules.html#modules) section.
 `require` isn't actually a global but rather local to each module.
 
+
+<!--english end-->
 
 <!-- type=var -->
 
@@ -91,18 +115,26 @@ To require modules. See the [Modules](modules.html#modules) section.
 
 ### require.resolve()
 
+<!--english start-->
+
 Use the internal `require()` machinery to look up the location of a module,
 but rather than loading the module, just return the resolved filename.
+
+<!--english end-->
 
 모듈의 위치를 검색하는데 내부 `require()` 장치(machinery)를 사용한다. 모듈을 로딩하는 
 것이 아니라 처리된 파일명을 리턴할 뿐이다.
 
 ### require.cache
 
+<!--english start-->
+
 * {Object}
 
 Modules are cached in this object when they are required. By deleting a key
 value from this object, the next `require` will reload the module.
+
+<!--english end-->
 
 * {Object}
 
@@ -110,6 +142,8 @@ value from this object, the next `require` will reload the module.
 `require`에서 해당 모듈을 다시 로드할 것이다.
 
 ## __filename
+
+<!--english start-->
 
 <!-- type=var -->
 
@@ -126,6 +160,8 @@ Example: running `node example.js` from `/Users/mjr`
     // /Users/mjr/example.js
 
 `__filename` isn't actually a global but rather local to each module.
+
+<!--english end-->
 
 <!-- type=var -->
 
@@ -144,6 +180,8 @@ Example: running `node example.js` from `/Users/mjr`
 
 ## __dirname
 
+<!--english start-->
+
 <!-- type=var -->
 
 * {String}
@@ -157,6 +195,8 @@ Example: running `node example.js` from `/Users/mjr`
 
 `__dirname` isn't actually a global but rather local to each module.
 
+
+<!--english end-->
 
 <!-- type=var -->
 
@@ -174,6 +214,8 @@ Example: running `node example.js` from `/Users/mjr`
 
 ## module
 
+<!--english start-->
+
 <!-- type=var -->
 
 * {Object}
@@ -183,6 +225,8 @@ A reference to the current module. In particular
 for more information.
 `module` isn't actually a global but rather local to each module.
 
+
+<!--english end-->
 
 <!-- type=var -->
 
@@ -194,6 +238,8 @@ for more information.
 
 
 ## exports
+
+<!--english start-->
 
 <!-- type=var -->
 
@@ -207,6 +253,8 @@ See the [module system documentation](modules.html) for more
 information.
 
 See the [module section](modules.html) for more information.
+
+<!--english end-->
 
 <!-- type=var -->
 
@@ -223,9 +271,13 @@ See the [module section](modules.html) for more information.
 ## setInterval(cb, ms)
 ## clearInterval(t)
 
+<!--english start-->
+
 <!--type=global-->
 
 The timer functions are global variables. See the [timers](timers.html) section.
+
+<!--english end-->
 
 <!--type=global-->
 

@@ -1,5 +1,7 @@
 # File System
 
+<!--english start-->
+
     Stability: 3 - Stable
 
 <!--name=fs-->
@@ -61,6 +63,8 @@ the entire process until they complete--halting all connections.
 
 Relative path to filename can be used, remember however that this path will be relative
 to `process.cwd()`.
+
+<!--english end-->
 
     안정성: 3 - Stable
 
@@ -124,113 +128,181 @@ _강력히 추천한다_. 동기방식은 모든 연결을 멈추고 작업이 �
 
 ## fs.rename(path1, path2, [callback])
 
+<!--english start-->
+
 Asynchronous rename(2). No arguments other than a possible exception are given
 to the completion callback.
+
+<!--english end-->
 
 비동기 rename(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
 ## fs.renameSync(path1, path2)
 
+<!--english start-->
+
 Synchronous rename(2).
+
+<!--english end-->
 
 동기 rename(2).
 
 ## fs.truncate(fd, len, [callback])
 
+<!--english start-->
+
 Asynchronous ftruncate(2). No arguments other than a possible exception are
 given to the completion callback.
+
+<!--english end-->
 
 동기 ftruncate(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
 ## fs.truncateSync(fd, len)
 
+<!--english start-->
+
 Synchronous ftruncate(2).
+
+<!--english end-->
 
 동기 ftruncate(2).
 
 ## fs.chown(path, uid, gid, [callback])
 
+<!--english start-->
+
 Asynchronous chown(2). No arguments other than a possible exception are given
 to the completion callback.
+
+<!--english end-->
 
 비동기 chown(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
 ## fs.chownSync(path, uid, gid)
 
+<!--english start-->
+
 Synchronous chown(2).
+
+<!--english end-->
 
 동기 chown(2).
 
 ## fs.fchown(fd, uid, gid, [callback])
 
+<!--english start-->
+
 Asynchronous fchown(2). No arguments other than a possible exception are given
 to the completion callback.
+
+<!--english end-->
 
 비동기 fchown(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
 ## fs.fchownSync(fd, uid, gid)
 
+<!--english start-->
+
 Synchronous fchown(2).
+
+<!--english end-->
 
 동기 fchown(2).
 
 ## fs.lchown(path, uid, gid, [callback])
 
+<!--english start-->
+
 Asynchronous lchown(2). No arguments other than a possible exception are given
 to the completion callback.
+
+<!--english end-->
 
 비동기 lchown(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
 ## fs.lchownSync(path, uid, gid)
 
+<!--english start-->
+
 Synchronous lchown(2).
+
+<!--english end-->
 
 동기 lchown(2).
 
 ## fs.chmod(path, mode, [callback])
 
+<!--english start-->
+
 Asynchronous chmod(2). No arguments other than a possible exception are given
 to the completion callback.
+
+<!--english end-->
 
 비동기 chmod(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
 ## fs.chmodSync(path, mode)
 
+<!--english start-->
+
 Synchronous chmod(2).
+
+<!--english end-->
 
 동기 chmod(2).
 
 ## fs.fchmod(fd, mode, [callback])
 
+<!--english start-->
+
 Asynchronous fchmod(2). No arguments other than a possible exception
 are given to the completion callback.
+
+<!--english end-->
 
 비동기 fchmod(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
 ## fs.fchmodSync(fd, mode)
 
+<!--english start-->
+
 Synchronous fchmod(2).
+
+<!--english end-->
 
 동기 fchmod(2).
 
 ## fs.lchmod(path, mode, [callback])
 
+<!--english start-->
+
 Asynchronous lchmod(2). No arguments other than a possible exception
 are given to the completion callback.
+
+<!--english end-->
 
 비동기 lchmod(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
 ## fs.lchmodSync(path, mode)
 
+<!--english start-->
+
 Synchronous lchmod(2).
+
+<!--english end-->
 
 동기 lchmod(2).
 
 ## fs.stat(path, [callback])
 
+<!--english start-->
+
 Asynchronous stat(2). The callback gets two arguments `(err, stats)` where
 `stats` is a [fs.Stats](#fs_class_fs_stats) object.  See the [fs.Stats](#fs_class_fs_stats)
 section below for more information.
+
+<!--english end-->
 
 비동기 stat(2). 콜백은 두 아규먼트 `(err, stats)`를 받고 `stats`은 
 [fs.Stats](#fs_class_fs_stats) 객체이다. 더 자세한 내용은 아래의 
@@ -238,10 +310,14 @@ section below for more information.
 
 ## fs.lstat(path, [callback])
 
+<!--english start-->
+
 Asynchronous lstat(2). The callback gets two arguments `(err, stats)` where
 `stats` is a `fs.Stats` object. `lstat()` is identical to `stat()`, except that if
 `path` is a symbolic link, then the link itself is stat-ed, not the file that it
 refers to.
+
+<!--english end-->
 
 동기 lstat(2). 콜백은 두 아규먼트 `(err, stats)`를 받고 `stats`은 `fs.Stats` 객체다.
 `lstat()`은 `path`가 심볼릭 링크일 경우 참조하는 파일이 아닌 심볼릭 링크 자체의 상태라는 
@@ -249,9 +325,13 @@ refers to.
 
 ## fs.fstat(fd, [callback])
 
+<!--english start-->
+
 Asynchronous fstat(2). The callback gets two arguments `(err, stats)` where
 `stats` is a `fs.Stats` object. `fstat()` is identical to `stat()`, except that
 the file to be stat-ed is specified by the file descriptor `fd`.
+
+<!--english end-->
 
 비동기 fstat(2). 콜백은 두 아규먼트 `(err, stats)`를 받고 `stats`은 `fs.Stats` 객체다.
 `fstat()`은 상태를 확인하는 파일이 파일 디스크립터 `fd`가 지정한 파일이라는 점만 빼면 
@@ -259,41 +339,65 @@ the file to be stat-ed is specified by the file descriptor `fd`.
 
 ## fs.statSync(path)
 
+<!--english start-->
+
 Synchronous stat(2). Returns an instance of `fs.Stats`.
+
+<!--english end-->
 
 동기 stat(2). `fs.Stats` 인스턴스를 반환한다.
 
 ## fs.lstatSync(path)
 
+<!--english start-->
+
 Synchronous lstat(2). Returns an instance of `fs.Stats`.
+
+<!--english end-->
 
 동기 lstat(2). `fs.Stats` 인스턴스를 반환한다.
 
 ## fs.fstatSync(fd)
 
+<!--english start-->
+
 Synchronous fstat(2). Returns an instance of `fs.Stats`.
+
+<!--english end-->
 
 동기 fstat(2). `fs.Stats` 인스턴스를 반환한다.
 
 ## fs.link(srcpath, dstpath, [callback])
 
+<!--english start-->
+
 Asynchronous link(2). No arguments other than a possible exception are given to
 the completion callback.
+
+<!--english end-->
 
 비동기 link(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
 ## fs.linkSync(srcpath, dstpath)
 
+<!--english start-->
+
 Synchronous link(2).
+
+<!--english end-->
 
 동기 link(2).
 
 ## fs.symlink(linkdata, path, [type], [callback])
 
+<!--english start-->
+
 Asynchronous symlink(2). No arguments other than a possible exception are given
 to the completion callback.
 `type` argument can be either `'dir'` or `'file'` (default is `'file'`).  It is only 
 used on Windows (ignored on other platforms).
+
+<!--english end-->
 
 비동기 symlink(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 `type` 아규먼트는 `'dir'`이나 `'file'`가 가능하다.(기본값은 `'file'`이다) 이 옵션은 
@@ -301,82 +405,130 @@ used on Windows (ignored on other platforms).
 
 ## fs.symlinkSync(linkdata, path, [type])
 
+<!--english start-->
+
 Synchronous symlink(2).
+
+<!--english end-->
 
 동기 symlink(2).
 
 ## fs.readlink(path, [callback])
 
+<!--english start-->
+
 Asynchronous readlink(2). The callback gets two arguments `(err,
 linkString)`.
+
+<!--english end-->
 
 비동기 readlink(2). 콜백은 두 아규먼트 `(err, linkString)`를 받는다.
 
 ## fs.readlinkSync(path)
 
+<!--english start-->
+
 Synchronous readlink(2). Returns the symbolic link's string value.
+
+<!--english end-->
 
 동기 readlink(2). 심볼릭 링크의 문자열 값을 반환한다.
 
 ## fs.realpath(path, [callback])
 
+<!--english start-->
+
 Asynchronous realpath(2).  The callback gets two arguments `(err,
 resolvedPath)`.  May use `process.cwd` to resolve relative paths.
+
+<!--english end-->
 
 비동기 realpath(2). 콜백은 두 아규먼트 `(err, resolvedPath)`를 받는다.
 상대경로를 처리하려면 `process.cwd`를 사용해야 할 것이다.
 
 ## fs.realpathSync(path)
 
+<!--english start-->
+
 Synchronous realpath(2). Returns the resolved path.
+
+<!--english end-->
 
 동기 realpath(2). 처리된 경로를 반환한다.
 
 ## fs.unlink(path, [callback])
 
+<!--english start-->
+
 Asynchronous unlink(2). No arguments other than a possible exception are given
 to the completion callback.
+
+<!--english end-->
 
 비동기 unlink(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
 ## fs.unlinkSync(path)
 
+<!--english start-->
+
 Synchronous unlink(2).
+
+<!--english end-->
 
 동기 unlink(2).
 
 ## fs.rmdir(path, [callback])
 
+<!--english start-->
+
 Asynchronous rmdir(2). No arguments other than a possible exception are given
 to the completion callback.
+
+<!--english end-->
 
 비동기 rmdir(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
 ## fs.rmdirSync(path)
 
+<!--english start-->
+
 Synchronous rmdir(2).
+
+<!--english end-->
 
 동기 rmdir(2).
 
 ## fs.mkdir(path, [mode], [callback])
 
+<!--english start-->
+
 Asynchronous mkdir(2). No arguments other than a possible exception are given
 to the completion callback. `mode` defaults to `0777`.
+
+<!--english end-->
 
 비동기 mkdir(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 `mode`의 기본값은 `0777`이다.
 
 ## fs.mkdirSync(path, [mode])
 
+<!--english start-->
+
 Synchronous mkdir(2).
+
+<!--english end-->
 
 동기 mkdir(2).
 
 ## fs.readdir(path, [callback])
 
+<!--english start-->
+
 Asynchronous readdir(3).  Reads the contents of a directory.
 The callback gets two arguments `(err, files)` where `files` is an array of
 the names of the files in the directory excluding `'.'` and `'..'`.
+
+<!--english end-->
 
 비동기 readdir(3). 디렉토리의 내용을 읽는다.
 콜백은 두 아규먼트 `(err, files)`를 받고 `files`는 디렉토리에서 `'.'`와 `'..'`를 
@@ -384,25 +536,39 @@ the names of the files in the directory excluding `'.'` and `'..'`.
 
 ## fs.readdirSync(path)
 
+<!--english start-->
+
 Synchronous readdir(3). Returns an array of filenames excluding `'.'` and
 `'..'`.
+
+<!--english end-->
 
 동기 readdir(3). `'.'`와 `'..'`를 제외한 파일명들의 배열을 반환한다.
 
 ## fs.close(fd, [callback])
 
+<!--english start-->
+
 Asynchronous close(2).  No arguments other than a possible exception are given
 to the completion callback.
+
+<!--english end-->
 
 비동기 close(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
 ## fs.closeSync(fd)
 
+<!--english start-->
+
 Synchronous close(2).
+
+<!--english end-->
 
 동기 close(2).
 
 ## fs.open(path, flags, [mode], [callback])
+
+<!--english start-->
 
 Asynchronous file open. See open(2). `flags` can be:
 
@@ -425,6 +591,8 @@ The file is created if it does not exist.
 The file is created if it does not exist.
 
 `mode` defaults to `0666`. The callback gets two arguments `(err, fd)`.
+
+<!--english end-->
 
 비동기 파일 열기. open(2).를 봐라. `flags`는 다음의 값이 될 수 있다.
 
@@ -450,39 +618,61 @@ The file is created if it does not exist.
 
 ## fs.openSync(path, flags, [mode])
 
+<!--english start-->
+
 Synchronous open(2).
+
+<!--english end-->
 
 동기 open(2).
 
 ## fs.utimes(path, atime, mtime, [callback])
 ## fs.utimesSync(path, atime, mtime)
 
+<!--english start-->
+
 Change file timestamps of the file referenced by the supplied path.
+
+<!--english end-->
 
 전달한 경로가 참조하는 파일의 타임스탬프를 변경한다.
 
 ## fs.futimes(fd, atime, mtime, [callback])
 ## fs.futimesSync(fd, atime, mtime)
 
+<!--english start-->
+
 Change the file timestamps of a file referenced by the supplied file
 descriptor.
+
+<!--english end-->
 
 전달한 파일 디스크립터가 참조하는 파일의 타임스탬프를 변경한다.
 
 ## fs.fsync(fd, [callback])
 
+<!--english start-->
+
 Asynchronous fsync(2). No arguments other than a possible exception are given
 to the completion callback.
+
+<!--english end-->
 
 비동기 fsync(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
 ## fs.fsyncSync(fd)
 
+<!--english start-->
+
 Synchronous fsync(2).
+
+<!--english end-->
 
 동기 fsync(2).
 
 ## fs.write(fd, buffer, offset, length, position, [callback])
+
+<!--english start-->
 
 Write `buffer` to the file specified by `fd`.
 
@@ -500,6 +690,8 @@ Note that it is unsafe to use `fs.write` multiple times on the same file
 without waiting for the callback. For this scenario,
 `fs.createWriteStream` is strongly recommended.
 
+<!--english end-->
+
 `fd`가 지정한 파일에 `buffer`를 작성한다.
 
 `offset`과 `length`는 작성할 버퍼의 부분을 결정한다.
@@ -516,20 +708,30 @@ pwrite(2)를 봐라.
 
 ## fs.writeSync(fd, buffer, offset, length, position)
 
+<!--english start-->
+
 Synchronous version of buffer-based `fs.write()`. Returns the number of bytes
 written.
+
+<!--english end-->
 
 버퍼기반 `fs.write()`의 동기 버전. 작성한 바이트 수를 반환한다.
 
 ## fs.writeSync(fd, str, position, [encoding])
 
+<!--english start-->
+
 Synchronous version of string-based `fs.write()`. `encoding` defaults to
 `'utf8'`. Returns the number of _bytes_ written.
+
+<!--english end-->
 
 문자열기반 `fs.write()`의 동기 버전. `encoding`의 기본값은 `'utf8'`이다. 
 작성한 _바이트_ 수를 반환한다.
 
 ## fs.read(fd, buffer, offset, length, position, [callback])
+
+<!--english start-->
 
 Read data from the file specified by `fd`.
 
@@ -543,6 +745,8 @@ Read data from the file specified by `fd`.
 If `position` is `null`, data will be read from the current file position.
 
 The callback is given the three arguments, `(err, bytesRead, buffer)`.
+
+<!--english end-->
 
 `fd`가 지정한 파일에서 데이터를 읽는다.
 
@@ -559,19 +763,29 @@ The callback is given the three arguments, `(err, bytesRead, buffer)`.
 
 ## fs.readSync(fd, buffer, offset, length, position)
 
+<!--english start-->
+
 Synchronous version of buffer-based `fs.read`. Returns the number of
 `bytesRead`.
+
+<!--english end-->
 
 버퍼기반 `fs.read`의 동기 버전이다. `bytesRead`의 수를 반환한다.
 
 ## fs.readSync(fd, length, position, encoding)
 
+<!--english start-->
+
 Synchronous version of string-based `fs.read`. Returns the number of
 `bytesRead`.
+
+<!--english end-->
 
 문자열기반 `fs.read`의 동기버전이다. `bytesRead`의 수를 반환한다.
 
 ## fs.readFile(filename, [encoding], [callback])
+
+<!--english start-->
 
 Asynchronously reads the entire contents of a file. Example:
 
@@ -584,6 +798,8 @@ The callback is passed two arguments `(err, data)`, where `data` is the
 contents of the file.
 
 If no encoding is specified, then the raw buffer is returned.
+
+<!--english end-->
 
 파일의 전체 내용을 비동기로 읽는다. 예제:
 
@@ -599,10 +815,14 @@ If no encoding is specified, then the raw buffer is returned.
 
 ## fs.readFileSync(filename, [encoding])
 
+<!--english start-->
+
 Synchronous version of `fs.readFile`. Returns the contents of the `filename`.
 
 If `encoding` is specified then this function returns a string. Otherwise it
 returns a buffer.
+
+<!--english end-->
 
 `fs.readFile`의 동기버전이다. `filename`의 내용을 반환한다.
 
@@ -611,6 +831,8 @@ returns a buffer.
 
 
 ## fs.writeFile(filename, data, [encoding], [callback])
+
+<!--english start-->
 
 Asynchronously writes data to a file, replacing the file if it already exists.
 `data` can be a string or a buffer. The `encoding` argument is ignored if
@@ -622,6 +844,8 @@ Example:
       if (err) throw err;
       console.log('It\'s saved!');
     });
+
+<!--english end-->
 
 비동기로 파일에 데이터를 작성하고 파일이 이미 존재하는 경우에는 파일을 대체한다.
 `data`는 문자열이나 버퍼가 될 수 있다. `data`가 버퍼일 경우 `encoding`  아규먼트는 
@@ -636,11 +860,17 @@ Example:
 
 ## fs.writeFileSync(filename, data, [encoding])
 
+<!--english start-->
+
 The synchronous version of `fs.writeFile`.
+
+<!--english end-->
 
 `fs.writeFile`의 동기버전이다.
 
 ## fs.watchFile(filename, [options], listener)
+
+<!--english start-->
 
     Stability: 2 - Unstable.  Use fs.watch instead, if available.
 
@@ -666,6 +896,8 @@ These stat objects are instances of `fs.Stat`.
 
 If you want to be notified when the file was modified, not just accessed
 you need to compare `curr.mtime` and `prev.mtime`.
+
+<!--english end-->
 
     안정성: 2 - Unstable.  가능하다면 대신 fs.watch를 사용해라.
 
@@ -693,15 +925,21 @@ you need to compare `curr.mtime` and `prev.mtime`.
 
 ## fs.unwatchFile(filename)
 
+<!--english start-->
+
     Stability: 2 - Unstable.  Use fs.watch instead, if available.
 
 Stop watching for changes on `filename`.
+
+<!--english end-->
 
     안정성: 2 - Unstable.  가능하다면 대신 fs.watch를 사용해라.
 
 `filename`의 변경사항을 감시하는 것을 멈춘다.
 
 ## fs.watch(filename, [options], listener)
+
+<!--english start-->
 
     Stability: 2 - Unstable.  Not available on all platforms.
 
@@ -717,6 +955,8 @@ The listener callback gets two arguments `(event, filename)`.  `event` is either
 'rename' or 'change', and `filename` is the name of the file which triggered
 the event.
 
+<!--english end-->
+
     안정성: 2 - Unstable.  모든 플랫폼에서 사용할 수 있는 것은 아니다.
 
 `filename`의 변경사항을 감시하고 `filename`은 파일이나 디렉토리가 될 수 있다. 
@@ -731,10 +971,14 @@ the event.
 
 ### Caveats
 
+<!--english start-->
+
 <!--type=misc-->
 
 The `fs.watch` API is not 100% consistent across platforms, and is
 unavailable in some situations.
+
+<!--english end-->
 
 <!--type=misc-->
 
@@ -742,6 +986,8 @@ unavailable in some situations.
 사용할 수 없다.
 
 #### Availability
+
+<!--english start-->
 
 <!--type=misc-->
 
@@ -758,6 +1004,8 @@ If the underlying functionality is not available for some reason, then
 `fs.watchFile`, which uses stat polling, but it is slower and less
 reliable.
 
+<!--english end-->
+
 <!--type=misc-->
 
 이 기능은 의존 운영체제가 제공하는 파일시스템의 변경사항을 알리는 방법에 따라 다르다.
@@ -772,6 +1020,8 @@ stat 폴링(polling)을 사용하지만 더 느리고 덜 신뢰적인 `fs.watch
 사용할 수 있다.
 
 #### Filename Argument
+
+<!--english start-->
 
 <!--type=misc-->
 
@@ -790,6 +1040,8 @@ callback, and have some fallback logic if it is null.
       }
     });
 
+<!--english end-->
+
 <!--type=misc-->
 
 모든 클랫폼에서 `filename` 아규먼트를 콜백에 전달하는 것은 아니다. (현재는 Linux와 
@@ -807,6 +1059,8 @@ null 일 경우를 위한 대체(fallback) 로직을 가지고 있어야 한다.
     });
 
 ## Class: fs.Stats
+
+<!--english start-->
 
 Objects returned from `fs.stat()`, `fs.lstat()` and `fs.fstat()` and their
 synchronous counterparts are of this type.
@@ -850,6 +1104,8 @@ be found in the [MDN JavaScript Reference][MDN-Date] page.
 [MDN-Date-getTime]: https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Date/getTime
 
 
+<!--english end-->
+
 `fs.stat()`, `fs.lstat()`, `fs.fstat()`가 리턴하는 객체고 이 함수들의 동기함수들도 
 이 타입을 리턴한다.
 
@@ -891,6 +1147,8 @@ be found in the [MDN JavaScript Reference][MDN-Date] page.
 
 ## fs.createReadStream(path, [options])
 
+<!--english start-->
+
 Returns a new ReadStream object (See `Readable Stream`).
 
 `options` is an object with the following defaults:
@@ -909,6 +1167,8 @@ start at 0.
 An example to read the last 10 bytes of a file which is 100 bytes long:
 
     fs.createReadStream('sample.txt', {start: 90, end: 99});
+
+<!--english end-->
 
 새로운 ReadStream 객체를 반환한다. (`Readable Stream`를 봐라)
 
@@ -931,15 +1191,23 @@ An example to read the last 10 bytes of a file which is 100 bytes long:
 
 ## Class: fs.ReadStream
 
+<!--english start-->
+
 `ReadStream` is a [Readable Stream](stream.html#stream_readable_stream).
+
+<!--english end-->
 
 `ReadStream`는 [Readable Stream](stream.html#stream_readable_stream)이다.
 
 ### Event: 'open'
 
+<!--english start-->
+
 * `fd` {Integer} file descriptor used by the ReadStream.
 
 Emitted when the ReadStream's file is opened.
+
+<!--english end-->
 
 * ReadStream는 `fd` {Integer} 파일 디스크립터를 사용한다.
 
@@ -947,6 +1215,8 @@ ReadStream의 파일이 열렸을 때 발생한다.
 
 
 ## fs.createWriteStream(path, [options])
+
+<!--english start-->
 
 Returns a new WriteStream object (See `Writable Stream`).
 
@@ -960,6 +1230,8 @@ Returns a new WriteStream object (See `Writable Stream`).
 some position past the beginning of the file.  Modifying a file rather
 than replacing it may require a `flags` mode of `r+` rather than the
 default mode `w`.
+
+<!--english end-->
 
 새로운 WriteStream 객체를 반환한다. (`Writable Stream`를 봐라.)
 
@@ -975,15 +1247,23 @@ default mode `w`.
 
 ## fs.WriteStream
 
+<!--english start-->
+
 `WriteStream` is a [Writable Stream](stream.html#stream_writable_stream).
+
+<!--english end-->
 
 `WriteStream`는 [Writable Stream](stream.html#stream_writable_stream)이다.
 
 ### Event: 'open'
 
+<!--english start-->
+
 * `fd` {Integer} file descriptor used by the ReadStream.
 
 Emitted when the WriteStream's file is opened.
+
+<!--english end-->
 
 * `fd` {Integer} ReadStream이 사용하는 파일 디스크립터.
 
@@ -991,30 +1271,46 @@ WriteStream의 파일이 열렸을 때 발생한다.
 
 ### file.bytesWritten
 
+<!--english start-->
+
 The number of bytes written so far. Does not include data that is still queued
 for writing.
+
+<!--english end-->
 
 지금까지 작성된 바이트의 수. 작성하기 위해 아직 큐에 있는 데이터는 포함하지 않는다.
 
 ## Class: fs.FSWatcher
 
+<!--english start-->
+
 Objects returned from `fs.watch()` are of this type.
+
+<!--english end-->
 
 `fs.watch()`가 반환하는 객체가 이 타입이다.
 
 ### watcher.close()
 
+<!--english start-->
+
 Stop watching for changes on the given `fs.FSWatcher`.
+
+<!--english end-->
 
 주어진 `fs.FSWatcher`에서 변경사항을 감시하는 것을 멈춘다.
 
 ### Event: 'change'
+
+<!--english start-->
 
 * `event` {String} The type of fs change
 * `filename` {String} The filename that changed (if relevant/available)
 
 Emitted when something changes in a watched directory or file.
 See more details in [fs.watch](#fs_fs_watch_filename_options_listener).
+
+<!--english end-->
 
 * `event` {String} fs 변경사항의 타입
 * `filename` {String} 변경된 파일명 (적절하거나 사용가능하다면)
@@ -1024,9 +1320,13 @@ See more details in [fs.watch](#fs_fs_watch_filename_options_listener).
 
 ### Event: 'error'
 
+<!--english start-->
+
 * `error` {Error object}
 
 Emitted when an error occurs.
+
+<!--english end-->
 
 * `error` {Error object}
 

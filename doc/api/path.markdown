@@ -1,5 +1,7 @@
 # Path
 
+<!--english start-->
+
     Stability: 3 - Stable
 
 This module contains utilities for handling and transforming file
@@ -10,6 +12,8 @@ The file system is not consulted to check whether paths are valid.
 logically be found in the fs module as they do access the file system.
 
 Use `require('path')` to use this module.  The following methods are provided:
+
+<!--english end-->
 
     안정성: 3 - Stable
 
@@ -23,6 +27,8 @@ fs 모듈에서 논리적으로 찾을 수 있어야 한다.
 
 ## path.normalize(p)
 
+<!--english start-->
+
 Normalize a string path, taking care of `'..'` and `'.'` parts.
 
 When multiple slashes are found, they're replaced by a single one;
@@ -34,6 +40,8 @@ Example:
     path.normalize('/foo/bar//baz/asdf/quux/..')
     // returns
     '/foo/bar/baz/asdf'
+
+<!--english end-->
 
 `'..'`와 `'.'` 부분을 처리해서 문자열 경로를 정규화한다.
 
@@ -49,6 +57,8 @@ windows에서는 역슬래시를 사용한다.
 
 ## path.join([path1], [path2], [...])
 
+<!--english start-->
+
 Join all arguments together and normalize the resulting path.
 Non-string arguments are ignored.
 
@@ -61,6 +71,8 @@ Example:
     path.join('foo', {}, 'bar')
     // returns
     'foo/bar'
+
+<!--english end-->
 
 모든 아규먼트를 합쳐서 최종 경로로 정규화한다.
 문자열이 아닌 아규먼트는 무시한다.
@@ -76,6 +88,8 @@ Example:
     'foo/bar'
 
 ## path.resolve([from ...], to)
+
+<!--english start-->
 
 Resolves `to` to an absolute path.
 
@@ -114,6 +128,8 @@ Examples:
     // if currently in /home/myself/node, it returns
     '/home/myself/node/wwwroot/static_files/gif/image.gif'
 
+<!--english end-->
+
 `to`를 절대경로로 변환한다.
 
 `to`가 절대경로가 아니면 절대경로를 찾을 때까지 `from` 아규먼트들을 우측에서 좌측의 순서로 
@@ -151,6 +167,8 @@ Examples:
 
 ## path.relative(from, to)
 
+<!--english start-->
+
 Solve the relative path from `from` to `to`.
 
 At times we have two absolute paths, and we need to derive the relative
@@ -168,6 +186,8 @@ Examples:
     path.relative('/data/orandea/test/aaa', '/data/orandea/impl/bbb')
     // returns
     '../../impl/bbb'
+
+<!--english end-->
 
 `from`에서 `to`까지의 상대경로를 처리한다.
 
@@ -188,6 +208,8 @@ Examples:
 
 ## path.dirname(p)
 
+<!--english start-->
+
 Return the directory name of a path.  Similar to the Unix `dirname` command.
 
 Example:
@@ -195,6 +217,8 @@ Example:
     path.dirname('/foo/bar/baz/asdf/quux')
     // returns
     '/foo/bar/baz/asdf'
+
+<!--english end-->
 
 경로의 디렉토리이름을 반환한다. Unix의 `dirname` 명령어와 비슷하다.
 
@@ -205,6 +229,8 @@ Example:
     '/foo/bar/baz/asdf'
 
 ## path.basename(p, [ext])
+
+<!--english start-->
 
 Return the last portion of a path.  Similar to the Unix `basename` command.
 
@@ -217,6 +243,8 @@ Example:
     path.basename('/foo/bar/baz/asdf/quux.html', '.html')
     // returns
     'quux'
+
+<!--english end-->
 
 경로의 마지막 부분을 반환한다. Unix의 `basename` 명령어와 비슷하다.
 
@@ -231,6 +259,8 @@ Example:
     'quux'
 
 ## path.extname(p)
+
+<!--english start-->
 
 Return the extension of the path, from the last '.' to end of string
 in the last portion of the path.  If there is no '.' in the last portion
@@ -248,6 +278,8 @@ an empty string.  Examples:
     path.extname('index')
     // returns
     ''
+
+<!--english end-->
 
 경로의 마지막 부분의 문자열에서 마지막 '.'에서부터 경로의 확장자를 반환한다. 
 경로의 마지막 부분에 '.'가 없거나 첫 글자가 '.'이라면 빈 문자열을 반환한다.
@@ -267,12 +299,16 @@ an empty string.  Examples:
 
 ## path.exists(p, [callback])
 
+<!--english start-->
+
 Test whether or not the given path exists by checking with the file system.
 Then call the `callback` argument with either true or false.  Example:
 
     path.exists('/etc/passwd', function (exists) {
       util.debug(exists ? "it's there" : "no passwd!");
     });
+
+<!--english end-->
 
 파일 시스템으로 확인해서 주어진 경로가 존재하는 지 여부를 검사한다.
 그 다음 true나 false 아규먼트로 `callback`을 호출한다. 예제:
@@ -284,6 +320,10 @@ Then call the `callback` argument with either true or false.  Example:
 
 ## path.existsSync(p)
 
+<!--english start-->
+
 Synchronous version of `path.exists`.
+
+<!--english end-->
 
 `path.exists`의 동기 버전.

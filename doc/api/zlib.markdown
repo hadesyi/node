@@ -1,5 +1,7 @@
 # Zlib
 
+<!--english start-->
+
     Stability: 3 - Stable
 
 You can access this module with:
@@ -10,6 +12,8 @@ This provides bindings to Gzip/Gunzip, Deflate/Inflate, and
 DeflateRaw/InflateRaw classes.  Each class takes the same options, and
 is a readable/writable Stream.
 
+<!--english end-->
+
     안정성: 3 - Stable
 
 이 모듈은 다음과 같은 방법으로 접근한다:
@@ -19,6 +23,8 @@ is a readable/writable Stream.
 이 모듈은 Gzip/Uunzip, Deflate/Inflate, DeflateRaw/InflateRaw 클래스에 대한 바인딩이다. 각 클래스는 읽기/쓰기 가능한 스트림이고 옵션은 모두 동일하다.
 
 ## Examples
+
+<!--english start-->
 
 Compressing or decompressing a file can be done by piping an
 fs.ReadStream into a zlib stream, then into an fs.WriteStream.
@@ -111,6 +117,8 @@ tradeoffs involved in zlib usage.
       }
     }).listen(1337);
 
+<!--english end-->
+
 파일을 압축하거나 압축을 푸는 일은 fs.ReadStream()으로 파일을 읽어서 zlib 스트림으로 보내고 나서(pipe) 다시 fs.WriteStream에 보내는(pipe) 것으로 이루어진다.
 
     var gzip = zlib.createGzip();
@@ -195,6 +203,8 @@ HTTP client나 server에서 이 모듈를 사용하려면 request에서 사용�
 
 ## Constants
 
+<!--english start-->
+
 <!--type=misc-->
 
 All of the constants defined in zlib.h are also defined on
@@ -202,96 +212,156 @@ All of the constants defined in zlib.h are also defined on
 documentation.  See <http://zlib.net/manual.html#Constants>
 for more details.
 
+<!--english end-->
+
 <!--type=misc-->
 
 zlib.h에 정의된 컨스턴트는 모두 `require('zlib')에도 정의돼 있다. zlib 문서에 자세히 설명돼 있으니 <http://zlib.net/manual.html#Constants>를 보라.
 
 ## zlib.createGzip([options])
 
+<!--english start-->
+
 Returns a new [Gzip](#zlib.Gzip) object with an [options](#options).
+
+<!--english end-->
 
 [options](#options)으로 [Gzip](#zlib.Gzip) 객채를 새로 만들어 리턴한다.
 
 ## zlib.createGunzip([options])
 
+<!--english start-->
+
 Returns a new [Gunzip](#zlib.Gunzip) object with an [options](#options).
+
+<!--english end-->
 
 [options](#options)으로 [Gunzip](#zlib.Gunzip) 객채를 새로 만들어 리턴한다.
 
 ## zlib.createDeflate([options])
 
+<!--english start-->
+
 Returns a new [Deflate](#zlib.Deflate) object with an [options](#options).
+
+<!--english end-->
 
 [options](#options)으로 [Deflate](#zlib.Deflate) 객채를 새로 만들어 리턴한다.
 
 ## zlib.createInflate([options])
 
+<!--english start-->
+
 Returns a new [Inflate](#zlib.Inflate) object with an [options](#options).
+
+<!--english end-->
 
 [options](#options)으로 [Inflate](#zlib.Inflate) 객채를 새로 만들어 리턴한다.
 
 ## zlib.createDeflateRaw([options])
 
+<!--english start-->
+
 Returns a new [DeflateRaw](#zlib.DeflateRaw) object with an [options](#options).
+
+<!--english end-->
 
 [options](#options)으로 [DeflateRaw](#zlib.DeflateRaw) 객채를 새로 만들어 리턴한다.
 
 ## zlib.createInflateRaw([options])
 
+<!--english start-->
+
 Returns a new [InflateRaw](#zlib.InflateRaw) object with an [options](#options).
+
+<!--english end-->
 
 [options](#options)으로 [InflateRaw](#zlib.InflateRaw) 객채를 새로 만들어 리턴한다.
 
 ## zlib.createUnzip([options])
 
+<!--english start-->
+
 Returns a new [Unzip](#zlib.Unzip) object with an [options](#options).
+
+<!--english end-->
 
 [options](#options)으로 [Unzip](#zlib.Unzip) 객채를 새로 만들어 리턴한다.
 
 ## Class: zlib.Gzip
 
+<!--english start-->
+
 Compress data using gzip.
+
+<!--english end-->
 
 gzip으로 데이터를 압축한다.
 
 ## Class: zlib.Gunzip
 
+<!--english start-->
+
 Decompress a gzip stream.
+
+<!--english end-->
 
 gzip 스트림의 압축을 푼다.
 
 ## Class: zlib.Deflate
 
+<!--english start-->
+
 Compress data using deflate.
+
+<!--english end-->
 
 deflate로 데이터를 압축한다.
 
 ## Class: zlib.Inflate
 
+<!--english start-->
+
 Decompress a deflate stream.
+
+<!--english end-->
 
 deflate 스트림의 압축을 푼다.
 
 ## Class: zlib.DeflateRaw
 
+<!--english start-->
+
 Compress data using deflate, and do not append a zlib header.
+
+<!--english end-->
 
 deflate로 데이터를 압축하지만 zlib 헤더는 넣지 않는다.
 
 ## Class: zlib.InflateRaw
 
+<!--english start-->
+
 Decompress a raw deflate stream.
+
+<!--english end-->
 
 raw deflate 스트림의 압축을 푼다.
 
 ## Class: zlib.Unzip
 
+<!--english start-->
+
 Decompress either a Gzip- or Deflate-compressed stream by auto-detecting
 the header.
+
+<!--english end-->
 
 Gzip-이나 Deflate-로 압축한 스트림의 헤더를 자동으로 찾아서 압축을 푼다.
 
 ## Convenience Methods
+
+<!--english start-->
 
 <!--type=misc-->
 
@@ -301,53 +371,85 @@ compression/decompression engine is created using the default settings
 in all convenience methods.  To supply different options, use the
 zlib classes directly.
 
+<!--english end-->
+
 <!--type=misc-->
 
 여기에 있는 모든 메소드는 첫번째 인자로 버퍼나 스트링을 받는다. 그리고 콜백도 `callback(error, result)` 형식으로 호출한다. 압축/압축해제 엔진은 기본 설정으로 생성하고 다른 옵션으로 생성하고 싶으면 zlib 클래스를 직접사용해야 한다.
 
 ## zlib.deflate(buf, callback)
 
+<!--english start-->
+
 Compress a string with Deflate.
+
+<!--english end-->
 
 Deflate로 스트링을 압축한다.
 
 ## zlib.deflateRaw(buf, callback)
 
+<!--english start-->
+
 Compress a string with DeflateRaw.
+
+<!--english end-->
 
 DeflateRaw로 스트링을 압축한다.
 
 ## zlib.gzip(buf, callback)
 
+<!--english start-->
+
 Compress a string with Gzip.
+
+<!--english end-->
 
 Gzip으로 스트링을 압축한다.
 
 ## zlib.gunzip(buf, callback)
 
+<!--english start-->
+
 Decompress a raw Buffer with Gunzip.
+
+<!--english end-->
 
 Gunzip으로 Buffer의 압축을 푼다.
 
 ## zlib.inflate(buf, callback)
 
+<!--english start-->
+
 Decompress a raw Buffer with Inflate.
+
+<!--english end-->
 
 Inflate로 Buffer의 압축을 푼다.
 
 ## zlib.inflateRaw(buf, callback)
 
+<!--english start-->
+
 Decompress a raw Buffer with InflateRaw.
+
+<!--english end-->
 
 InflateRaw로 Buffer의 압축을 푼다.
 
 ## zlib.unzip(buf, callback)
 
+<!--english start-->
+
 Decompress a raw Buffer with Unzip.
+
+<!--english end-->
 
 Unzip으로 Buffer의 압축을 푼다.
 
 ## Options
+
+<!--english start-->
 
 <!--type=misc-->
 
@@ -366,6 +468,8 @@ relevant when compressing, and are ignored by the decompression classes.
 See the description of `deflateInit2` and `inflateInit2` at
 <http://zlib.net/manual.html#Advanced> for more information on these.
 
+<!--english end-->
+
 <!--type=misc-->
 
 모든 클래스는 옵션 객체를 인자로 받고 생략 가능하다(단축 메소드는 기본값을 사용한다).
@@ -381,6 +485,8 @@ See the description of `deflateInit2` and `inflateInit2` at
 `deflateInit2`와 `inflateInit2`의 설명은 <http://zlib.net/manual.html#Advanced> 페이지에서 보라.
 
 ## Memory Usage Tuning
+
+<!--english start-->
 
 <!--type=misc-->
 
@@ -419,6 +525,8 @@ In general, greater memory usage options will mean that node has to make
 fewer calls to zlib, since it'll be able to process more data in a
 single `write` operation.  So, this is another factor that affects the
 speed, at the cost of memory usage.
+
+<!--english end-->
 
 <!--type=misc-->
 

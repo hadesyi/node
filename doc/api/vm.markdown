@@ -1,5 +1,7 @@
 # Executing JavaScript
 
+<!--english start-->
+
     Stability: 3 - Stable
 
 <!--name=vm-->
@@ -9,6 +11,8 @@ You can access this module with:
     var vm = require('vm');
 
 JavaScript code can be compiled and run immediately or compiled, saved, and run later.
+
+<!--english end-->
 
     안정성: 3 - Stable
 
@@ -22,6 +26,8 @@ JavaScript code can be compiled and run immediately or compiled, saved, and run 
 
 
 ## vm.runInThisContext(code, [filename])
+
+<!--english start-->
 
 `vm.runInThisContext()` compiles `code`, runs it and returns the result. Running
 code does not have access to local scope. `filename` is optional, it's used only
@@ -50,6 +56,8 @@ Example of using `vm.runInThisContext` and `eval` to run the same code:
 In case of syntax error in `code`, `vm.runInThisContext` emits the syntax error to stderr
 and throws an exception.
 
+
+<!--english end-->
 
 `vm.runInThisContext()`는 `code`를 컴파일하고 실행해서 결과를 반환한다. 실행되는 코드는 
 지역범위에 접근하지 않는다. `filename`은 선택사항이며 스택트레이스에서만 사용된다.
@@ -80,6 +88,8 @@ and throws an exception.
 
 ## vm.runInNewContext(code, [sandbox], [filename])
 
+<!--english start-->
+
 `vm.runInNewContext` compiles `code`, then runs it in `sandbox` and returns the
 result. Running code does not have access to local scope. The object `sandbox`
 will be used as the global object for `code`.
@@ -106,6 +116,8 @@ requires a separate process.
 
 In case of syntax error in `code`, `vm.runInNewContext` emits the syntax error to stderr
 and throws an exception.
+
+<!--english end-->
 
 `vm.runInNewContext`는 `code`를 컴파일하고 `sandbox`에서 실행한 뒤 결과를 반환한다. 
 실행되는 코드는 지역범위에 접근하지 않는다. `sandbox` 객체는 `code`의 전역객체로 사용될 
@@ -135,6 +147,8 @@ and throws an exception.
 예외를 던진다.
 
 ## vm.runInContext(code, context, [filename])
+
+<!--english start-->
 
 `vm.runInContext` compiles `code`, then runs it in `context` and returns the
 result. A (V8) context comprises a global object, together with a set of
@@ -167,6 +181,8 @@ requires a separate process.
 
 In case of syntax error in `code`, `vm.runInContext` emits the syntax error to stderr
 and throws an exception.
+
+<!--english end-->
 
 `vm.runInContext`는 `code`를 컴파일하고 `context`에서 실행한 뒤 결과를 반환한다. 
 (V8) 컨텍스트트는 내장된 객체 및 기능들과 함께 하나의 전역객체로 이루어져 있다. 
@@ -201,10 +217,14 @@ and throws an exception.
 
 ## vm.createContext([initSandbox])
 
+<!--english start-->
+
 `vm.createContext` creates a new context which is suitable for use as the 2nd argument of a subsequent
 call to `vm.runInContext`. A (V8) context comprises a global object together with a set of
 build-in objects and functions. The optional argument `initSandbox` will be shallow-copied
 to seed the initial contents of the global object used by the context.
+
+<!--english end-->
 
 `vm.createContext`는 뒤이은 `vm.runInContext` 호출의 두 번째 파라미터로 사용하기에 적합한 새로운 
 컨텍스트를 생성한다. (V8) 컨텍스트트는 내장된 객체 및 기능들과 함께 하나의 전역객체로 이루어져 있다. 
@@ -212,6 +232,8 @@ to seed the initial contents of the global object used by the context.
 복사가 될 것이다.
 
 ## vm.createScript(code, [filename])
+
+<!--english start-->
 
 `createScript` compiles `code` but does not run it. Instead, it returns a
 `vm.Script` object representing this compiled code. This script can be run
@@ -221,6 +243,8 @@ optional, it's only used in stack traces.
 
 In case of syntax error in `code`, `createScript` prints the syntax error to stderr
 and throws an exception.
+
+<!--english end-->
 
 `createScript`는 `code`를 컴파일하지만 실행하지는 않는다. 대신 컴파일된 코드를 나타내는 
 `vm.Script` 객체를 반환한다. 이 스크립트는 아래의 메서드들을 사용해서 나중에 여려 번 
@@ -234,11 +258,17 @@ and throws an exception.
 
 ## Class: Script
 
+<!--english start-->
+
 A class for running scripts.  Returned by vm.createScript.
+
+<!--english end-->
 
 스크립트를 실행하는 클래스. vm.createScript가 반환하는 클래스다.
 
 ### script.runInThisContext()
+
+<!--english start-->
 
 Similar to `vm.runInThisContext` but a method of a precompiled `Script` object.
 `script.runInThisContext` runs the code of `script` and returns the result.
@@ -260,6 +290,8 @@ Example of using `script.runInThisContext` to compile code once and run it multi
     console.log(globalVar);
 
     // 1000
+
+<!--english end-->
 
 `vm.runInThisContext`와 유사하지만 미리 컴파일된 `Script` 객체의 메서드이다. 
 `script.runInThisContext`는 `script`의 코드를 실행하고 결과를 반환한다.
@@ -284,6 +316,8 @@ Example of using `script.runInThisContext` to compile code once and run it multi
 
 
 ### script.runInNewContext([sandbox])
+
+<!--english start-->
 
 Similar to `vm.runInNewContext` a method of a precompiled `Script` object.
 `script.runInNewContext` runs the code of `script` with `sandbox` as the global object and returns the result.
@@ -312,6 +346,8 @@ These globals are contained in the sandbox.
 Note that running untrusted code is a tricky business requiring great care.  To prevent accidental
 global variable leakage, `script.runInNewContext` is quite useful, but safely running untrusted code
 requires a separate process.
+
+<!--english end-->
 
 `vm.runInNewContext`와 유사하지만 미리 컴파일된 `Script` 객체의 메서드이다.
 `script.runInNewContext`는 전역객체인 `sandbox`와 함께 `script`의 코드를 실행하고 결과를 반환한다.

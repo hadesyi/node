@@ -1,5 +1,7 @@
 # Readline
 
+<!--english start-->
+
     Stability: 3 - Stable
 
 To use this module, do `require('readline')`. Readline allows reading of a
@@ -21,6 +23,8 @@ to allow your program to gracefully terminate:
       i.close();
       process.stdin.destroy();
     });
+
+<!--english end-->
 
     안정성: 3 - Stable
 
@@ -46,6 +50,8 @@ to allow your program to gracefully terminate:
 
 ## rl.createInterface(input, output, completer)
 
+<!--english start-->
+
 Takes two streams and creates a readline interface. The `completer` function
 is used for autocompletion. When given a substring, it returns `[[substr1,
 substr2, ...], originalsubstring]`.
@@ -61,6 +67,8 @@ Also `completer` can be run in async mode if it accepts two arguments:
 
     var readline = require('readline'),
       rl = readline.createInterface(process.stdin, process.stdout);
+
+<!--english end-->
 
 두 스트림을 받아서 readline 인터펭스를 생성한다. `completer` 함수는 자동완성에 
 사용한다. 부분문자열을 전달했을 때 
@@ -81,28 +89,42 @@ Also `completer` can be run in async mode if it accepts two arguments:
 
 ## Class: Interface
 
+<!--english start-->
+
 The class that represents a readline interface with a stdin and stdout
 stream.
+
+<!--english end-->
 
 클래스는 stdin와 stdout 스트림을 가진 readline 인터페이스를 나타낸다.
 
 ### rl.setPrompt(prompt, length)
 
+<!--english start-->
+
 Sets the prompt, for example when you run `node` on the command line, you see
 `> `, which is node's prompt.
+
+<!--english end-->
 
 프롬프트를 설정한다. 예를 들어 커맨드라인에서 `node`를 실행하면 node의 프롬프트인 
 `> `를 볼 수 있다.
 
 ### rl.prompt()
 
+<!--english start-->
+
 Readies readline for input from the user, putting the current `setPrompt`
 options on a new line, giving the user a new spot to write.
+
+<!--english end-->
 
 사용자가 작성할 새로운 지점인 새로운 줄에서 현재의 `setPrompt` 옵션을 두어 
 사용자에게 입력을 받기 위해서 readline을 준비한다.
 
 ### rl.question(query, callback)
+
+<!--english start-->
 
 Prepends the prompt with `query` and invokes `callback` with the user's
 response. Displays the query to the user, and then invokes `callback` with the
@@ -114,34 +136,54 @@ Example usage:
       console.log('Oh, so your favorite food is ' + answer);
     });
 
+<!--english end-->
+
 `query`앞에 프로프트를 붙히고 사용자의 응답으로 `callback`을 호출한다. 
 사용자에게 쿼리를 보여주고 사용자가 입력한 응답으로 `callback`을 호출한다.
 
 ### rl.close()
 
+<!--english start-->
+
   Closes tty.
+
+<!--english end-->
 
   tty를 닫는다.
 
 ### rl.pause()
 
+<!--english start-->
+
   Pauses tty.
+
+<!--english end-->
 
   tty를 멈춘다.
 
 ### rl.resume()
 
+<!--english start-->
+
   Resumes tty.
+
+<!--english end-->
 
   tty를 복구한다.
 
 ### rl.write()
 
+<!--english start-->
+
   Writes to tty.
+
+<!--english end-->
 
   tty에 작성한다.
 
 ### Event: 'line'
+
+<!--english start-->
 
 `function (line) {}`
 
@@ -153,6 +195,8 @@ Example of listening for `line`:
     rl.on('line', function (cmd) {
       console.log('You just typed: '+cmd);
     });
+
+<!--english end-->
 
 `function (line) {}`
 
@@ -166,6 +210,8 @@ Example of listening for `line`:
     });
 
 ### Event: 'close'
+
+<!--english start-->
 
 `function () {}`
 
@@ -211,6 +257,8 @@ Take a look at this slightly more complicated
 [example](https://gist.github.com/901104), and
 [http-console](https://github.com/cloudhead/http-console) for a real-life use
 case.
+
+<!--english end-->
 
 `function () {}`
 

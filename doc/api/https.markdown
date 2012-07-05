@@ -1,9 +1,13 @@
 # HTTPS
 
+<!--english start-->
+
     Stability: 3 - Stable
 
 HTTPS is the HTTP protocol over TLS/SSL. In Node this is implemented as a
 separate module.
+
+<!--english end-->
 
     안정성: 3 - Stable
 
@@ -12,13 +16,19 @@ HTTPS는 TLS/SSL를 사용하는 HTTP 프로토콜이다. Node에서 HTTPS는 �
 
 ## Class: https.Server
 
+<!--english start-->
+
 This class is a subclass of `tls.Server` and emits events same as
 `http.Server`. See `http.Server` for more information.
+
+<!--english end-->
 
 이 클래스는 `tls.Server`의 하위 클래스로 `http.Server`와 같은 이벤트를 
 발생시킨다. 자세한 내용은 `http.Server`를 참고해라.
 
 ## https.createServer(options, [requestListener])
+
+<!--english start-->
 
 Returns a new HTTPS web server object. The `options` is similar to
 `tls.createServer()`. The `requestListener` is a function which is
@@ -53,6 +63,8 @@ Or
       res.writeHead(200);
       res.end("hello world\n");
     }).listen(8000);
+
+<!--english end-->
 
 새로운 HTTPS 웹서버 객체를 반환한다. `options`은 `tls.createServer()`와 
 유사하다. `requestListener`는 `'request'` 이벤트에 자동으로 추가되는 
@@ -89,6 +101,8 @@ Or
     }).listen(8000);
 
 ## https.request(options, callback)
+
+<!--english start-->
 
 Makes a request to a secure web server.
 All options from [http.request()](http.html#http.request) are valid.
@@ -189,7 +203,9 @@ Example:
       ...
     }
 
-안전한 웹서버로의 용청을 생성한다.
+<!--english end-->
+
+안전한 웹서버로의 요청을 생성한다.
 Makes a request to a secure web server.
 [http.request()](http.html#http.request)의 모든 옵션이 유효하다.
 
@@ -288,6 +304,8 @@ options 아규먼트는 다음과 같다.
 
 ## https.get(options, callback)
 
+<!--english start-->
+
 Like `http.get()` but for HTTPS.
 
 Example:
@@ -305,6 +323,8 @@ Example:
     }).on('error', function(e) {
       console.error(e);
     });
+
+<!--english end-->
 
 `http.get()`와 같지만 HTTPS다.
 
@@ -327,8 +347,12 @@ Example:
 
 ## Class: https.Agent
 
+<!--english start-->
+
 An Agent object for HTTPS similar to [http.Agent](http.html#http.Agent).
 See [https.request()](#https.request) for more information.
+
+<!--english end-->
 
 [http.Agent](http.html#http.Agent)와 유사한 HTTPS의 Agent 객체.
 자세한 내용은 [https.request()](#https.request)를 참고해라.
@@ -336,8 +360,12 @@ See [https.request()](#https.request) for more information.
 
 ## https.globalAgent
 
+<!--english start-->
+
 Global instance of [https.Agent](#https.Agent) which is used as the default
 for all HTTPS client requests.
+
+<!--english end-->
 
 모든 HTTPS 클라이언트 요청에 기본적으로 사용할 [https.Agent](#https.Agent)의 
 전역 인스턴스다.

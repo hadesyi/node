@@ -1,5 +1,7 @@
 # Debugger
 
+<!--english start-->
+
     Stability: 3 - Stable
 
 <!-- type=misc -->
@@ -78,6 +80,8 @@ The `repl` command allows you to evaluate code remotely. The `next` command
 steps over to the next line. There are a few other commands available and more
 to come. Type `help` to see others.
 
+<!--english end-->
+
     안정성: 3 - Stable
 
 <!-- type=misc -->
@@ -150,6 +154,8 @@ V8에는 확장 가능한 디버거가 들어 있다. 이 디버거는 간단한
 
 ## Watchers
 
+<!--english start-->
+
 You can watch expression and variable values while debugging your code.
 On every breakpoint each expression from the watchers list will be evaluated
 in the current context and displayed just before the breakpoint's source code
@@ -159,6 +165,8 @@ To start watching an expression, type `watch("my_expression")`. `watchers`
 prints the active watchers. To remove a watcher, type
 `unwatch("my_expression")`.
 
+<!--english end-->
+
 디버깅하는 동안 표현식(expression)과 변수의 값을 watch할 수 있다. breakpoint마다 watcher에 등록된 표현을 현 컨텍스트에서 실행해서 보여준다. 그 다음에 breakpoint가 있는 소스코드가 출력된다.
 
 `watch("my_expression")`으로 watcher를 등록하고 `watchers` 명령으로 등록된 watcher들을 확인할 수 있다. 그리고 `unwatch("my_expression")`으로 등록된 watcher를 제거할 수 있다.
@@ -167,10 +175,14 @@ prints the active watchers. To remove a watcher, type
 
 ### Stepping
 
+<!--english start-->
+
 * `cont`, `c` - Continue execution
 * `next`, `n` - Step next
 * `step`, `s` - Step in
 * `out`, `o` - Step out
+
+<!--english end-->
 
 * `cont`, `c` - 계속 실행
 * `next`, `n` - Step next
@@ -179,6 +191,8 @@ prints the active watchers. To remove a watcher, type
 
 ### Breakpoints
 
+<!--english start-->
+
 * `setBreakpoint()`, `sb()` - Set breakpoint on current line
 * `setBreakpoint('fn()')`, `sb(...)` - Set breakpoint on a first statement in
 functions body
@@ -186,12 +200,16 @@ functions body
 script.js
 * `clearBreakpoint`, `cb(...)` - Clear breakpoint
 
+<!--english end-->
+
 * `setBreakpoint()`, `sb()` - 현 라인에 breakpoint를 설정한다.
 * `setBreakpoint('fn()')`, `sb(...)` - 함수 바디의 첫 라인에 breakpoint를 설정한다.
 * `setBreakpoint('script.js', 1)`, `sb(...)` - script.js의 첫 라인에 breakpoint를 설정한다.
 * `clearBreakpoint`, `cb(...)` - breakpoint를 제거
 
 ### Info
+
+<!--english start-->
 
 * `backtrace`, `bt` - Print backtrace of current execution frame
 * `list(5)` - List scripts source code with 5 line context (5 lines before and
@@ -202,6 +220,8 @@ after)
 breakpoint)
 * `repl` - Open debugger's repl for evaluation in debugging script's context
 
+<!--english end-->
+
 * `backtrace`, `bt` - 현 execution의 backtrace를 출력한다.
 * `list(5)` - 스크립트 소스코드를 다섯 라인 나열한다. 다섯 라인은 현재 멈춘 컨텍스트 전후에 있는 라인을 의미한다.
 * `watch(expr)` - watch 목록에 표현식을 넣는다.
@@ -211,9 +231,13 @@ breakpoint)
 
 ### Execution control
 
+<!--english start-->
+
 * `run` - Run script (automatically runs on debugger's start)
 * `restart` - Restart script
 * `kill` - Kill script
+
+<!--english end-->
 
 * `run` - 스크립트 실행 (디버거를 실행하면 자동으로 이 명령이 수행된다)
 * `restart` - 스크립트 재시작
@@ -221,17 +245,25 @@ breakpoint)
 
 ### Various
 
+<!--english start-->
+
 * `scripts` - List all loaded scripts
 * `version` - Display v8's version
+
+<!--english end-->
 
 * `scripts` - 열린 스크립트를 모두 보여준다.
 * `version` - v8의 버전을 보여준다.
 
 ## Advanced Usage
 
+<!--english start-->
+
 The V8 debugger can be enabled and accessed either by starting Node with
 the `--debug` command-line flag or by signaling an existing Node process
 with `SIGUSR1`.
+
+<!--english end-->
 
 커맨드 라인에서 `--debug` 플래그 주고 Node를 실행하면 V8 디버거가 켜진다. 또 이미 실행중인 Node 프로세스에 `SIGUSR1` 시그널을 보내면 V8 디버거가 켜지고 접근해서 사용할 수 있다.
 

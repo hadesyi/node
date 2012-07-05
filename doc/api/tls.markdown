@@ -1,5 +1,7 @@
 # TLS (SSL)
 
+<!--english start-->
+
     Stability: 3 - Stable
 
 Use `require('tls')` to access this module.
@@ -37,6 +39,8 @@ To create .pfx or .p12, do this:
   - `inkey`: private key
   - `certfile`: all CA certs concatenated in one file like
     `cat ca1-cert.pem ca2-cert.pem > ca-cert.pem`
+
+<!--english end-->
 
     안정성: 3 - Stable
 
@@ -78,6 +82,8 @@ CSR로 자체서명 인증서를 생성하려면 다음과 같이 한다.
 
 ## Client-initiated renegotiation attack mitigation
 
+<!--english start-->
+
 <!-- type=misc -->
 
 The TLS protocol lets the client renegotiate certain aspects of the TLS session.
@@ -99,6 +105,8 @@ Don't change the defaults unless you know what you are doing.
 To test your server, connect to it with `openssl s_client -connect address:port`
 and tap `R<CR>` (that's the letter `R` followed by a carriage return) a few
 times.
+
+<!--english end-->
 
 <!-- type=misc -->
 
@@ -122,6 +130,8 @@ DoS(denial-of-service) 공격의 잠재적인 요소인 서버측 리소스의 �
 
 ## NPN and SNI
 
+<!--english start-->
+
 <!-- type=misc -->
 
 NPN (Next Protocol Negotiation) and SNI (Server Name Indication) are TLS
@@ -130,6 +140,8 @@ handshake extensions allowing you:
   * NPN - to use one TLS server for multiple protocols (HTTP, SPDY)
   * SNI - to use one TLS server for multiple hostnames with different SSL
     certificates.
+
+<!--english end-->
 
 <!-- type=misc -->
 
@@ -141,6 +153,8 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
 
 
 ## tls.createServer(options, [secureConnectionListener])
+
+<!--english start-->
 
 Creates a new [tls.Server](#tls.Server).
 The `connectionListener` argument is automatically set as a listener for the
@@ -244,6 +258,8 @@ You can test this server by connecting to it with `openssl s_client`:
 
     openssl s_client -connect 127.0.0.1:8000
 
+<!--english end-->
+
 새로운 [tls.Server](#tls.Server)를 생성한다.
 `connectionListener` 아규먼트는 자동적으로 [secureConnection](#event_secureConnection_) 
 이벤트의 리스너로 설정된다. 
@@ -345,6 +361,8 @@ You can test this server by connecting to it with `openssl s_client`:
 
 ## tls.connect(port, [host], [options], [secureConnectListener])
 
+<!--english start-->
+
 Creates a new client connection to the given `port` and `host`. (If `host`
 defaults to `localhost`.) `options` should be an object which specifies
 
@@ -431,6 +449,8 @@ Or
       server.close();
     });
 
+<!--english end-->
+
 전달한 `port`와 `host`로 새로운 클라이언트 연결을 생성한다. (`host`를 지정하지 않으면
 기본값은 `localhost`이다.) `options`는 지정된 객체여야 한다.
 
@@ -516,6 +536,8 @@ Or
 
 ## tls.createSecurePair([credentials], [isServer], [requestCert], [rejectUnauthorized])
 
+<!--english start-->
+
 Creates a new secure pair object with two streams, one of which reads/writes
 encrypted data, and one reads/writes cleartext data.
 Generally the encrypted one is piped to/from an incoming encrypted data stream,
@@ -535,6 +557,8 @@ and the cleartext one is used as a replacement for the initial encrypted stream.
 
 `tls.createSecurePair()` returns a SecurePair object with
 [cleartext](#tls.CleartextStream) and `encrypted` stream properties.
+
+<!--english end-->
 
 두 스트림으로 새 안정한 쌍(pair) 객체를 생성한다. 두 스트림 중 하나는 암호화된 데이터를 
 읽고 쓰고 다른 하나는 평문 데이터를 읽고 쓴다.
@@ -556,11 +580,17 @@ and the cleartext one is used as a replacement for the initial encrypted stream.
 
 ## Class: SecurePair
 
+<!--english start-->
+
 Returned by tls.createSecurePair.
+
+<!--english end-->
 
 tls.createSecurePair가 반환하는 클래스다.
 
 ### Event: 'secure'
+
+<!--english start-->
 
 The event is emitted from the SecurePair once the pair has successfully
 established a secure connection.
@@ -569,6 +599,8 @@ Similarly to the checking for the server 'secureConnection' event,
 pair.cleartext.authorized should be checked to confirm whether the certificate
 used properly authorized.
 
+<!--english end-->
+
 쌍이 성공적으로 안전한 연결을 수립했을 때 SecurePair가 발생시키는 이벤트이다.
 
 서버의 'secureConnection' 이벤트를 확인하는 것과 비슷하게 pair.cleartext.authorized는 
@@ -576,15 +608,21 @@ used properly authorized.
 
 ## Class: tls.Server
 
+<!--english start-->
+
 This class is a subclass of `net.Server` and has the same methods on it.
 Instead of accepting just raw TCP connections, this accepts encrypted
 connections using TLS or SSL.
+
+<!--english end-->
 
 `net.Server`의 하위클래스이고 `net.Server`와 같은 메서드를 가진다.
 그냥 로우(raw) TCP 연결을 받아들이는 대신 TLS나 SSL을 사용해서 암호화된 연결을
 받아들인다.
 
 ### Event: 'secureConnection'
+
+<!--english start-->
 
 `function (cleartextStream) {}`
 
@@ -603,6 +641,8 @@ server, you unauthorized connections may be accepted.
 `cleartextStream.servername` is a string containing servername requested with
 SNI.
 
+<!--english end-->
+
 `function (cleartextStream) {}`
 
 새로운 연결이 성공적으로 핸드쉐이크를 했을 때 발생하는 이벤트이다. 아규먼트는 
@@ -619,10 +659,14 @@ SNI.
 
 ### Event: 'clientError'
 
+<!--english start-->
+
 `function (exception) { }`
 
 When a client connection emits an 'error' event before secure connection is
 established - it will be forwarded here.
+
+<!--english end-->
 
 `function (exception) { }`
 
@@ -632,6 +676,8 @@ established - it will be forwarded here.
 
 ### server.listen(port, [host], [callback])
 
+<!--english start-->
+
 Begin accepting connections on the specified `port` and `host`.  If the
 `host` is omitted, the server will accept connections directed to any
 IPv4 address (`INADDR_ANY`).
@@ -640,6 +686,8 @@ This function is asynchronous. The last parameter `callback` will be called
 when the server has been bound.
 
 See `net.Server` for more information.
+
+<!--english end-->
 
 지정한 `port`와 `host`로 연결을 받아들이기 시작한다. `host`를 생략하면 서버는 모든 
 IPv4 주소(`INADDR_ANY`)에서 직접 연결을 받아들일 것이다.
@@ -652,27 +700,39 @@ IPv4 주소(`INADDR_ANY`)에서 직접 연결을 받아들일 것이다.
 
 ### server.close()
 
+<!--english start-->
+
 Stops the server from accepting new connections. This function is
 asynchronous, the server is finally closed when the server emits a `'close'`
 event.
+
+<!--english end-->
 
 서버가 새로운 연결을 받아들이는 것을 멈춤다. 이 함수는 비동기 함수이고 서버가 `'close'`
 이벤트를 발생시켰을 때 결국 닫힌다.
 
 ### server.address()
 
+<!--english start-->
+
 Returns the bound address and port of the server as reported by the operating
 system.
 See [net.Server.address()](net.html#server.address) for more information.
+
+<!--english end-->
 
 운영체제에서 보고된 서버가 바인딩된 주소와 포트를 반환한다.
 더 자세한 내용은 [net.Server.address()](net.html#server.address)를 봐라.
 
 ### server.addContext(hostname, credentials)
 
+<!--english start-->
+
 Add secure context that will be used if client request's SNI hostname is
 matching passed `hostname` (wildcards can be used). `credentials` can contain
 `key`, `cert` and `ca`.
+
+<!--english end-->
 
 클라이언트 요청의 SNI 호스트이름이 전달한 `hostname`(와일드카드도 사용할 수 있다.)와 
 일치하는 경우 사용할 안전한 컨텍스트를 추가한다. `credentials`은 `key`, `cert`, `ca`를 
@@ -680,19 +740,29 @@ matching passed `hostname` (wildcards can be used). `credentials` can contain
 
 ### server.maxConnections
 
+<!--english start-->
+
 Set this property to reject connections when the server's connection count
 gets high.
+
+<!--english end-->
 
 서버의 연결수가 많아졌을 때 연결을 거절하려면 이 프로퍼티를 설정해라.
 
 ### server.connections
 
+<!--english start-->
+
 The number of concurrent connections on the server.
+
+<!--english end-->
 
 서버의 현재 연결 수
 
 
 ## Class: tls.CleartextStream
+
+<!--english start-->
 
 This is a stream on top of the *Encrypted* stream that makes it possible to
 read/write an encrypted data as a cleartext data.
@@ -701,6 +771,8 @@ This instance implements a duplex [Stream](stream.html) interfaces.
 It has all the common stream methods and events.
 
 A ClearTextStream is the `clear` member of a SecurePair object.
+
+<!--english end-->
 
 평문 데이터와 같이 암호화된 데이터도 읽고 쓸 수 있도록 *암호화된* 스트림에 기반을 둔 
 스트림이다.
@@ -712,6 +784,8 @@ ClearTextStream는 SecurePair 객체의 `clear` 멤버이다.
 
 ### Event: 'secureConnect'
 
+<!--english start-->
+
 This event is emitted after a new connection has been successfully handshaked. 
 The listener will be called no matter if the server's certificate was
 authorized or not. It is up to the user to test `cleartextStream.authorized`
@@ -719,6 +793,8 @@ to see if the server certificate was signed by one of the specified CAs.
 If `cleartextStream.authorized === false` then the error can be found in
 `cleartextStream.authorizationError`. Also if NPN was used - you can check
 `cleartextStream.npnProtocol` for negotiated protocol.
+
+<!--english end-->
 
 새로운 연결이 성공적으로 핸드쉐이크를 했을 때 발생하는 이벤트이다.
 리스너는 서버의 인증서가 권한 부여를 받았는 지에 상관없이 호출될 것이다. 이는 서버 인증서가 
@@ -729,21 +805,31 @@ If `cleartextStream.authorized === false` then the error can be found in
 
 ### cleartextStream.authorized
 
+<!--english start-->
+
 A boolean that is `true` if the peer certificate was signed by one of the
 specified CAs, otherwise `false`
+
+<!--english end-->
 
 피어(peer) 인증서가 지정한 CA중에 하나로 서명되었으면 `true` 그렇지 않으면 `false`인
 불리언이다.
 
 ### cleartextStream.authorizationError
 
+<!--english start-->
+
 The reason why the peer's certificate has not been verified. This property
 becomes available only when `cleartextStream.authorized === false`.
+
+<!--english end-->
 
 왜 피어(peer)의 인증서가 검증되지 못했는 지에 대한 내용이다. 이 프로퍼티는 
 `cleartextStream.authorized === false`인 경우에만 사용할 수 있다.
 
 ### cleartextStream.getPeerCertificate()
+
+<!--english start-->
 
 Returns an object representing the peer's certificate. The returned object has
 some properties corresponding to the field of the certificate.
@@ -770,6 +856,8 @@ Example:
 
 If the peer does not provide a certificate, it returns `null` or an empty
 object.
+
+<!--english end-->
 
 피어(peer)의 인증서를 나타내는 객체를 반환한다. 반환된 객체는 인증서의 필드와 대응되는 
 몇몇 프로퍼티를 가지고 있다.
@@ -798,23 +886,35 @@ object.
 
 ### cleartextStream.address()
 
+<!--english start-->
+
 Returns the bound address and port of the underlying socket as reported by the
 operating system. Returns an object with two properties, e.g.
 `{"address":"192.168.57.1", "port":62053}`
+
+<!--english end-->
 
 운영체제가 보고했듯이 기반하는 소켓의 바인딩된 주소와 포트를 반환한다. 다음과 같이 두 가지 
 프로퍼티를 가진 객체를 반환한다. `{"address":"192.168.57.1", "port":62053}`
 
 ### cleartextStream.remoteAddress
 
+<!--english start-->
+
 The string representation of the remote IP address. For example,
 `'74.125.127.100'` or `'2001:4860:a005::68'`.
+
+<!--english end-->
 
 원격 IP 주소를 나타내는 문자열이다. 예를 들면 `'74.125.127.100'`나 
 `'2001:4860:a005::68'`이다.
 
 ### cleartextStream.remotePort
 
+<!--english start-->
+
 The numeric representation of the remote port. For example, `443`.
+
+<!--english end-->
 
 원격 포트르르 나태내는 숫자다. 예를 들면 `443`.

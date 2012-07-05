@@ -1,5 +1,7 @@
 # Synopsis
 
+<!--english start-->
+
 <!--type=misc-->
 
 An example of a [web server](http.html) written with Node which responds with 'Hello
@@ -21,6 +23,8 @@ it with the node program
     Server running at http://127.0.0.1:8124/
 
 All of the examples in the documentation can be run similarly.
+
+<!--english end-->
 
 <!--type=misc-->
 

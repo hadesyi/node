@@ -1,5 +1,7 @@
 # About this Documentation
 
+<!--english start-->
+
 <!-- type=misc -->
 
 The goal of this documentation is to comprehensively explain the Node.js
@@ -20,6 +22,8 @@ Every `.html` and `.json` file is generated based on the corresponding
 documentation is generated using the `tools/doc/generate.js` program.
 The HTML template is located at `doc/template.html`.
 
+<!--english end-->
+
 <!-- type=misc -->
 
 이 문서의 목적은 Node.js API를 레퍼런스부터 개념적인 부분까지 광범위하게 설명하는 
@@ -37,6 +41,8 @@ The HTML template is located at `doc/template.html`.
 프로그램을 사용해서 생성한다. HTML 템플릿은 `doc/template.html`에 있다.
 
 ## Stability Index
+
+<!--english start-->
 
 <!--type=misc-->
 
@@ -74,6 +80,8 @@ unlikely to ever have to change.
 * **5 - Locked**  Unless serious bugs are found, this code will not ever
 change.  Please do not suggest changes in this area; they will be refused.
 
+<!--english end-->
+
 <!--type=misc-->
 
 문서 전체에서 섹션의 안정성 지표를 볼 것이다. Node.js API는 아직도 조금씩 바뀌고 
@@ -109,12 +117,16 @@ change.  Please do not suggest changes in this area; they will be refused.
 
 ## JSON Output
 
+<!--english start-->
+
     Stability: 1 - Experimental
 
 Every HTML file in the markdown has a corresponding JSON file with the
 same data.
 
 This feature is new as of node v0.6.12.  It is experimental.
+
+<!--english end-->
 
     안정성: 1 - Experimental
 

@@ -9,7 +9,7 @@
 // following conditions:
 //
 // The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
+
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 // OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -54,6 +54,7 @@ function render(lexed, filename, template, cb) {
     // content has to be the last thing we do with
     // the lexed tokens, because it's destructive.
     content = marked.parser(lexed);
+    content = content.replace(/<!--english start-->/g, "<aside>").replace(/<!--english end-->/g, "</aside>");
     template = template.replace(/__CONTENT__/g, content);
 
     cb(null, template);

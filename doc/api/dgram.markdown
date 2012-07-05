@@ -1,18 +1,24 @@
 # UDP / Datagram Sockets
 
+<!--english start-->
+
     Stability: 3 - Stable
 
 <!-- name=dgram -->
 
 Datagram sockets are available through `require('dgram')`.
 
-    안정선: 3 - Stable
+<!--english end-->
+
+    안정성: 3 - Stable
 
 <!-- name=dgram -->
 
 데이터그램 소켓은 `require('dgram')`로 사용할 수 있다.
 
 ## dgram.createSocket(type, [callback])
+
+<!--english start-->
 
 * `type` String. Either 'udp4' or 'udp6'
 * `callback` Function. Attached as a listener to `message` events.
@@ -28,6 +34,8 @@ Call `socket.bind` if you want to receive datagrams. `socket.bind()` will bind
 to the "all interfaces" address on a random port (it does the right thing for
 both `udp4` and `udp6` sockets). You can then retrieve the address and port
 with `socket.address().address` and `socket.address().port`.
+
+<!--english end-->
 
 * `type` 문자열. 'udp4'나 'udp6'
 * `callback` 함수. `message` 이벤트에 리스너로 추가된다.
@@ -45,19 +53,27 @@ with `socket.address().address` and `socket.address().port`.
 
 ## Class: Socket
 
+<!--english start-->
+
 The dgram Socket class encapsulates the datagram functionality.  It
 should be created via `dgram.createSocket(type, [callback])`.
+
+<!--english end-->
 
 dgram Socket 클래스는 데이터그램 기능을 은닉화한다. 이 클래스는 
 `dgram.createSocket(type, [callback])`를 통해서 생성되어야 한다.
 
 ### Event: 'message'
 
+<!--english start-->
+
 * `msg` Buffer object. The message
 * `rinfo` Object. Remote address information
 
 Emitted when a new datagram is available on a socket.  `msg` is a `Buffer` and `rinfo` is
 an object with the sender's address information and the number of bytes in the datagram.
+
+<!--english end-->
 
 * `msg` Buffer 객체. 메시지
 * `rinfo` 객체. 원격 주소 정보
@@ -67,29 +83,43 @@ an object with the sender's address information and the number of bytes in the d
 
 ### Event: 'listening'
 
+<!--english start-->
+
 Emitted when a socket starts listening for datagrams.  This happens as soon as UDP sockets
 are created.
+
+<!--english end-->
 
 소켓이 데이트그램을 받기 시작했을 때 발생한다. 이는 UDP 소켓이 생성되자마자 발생한다.
 
 ### Event: 'close'
 
+<!--english start-->
+
 Emitted when a socket is closed with `close()`.  No new `message` events will be emitted
 on this socket.
+
+<!--english end-->
 
 소켓이 `close()`로 닫혔을 때 발생한다. 소켓에서 더이상 새로운 `message` 이벤트가 발생하지 않는다.
 
 ### Event: 'error'
 
+<!--english start-->
+
 * `exception` Error object
 
 Emitted when an error occurs.
+
+<!--english end-->
 
 * `exception` Error 객체
 
 오류가 생겼을 때 발생한다. 
 
 ### dgram.send(buf, offset, length, port, address, [callback])
+
+<!--english start-->
 
 * `buf` Buffer object.  Message to be sent
 * `offset` Integer. Offset in the buffer where the message starts.
@@ -145,6 +175,8 @@ a packet might travel, and that generally sending a datagram greater than
 the (receiver) `MTU` won't work (the packet gets silently dropped, without
 informing the source that the data did not reach its intended recipient).
 
+<!--english end-->
+
 * `buf` Buffer 객체.  보내는 메시지다
 * `offset` 정수. 버퍼에서 메시지가 시작되는 오프셋.
 * `length` 정수. 메시지의 바이트 수
@@ -197,6 +229,8 @@ UDP 소켓에서 목적지 포트와 IP 주소는 반드시 지정해야 한다.
 
 ### dgram.bind(port, [address])
 
+<!--english start-->
+
 * `port` Integer
 * `address` String, Optional
 
@@ -222,6 +256,8 @@ Example of a UDP server listening on port 41234:
 
     server.bind(41234);
     // server listening 0.0.0.0:41234
+
+<!--english end-->
 
 * `port` 정수
 * `address` 문자열, 선택사항
@@ -252,24 +288,36 @@ UDP 서버가 41234 포트에서 받는 예제:
 
 ### dgram.close()
 
+<!--english start-->
+
 Close the underlying socket and stop listening for data on it.
+
+<!--english end-->
 
 의존하는 소켓을 닫고 소켓에서 데이터를 받는 것을 멈춘다.
 
 ### dgram.address()
 
+<!--english start-->
+
 Returns an object containing the address information for a socket.  For UDP sockets,
 this object will contain `address` and `port`.
+
+<!--english end-->
 
 소켓에 대한 주소 정보를 담고 있는 객체를 반환한다. UDP 소켓에서 이 객체는 
 `address`와 `port`를 담고 있을 것이다.
 
 ### dgram.setBroadcast(flag)
 
+<!--english start-->
+
 * `flag` Boolean
 
 Sets or clears the `SO_BROADCAST` socket option.  When this option is set, UDP packets
 may be sent to a local interface's broadcast address.
+
+<!--english end-->
 
 * `flag` 불리언
 
@@ -277,6 +325,8 @@ may be sent to a local interface's broadcast address.
 주소로 UDP 패킷을 보낼 것이다.
 
 ### dgram.setTTL(ttl)
+
+<!--english start-->
 
 * `ttl` Integer
 
@@ -289,6 +339,8 @@ probes or when multicasting.
 The argument to `setTTL()` is a number of hops between 1 and 255.  The default on most
 systems is 64.
 
+<!--english end-->
+
 * `ttl` 정수
 
 `IP_TTL` 소켓 옵션을 설정한다. TTL은 "Time to Live"를 의미하지만 이 상황에서 TTL은 패킷이 
@@ -300,6 +352,8 @@ systems is 64.
 
 ### dgram.setMulticastTTL(ttl)
 
+<!--english start-->
+
 * `ttl` Integer
 
 Sets the `IP_MULTICAST_TTL` socket option.  TTL stands for "Time to Live," but in this
@@ -309,6 +363,8 @@ decrements the TTL. If the TTL is decremented to 0 by a router, it will not be f
 
 The argument to `setMulticastTTL()` is a number of hops between 0 and 255.  The default on most
 systems is 64.
+
+<!--english end-->
 
 * `ttl` 정수
 
@@ -321,10 +377,14 @@ systems is 64.
 
 ### dgram.setMulticastLoopback(flag)
 
+<!--english start-->
+
 * `flag` Boolean
 
 Sets or clears the `IP_MULTICAST_LOOP` socket option.  When this option is set, multicast
 packets will also be received on the local interface.
+
+<!--english end-->
 
 * `flag` 불리언
 
@@ -333,6 +393,8 @@ packets will also be received on the local interface.
 
 ### dgram.addMembership(multicastAddress, [multicastInterface])
 
+<!--english start-->
+
 * `multicastAddress` String
 * `multicastInterface` String, Optional
 
@@ -340,6 +402,8 @@ Tells the kernel to join a multicast group with `IP_ADD_MEMBERSHIP` socket optio
 
 If `multicastInterface` is not specified, the OS will try to add membership to all valid
 interfaces.
+
+<!--english end-->
 
 * `multicastAddress` 문자열
 * `multicastInterface` 문자열, 선택사항
@@ -351,6 +415,8 @@ interfaces.
 
 ### dgram.dropMembership(multicastAddress, [multicastInterface])
 
+<!--english start-->
+
 * `multicastAddress` String
 * `multicastInterface` String, Optional
 
@@ -361,6 +427,8 @@ this.
 
 If `multicastInterface` is not specified, the OS will try to drop membership to all valid
 interfaces.
+
+<!--english end-->
 
 * `multicastAddress` 문자열
 * `multicastInterface` 문자열, 선택사항

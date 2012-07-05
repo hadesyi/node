@@ -1,5 +1,7 @@
 # Addons
 
+<!--english start-->
+
 Addons are dynamically linked shared objects. They can provide glue to C and
 C++ libraries. The API (at the moment) is rather complex, involving
 knowledge of several libraries:
@@ -24,6 +26,8 @@ compiling your module, you don't need to worry about linking to any of these
 libraries.
 
 
+<!--english end-->
+
 애드온은 동적으로 공유 객체를 연결합니다. 애드온은 C나 C++ 라이브러리에 연결할 수 있다.
 API는(현 시점에) 여러 가지 라이브러리에 대한 지식을 포함해서 상당히 복잡하다.
 
@@ -47,6 +51,8 @@ Node는 실행가능하도록 모든 의존성을 정적으로 컴파일한다. 
 
 
 ## Hello world
+
+<!--english start-->
 
 To get started let's make a small Addon which is the C++ equivalent of
 the following Javascript code:
@@ -118,6 +124,8 @@ Please see patterns below for further information or
 <https://github.com/pietern/hiredis-node> for an example in production.
 
 
+<!--english end-->
+
 다음 자바스크립트 코드와 동일한 작은 애드온을 C++로 작성하면서 시작해 보자.
 
     exports.hello = function() { return 'world'; };
@@ -186,6 +194,8 @@ Please see patterns below for further information or
 
 ## Addon patterns
 
+<!--english start-->
+
 Below are some addon patterns to help you get started. Consult the online
 [v8 reference](http://izs.me/v8-docs/main.html) for help with the various v8
 calls, and v8's [Embedder's Guide](http://code.google.com/apis/v8/embed.html)
@@ -216,6 +226,8 @@ In cases where there is more than one `.cc` file, simply add the file name to th
 
     obj.source = ['addon.cc', 'myexample.cc']
 
+
+<!--english end-->
 
 다음은 애드온 개발을 시작할 때 도움이 될만한 애드폰 패턴들이다. 여러 가지 v8 호출에 대해서는 
 온라인 [v8 reference](http://izs.me/v8-docs/main.html)를 참고하고 핸들, 범위, 함수 템플릿 
@@ -248,6 +260,8 @@ In cases where there is more than one `.cc` file, simply add the file name to th
 
 
 ### Function arguments
+
+<!--english start-->
 
 The following pattern illustrates how to read arguments from JavaScript
 function calls and return a result. This is the main and only needed source
@@ -289,6 +303,8 @@ You can test it with the following JavaScript snippet:
 
     console.log( 'This should be eight:', addon.add(3,5) );
 
+
+<!--english end-->
 
 다음 패턴은 자바스크립트 함수 호출에서 어떻게 아규먼트들을 읽고 결과를 리턴하는 지 보여준다.
 다음 파일이 메인파일이고 소스파일인 `addon.cc`만 필요하다.
@@ -332,6 +348,8 @@ You can test it with the following JavaScript snippet:
 
 ### Callbacks
 
+<!--english start-->
+
 You can pass JavaScript functions to a C++ function and execute them from
 there. Here's `addon.cc`:
 
@@ -366,6 +384,8 @@ To test it run the following JavaScript snippet:
       console.log(msg); // 'hello world'
     });
 
+
+<!--english end-->
 
 C++ 함수에 자바스크립트 함수를 전달해서 C++ 함수에서 자바스크립트 함수를 실행할 수 
 있다. 다음은 `addon.cc`이다:
@@ -404,6 +424,8 @@ C++ 함수에 자바스크립트 함수를 전달해서 C++ 함수에서 자바�
 
 ### Object factory
 
+<!--english start-->
+
 You can create and return new objects from within a C++ function with this
 `addon.cc` pattern, which returns an object with property `msg` that echoes
 the string passed to `createObject()`:
@@ -437,6 +459,8 @@ To test it in JavaScript:
     var obj2 = addon.createObject('world');
     console.log(obj1.msg+' '+obj2.msg); // 'hello world'
 
+
+<!--english end-->
 
 `createObject()`에 전달된 문자열을 출력하는 `msg` 프로퍼티를 가진 객체를 리턴하는 
 이 `addon.cc` 패턴과 함께 C++ 함수내에서 새로운 객체를 생성해서 리턴할 수 있다. 
@@ -472,6 +496,8 @@ To test it in JavaScript:
 
 
 ### Function factory
+
+<!--english start-->
 
 This pattern illustrates how to create and return a JavaScript function that
 wraps a C++ function:
@@ -512,6 +538,8 @@ To test:
     console.log(fn()); // 'hello world'
 
 
+<!--english end-->
+
 이 패턴은 C++ 함수를 감싸는 자바스크립트 함수를 어떻게 생성하고 리턴하는지 보여준다:
 
     #define BUILDING_NODE_EXTENSION
@@ -551,6 +579,8 @@ To test:
 
 
 ### Wrapping C++ objects
+
+<!--english start-->
 
 Here we will create a wrapper for a C++ object/class `MyObject` that can be
 instantiated in JavaScript through the `new` operator. First prepare the main
@@ -645,6 +675,8 @@ Test it with:
     console.log( obj.plusOne() ); // 13
 
 
+<!--english end-->
+
 `new` 오퍼레이터로 자바스크립트에서 인스턴스화할 수 있는 `MyObject` C++ 객체/클래스에 대한
 랩퍼(wrapper)를 생성할 것이다. 우선 메인 모듈 `addon.cc`를 준비하자.
 
@@ -737,6 +769,8 @@ Test it with:
 
 
 ### Factory of wrapped objects
+
+<!--english start-->
 
 This is useful when you want to be able to create native objects without
 explicitly instantiating them with the `new` operator in JavaScript, e.g.
@@ -861,6 +895,8 @@ Test it with:
     console.log( obj2.plusOne() ); // 22
     console.log( obj2.plusOne() ); // 23
 
+
+<!--english end-->
 
 이는 자바스크립트에서 `new` 오퍼레이터로 명시적인 인스턴스화 없이 네이티브 객체를 
 생성할 수 있도록 하고 싶을 때 유용하다.
@@ -988,6 +1024,8 @@ Test it with:
 
 ### Passing wrapped objects around
 
+<!--english start-->
+
 In addition to wrapping and returning C++ objects, you can pass them around
 by unwrapping them with Node's `node::ObjectWrap::Unwrap` helper function.
 In the following `addon.cc` we introduce a function `add()` that can take on two
@@ -1105,6 +1143,8 @@ Test it with:
     var result = addon.add(obj1, obj2);
 
     console.log(result); // 30
+
+<!--english end-->
 
 C++ 객체를 감싸고 리턴하는 부분에 대해서 추가적으로 Node의 `node::ObjectWrap::Unwrap`
 헬퍼 함수로 이 객체들을 풀어줌으로써(unwrapping) 전달할 수 있다.

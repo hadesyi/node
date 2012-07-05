@@ -1,5 +1,7 @@
 # REPL
 
+<!--english start-->
+
 A Read-Eval-Print-Loop (REPL) is available both as a standalone program and easily
 includable in other programs.  REPL provides a way to interactively run
 JavaScript and see the results.  It can be used for debugging, testing, or
@@ -25,6 +27,8 @@ This will start the REPL in canonical terminal settings which will allow you to 
 For example, you could add this to your bashrc file:
 
     alias node="env NODE_NO_READLINE=1 rlwrap node"
+
+<!--english end-->
 
 Read-Eval-Print-Loop (REPL)는 단독 프로그램과 다른 프로그램에 쉽게 포함해서 사용할 수 있다.
 REPL은 자바스크립트를 실행하고 결과를 보는 대화식 방법을 제공한다. 이는 디버깅, 테스팅이나 
@@ -53,6 +57,8 @@ REPL은 극도로 단순한 emacs 라인수정을 가진다.
 
 
 ## repl.start([prompt], [stream], [eval], [useGlobal], [ignoreUndefined])
+
+<!--english start-->
 
 Starts a REPL with `prompt` as the prompt and `stream` for all I/O.  `prompt`
 is optional and defaults to `> `.  `stream` is optional and defaults to
@@ -102,6 +108,8 @@ By starting a REPL from a Unix socket-based server instead of stdin, you can
 connect to a long-running node process without restarting it.
 
 
+<!--english end-->
+
 모든 I/O에 대한 프롬프트와 `stream`처럼 `prompt`로 REPL을 시작해라. `prompt`는 
 선택사항이고 기본적으로 `> `이다. `stream`는 선택적이고 기본값은 `process.stdin`이다. 
 `eval`도 선택적이고 기본적으로 `eval()`에 대한 비동기 랩퍼다.
@@ -149,6 +157,8 @@ stdin 대신 Unix 소켓에 기반한 서버에서 REPL을 시작하면 재시�
 
 
 ## REPL Features
+
+<!--english start-->
 
 <!-- type=misc -->
 
@@ -199,6 +209,8 @@ The following key combinations in the REPL have these special effects:
     command.  Press twice on a blank line to forcibly exit.
   - `<ctrl>D` - Similar to the `.exit` keyword.
 
+
+<!--english end-->
 
 <!-- type=misc -->
 

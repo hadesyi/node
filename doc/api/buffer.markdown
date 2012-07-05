@@ -1,5 +1,7 @@
 # Buffer
 
+<!--english start-->
+
     Stability: 3 - Stable
 
 Pure Javascript is Unicode friendly but not nice to binary data.  When
@@ -37,6 +39,8 @@ encoding method.  Here are the different string encodings.
 
 * `'hex'` - Encode each byte as two hexidecimal characters.
 
+<!--english end-->
+
     안정성: 3 - Stable
 
 자바스크립트 자체는 유니코드에 친화적이지만 바이너리 데이터에는 별로 좋지 않다. TCP 
@@ -72,17 +76,25 @@ encoding method.  Here are the different string encodings.
 
 ## Class: Buffer
 
+<!--english start-->
+
 The Buffer class is a global type for dealing with binary data directly.
 It can be constructed in a variety of ways.
+
+<!--english end-->
 
 Buffer 클래스는 바이너리 데이터를 직접 다루는 글로벌 타입니다.
 다양한 방법으로 생성할 수 있다.
 
 ### new Buffer(size)
 
+<!--english start-->
+
 * `size` Number
 
 Allocates a new buffer of `size` octets.
+
+<!--english end-->
 
 * `size` 숫자
 
@@ -90,9 +102,13 @@ Allocates a new buffer of `size` octets.
 
 ### new Buffer(array)
 
+<!--english start-->
+
 * `array` Array
 
 Allocates a new buffer using an `array` of octets.
+
+<!--english end-->
 
 * `array` 배열
 
@@ -100,11 +116,15 @@ Allocates a new buffer using an `array` of octets.
 
 ### new Buffer(str, [encoding])
 
+<!--english start-->
+
 * `str` String - string to encode.
 * `encoding` String - encoding to use, Optional.
 
 Allocates a new buffer containing the given `str`.
 `encoding` defaults to `'utf8'`.
+
+<!--english end-->
 
 * `str` 문자열 - 인코딩할 문자열.
 * `encoding` 문자열 - 사용할 인코딩(선택사항).
@@ -113,6 +133,8 @@ Allocates a new buffer containing the given `str`.
 `encoding`의 기본값은 `'utf8'`이다.
 
 ### buf.write(string, [offset], [length], [encoding])
+
+<!--english start-->
 
 * `string` String - data to be written to buffer
 * `offset` Number, Optional, Default: 0
@@ -134,6 +156,8 @@ The number of characters written (which may be different than the number of
 bytes written) is set in `Buffer._charsWritten` and will be overwritten the
 next time `buf.write()` is called.
 
+
+<!--english end-->
 
 * `string` 문자열 - 버퍼에 작성할 데이터
 * `offset` 숫자, 선택사항, 기본값: 0
@@ -157,6 +181,8 @@ next time `buf.write()` is called.
 
 ### buf.toString([encoding], [start], [end])
 
+<!--english start-->
+
 * `encoding` String, Optional, Default: 'utf8'
 * `start` Number, Optional, Default: 0
 * `end` Number, Optional, Default: `buffer.length`
@@ -166,6 +192,8 @@ Decodes and returns a string from buffer data encoded with `encoding`
 `end` (defaults to `buffer.length`).
 
 See `buffer.write()` example, above.
+
+<!--english end-->
 
 * `encoding` 문자열, 선택사항, 기본값: 'utf8'
 * `start` 숫자, 선택사항, 기본값: 0
@@ -178,6 +206,8 @@ See `buffer.write()` example, above.
 
 
 ### buf[index]
+
+<!--english start-->
 
 <!--type=property-->
 <!--name=[index]-->
@@ -197,6 +227,8 @@ Example: copy an ASCII string into a buffer, one byte at a time:
     console.log(buf);
 
     // node.js
+
+<!--english end-->
 
 <!--type=property-->
 <!--name=[index]-->
@@ -219,10 +251,14 @@ Example: copy an ASCII string into a buffer, one byte at a time:
 
 ### Class Method: Buffer.isBuffer(obj)
 
+<!--english start-->
+
 * `obj` Object
 * Return: Boolean
 
 Tests if `obj` is a `Buffer`.
+
+<!--english end-->
 
 * `obj` 객체
 * 반환타입: 불리언
@@ -230,6 +266,8 @@ Tests if `obj` is a `Buffer`.
 `obj`가 `Buffer`인지 확인한다.
 
 ### Class Method: Buffer.byteLength(string, [encoding])
+
+<!--english start-->
 
 * `string` String
 * `encoding` String, Optional, Default: 'utf8'
@@ -247,6 +285,8 @@ Example:
       Buffer.byteLength(str, 'utf8') + " bytes");
 
     // ½ + ¼ = ¾: 9 characters, 12 bytes
+
+<!--english end-->
 
 * `string` 문자열
 * `encoding` 문자열, 선택사항, 기본값: 'utf8'
@@ -267,6 +307,8 @@ Example:
 
 ### buf.length
 
+<!--english start-->
+
 * Number
 
 The size of the buffer in bytes.  Note that this is not necessarily the size
@@ -281,6 +323,8 @@ buffer object.  It does not change when the contents of the buffer are changed.
 
     // 1234
     // 1234
+
+<!--english end-->
 
 * 숫자
 
@@ -298,6 +342,8 @@ buffer object.  It does not change when the contents of the buffer are changed.
     // 1234
 
 ### buf.copy(targetBuffer, [targetStart], [sourceStart], [sourceEnd])
+
+<!--english start-->
 
 * `targetBuffer` Buffer object - Buffer to copy into
 * `targetStart` Number, Optional, Default: 0
@@ -324,6 +370,8 @@ into `buf2`, starting at the 8th byte in `buf2`.
 
     // !!!!!!!!qrst!!!!!!!!!!!!!
 
+
+<!--english end-->
 
 * `targetBuffer` Buffer 객체 - 복사할 Buffer다
 * `targetStart` 숫자, 선택사항, 기본값: 0
@@ -353,6 +401,8 @@ into `buf2`, starting at the 8th byte in `buf2`.
 
 ### buf.slice([start], [end])
 
+<!--english start-->
+
 * `start` Number, Optional, Default: 0
 * `end` Number, Optional, Default: `buffer.length`
 
@@ -378,6 +428,8 @@ byte from the original Buffer.
 
     // abc
     // !bc
+
+<!--english end-->
 
 * `start` 숫자, 선택사항, 기본값: 0
 * `end` 숫자, 선택사항, 기본값: `buffer.length`
@@ -406,6 +458,8 @@ byte from the original Buffer.
 
 ### buf.readUInt8(offset, [noAssert])
 
+<!--english start-->
+
 * `offset` Number
 * `noAssert` Boolean, Optional, Default: false
 * Return: Number
@@ -432,6 +486,8 @@ Example:
     // 0x4
     // 0x23
     // 0x42
+
+<!--english end-->
 
 * `offset` 숫자
 * `noAssert` 불리언, 선택사항, 기본값: false
@@ -463,6 +519,8 @@ Example:
 
 ### buf.readUInt16LE(offset, [noAssert])
 ### buf.readUInt16BE(offset, [noAssert])
+
+<!--english start-->
 
 * `offset` Number
 * `noAssert` Boolean, Optional, Default: false
@@ -496,6 +554,8 @@ Example:
     // 0x2304
     // 0x2342
     // 0x4223
+
+<!--english end-->
 
 * `offset` 숫자
 * `noAssert` 불리언, 선택사항, 기본값: false
@@ -533,6 +593,8 @@ Example:
 ### buf.readUInt32LE(offset, [noAssert])
 ### buf.readUInt32BE(offset, [noAssert])
 
+<!--english start-->
+
 * `offset` Number
 * `noAssert` Boolean, Optional, Default: false
 * Return: Number
@@ -557,6 +619,8 @@ Example:
 
     // 0x03042342
     // 0x42230403
+
+<!--english end-->
 
 * `offset` 숫자
 * `noAssert` 불리언, 선택사항, 기본값: false
@@ -585,6 +649,8 @@ Example:
 
 ### buf.readInt8(offset, [noAssert])
 
+<!--english start-->
+
 * `offset` Number
 * `noAssert` Boolean, Optional, Default: false
 * Return: Number
@@ -596,6 +662,8 @@ may be beyond the end of the buffer. Defaults to `false`.
 
 Works as `buffer.readUInt8`, except buffer contents are treated as two's
 complement signed values.
+
+<!--english end-->
 
 * `offset` 숫자
 * `noAssert` 불리언, 선택사항, 기본값: false
@@ -613,6 +681,8 @@ complement signed values.
 ### buf.readInt16LE(offset, [noAssert])
 ### buf.readInt16BE(offset, [noAssert])
 
+<!--english start-->
+
 * `offset` Number
 * `noAssert` Boolean, Optional, Default: false
 * Return: Number
@@ -625,6 +695,8 @@ may be beyond the end of the buffer. Defaults to `false`.
 
 Works as `buffer.readUInt16*`, except buffer contents are treated as two's
 complement signed values.
+
+<!--english end-->
 
 * `offset` 숫자
 * `noAssert` 불리언, 선택사항, 기본값: false
@@ -642,6 +714,8 @@ complement signed values.
 ### buf.readInt32LE(offset, [noAssert])
 ### buf.readInt32BE(offset, [noAssert])
 
+<!--english start-->
+
 * `offset` Number
 * `noAssert` Boolean, Optional, Default: false
 * Return: Number
@@ -654,6 +728,8 @@ may be beyond the end of the buffer. Defaults to `false`.
 
 Works as `buffer.readUInt32*`, except buffer contents are treated as two's
 complement signed values.
+
+<!--english end-->
 
 * `offset` 숫자
 * `noAssert` 불리언, 선택사항, 기본값: false
@@ -670,6 +746,8 @@ complement signed values.
 
 ### buf.readFloatLE(offset, [noAssert])
 ### buf.readFloatBE(offset, [noAssert])
+
+<!--english start-->
 
 * `offset` Number
 * `noAssert` Boolean, Optional, Default: false
@@ -693,6 +771,8 @@ Example:
     console.log(buf.readFloatLE(0));
 
     // 0x01
+
+<!--english end-->
 
 * `offset` 숫자
 * `noAssert` 불리언, 선택사항, 기본값: false
@@ -720,6 +800,8 @@ Example:
 ### buf.readDoubleLE(offset, [noAssert])
 ### buf.readDoubleBE(offset, [noAssert])
 
+<!--english start-->
+
 * `offset` Number
 * `noAssert` Boolean, Optional, Default: false
 * Return: Number
@@ -746,6 +828,8 @@ Example:
     console.log(buf.readDoubleLE(0));
 
     // 0.3333333333333333
+
+<!--english end-->
 
 * `offset` 숫자
 * `noAssert` 불리언, 선택사항, 기본값: false
@@ -776,6 +860,8 @@ Example:
 
 ### buf.writeUInt8(value, offset, [noAssert])
 
+<!--english start-->
+
 * `value` Number
 * `offset` Number
 * `noAssert` Boolean, Optional, Default: false
@@ -799,6 +885,8 @@ Example:
     console.log(buf);
 
     // <Buffer 03 04 23 42>
+
+<!--english end-->
 
 * `value` 숫자
 * `offset` 숫자
@@ -827,6 +915,8 @@ Example:
 ### buf.writeUInt16LE(value, offset, [noAssert])
 ### buf.writeUInt16BE(value, offset, [noAssert])
 
+<!--english start-->
+
 * `value` Number
 * `offset` Number
 * `noAssert` Boolean, Optional, Default: false
@@ -854,6 +944,8 @@ Example:
 
     // <Buffer de ad be ef>
     // <Buffer ad de ef be>
+
+<!--english end-->
 
 * `value` 숫자
 * `offset` 숫자
@@ -886,6 +978,8 @@ Example:
 ### buf.writeUInt32LE(value, offset, [noAssert])
 ### buf.writeUInt32BE(value, offset, [noAssert])
 
+<!--english start-->
+
 * `value` Number
 * `offset` Number
 * `noAssert` Boolean, Optional, Default: false
@@ -911,6 +1005,8 @@ Example:
 
     // <Buffer fe ed fa ce>
     // <Buffer ce fa ed fe>
+
+<!--english end-->
 
 * `value` 숫자
 * `offset` 숫자
@@ -940,6 +1036,8 @@ Example:
 
 ### buf.writeInt8(value, offset, [noAssert])
 
+<!--english start-->
+
 * `value` Number
 * `offset` Number
 * `noAssert` Boolean, Optional, Default: false
@@ -954,6 +1052,8 @@ should not be used unless you are certain of correctness. Defaults to `false`.
 
 Works as `buffer.writeUInt8`, except value is written out as a two's complement
 signed integer into `buffer`.
+
+<!--english end-->
 
 * `value` 숫자
 * `offset` 숫자
@@ -973,6 +1073,8 @@ signed integer into `buffer`.
 ### buf.writeInt16LE(value, offset, [noAssert])
 ### buf.writeInt16BE(value, offset, [noAssert])
 
+<!--english start-->
+
 * `value` Number
 * `offset` Number
 * `noAssert` Boolean, Optional, Default: false
@@ -987,6 +1089,8 @@ should not be used unless you are certain of correctness. Defaults to `false`.
 
 Works as `buffer.writeUInt16*`, except value is written out as a two's
 complement signed integer into `buffer`.
+
+<!--english end-->
 
 * `value` 숫자
 * `offset` 숫자
@@ -1006,6 +1110,8 @@ complement signed integer into `buffer`.
 ### buf.writeInt32LE(value, offset, [noAssert])
 ### buf.writeInt32BE(value, offset, [noAssert])
 
+<!--english start-->
+
 * `value` Number
 * `offset` Number
 * `noAssert` Boolean, Optional, Default: false
@@ -1020,6 +1126,8 @@ should not be used unless you are certain of correctness. Defaults to `false`.
 
 Works as `buffer.writeUInt32*`, except value is written out as a two's
 complement signed integer into `buffer`.
+
+<!--english end-->
 
 * `value` 숫자
 * `offset` 숫자
@@ -1038,6 +1146,8 @@ complement signed integer into `buffer`.
 
 ### buf.writeFloatLE(value, offset, [noAssert])
 ### buf.writeFloatBE(value, offset, [noAssert])
+
+<!--english start-->
 
 * `value` Number
 * `offset` Number
@@ -1064,6 +1174,8 @@ Example:
 
     // <Buffer 4f 4a fe bb>
     // <Buffer bb fe 4a 4f>
+
+<!--english end-->
 
 * `value` 숫자
 * `offset` 숫자
@@ -1094,6 +1206,8 @@ Example:
 ### buf.writeDoubleLE(value, offset, [noAssert])
 ### buf.writeDoubleBE(value, offset, [noAssert])
 
+<!--english start-->
+
 * `value` Number
 * `offset` Number
 * `noAssert` Boolean, Optional, Default: false
@@ -1119,6 +1233,8 @@ Example:
 
     // <Buffer 43 eb d5 b7 dd f9 5f d7>
     // <Buffer d7 5f f9 dd b7 d5 eb 43>
+
+<!--english end-->
 
 * `value` 숫자
 * `offset` 숫자
@@ -1148,6 +1264,8 @@ Example:
 
 ### buf.fill(value, [offset], [end])
 
+<!--english start-->
+
 * `value`
 * `offset` Number, Optional
 * `end` Number, Optional
@@ -1158,6 +1276,8 @@ buffer.
 
     var b = new Buffer(50);
     b.fill("h");
+
+<!--english end-->
 
 * `value`
 * `offset` 숫자, 선택사항
@@ -1171,6 +1291,8 @@ buffer.
 
 ## buffer.INSPECT_MAX_BYTES
 
+<!--english start-->
+
 * Number, Default: 50
 
 How many bytes will be returned when `buffer.inspect()` is called. This can
@@ -1178,6 +1300,8 @@ be overridden by user modules.
 
 Note that this is a property on the buffer module returned by
 `require('buffer')`, not on the Buffer global, or a buffer instance.
+
+<!--english end-->
 
 * 숫자, 기본값: 50
 
@@ -1189,6 +1313,8 @@ Note that this is a property on the buffer module returned by
 
 ## Class: SlowBuffer
 
+<!--english start-->
+
 This class is primarily for internal use.  JavaScript programs should
 use Buffer instead of using SlowBuffer.
 
@@ -1197,6 +1323,8 @@ small blocks of memory in the lifetime of a server, Node allocates memory
 in 8Kb (8192 byte) chunks.  If a buffer is smaller than this size, then it
 will be backed by a parent SlowBuffer object.  If it is larger than this,
 then Node will allocate a SlowBuffer slab for it directly.
+
+<!--english end-->
 
 이 클래스는 주로 내부에서 사용한다. 자바스크립트 프로그램은 SlowBuffer 대신 
 Buffer를 사용해야 한다.

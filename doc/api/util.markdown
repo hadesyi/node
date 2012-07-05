@@ -1,9 +1,13 @@
 # util
 
+<!--english start-->
+
     Stability: 5 - Locked
 
 These functions are in the module `'util'`. Use `require('util')` to access
 them.
+
+<!--english end-->
 
     안정성: 5 - Locked
 
@@ -12,6 +16,8 @@ them.
 
 
 ## util.format()
+
+<!--english start-->
 
 Returns a formatted string using the first argument as a `printf`-like format.
 
@@ -42,6 +48,8 @@ Each argument is converted to a string with `util.inspect()`.
     util.format(1, 2, 3); // '1 2 3'
 
 
+<!--english end-->
+
 `printf`같은 형식으로 첫 아규먼트를 사용해서 포매팅된 문자열을 반환한다.
 
 첫 아규먼트는 *플레이스홀더*가 포함된 문자열이다.(플레이스 홀더는 없어도 된다.)
@@ -70,11 +78,15 @@ Each argument is converted to a string with `util.inspect()`.
 
 ## util.debug(string)
 
+<!--english start-->
+
 A synchronous output function. Will block the process and
 output `string` immediately to `stderr`.
 
     require('util').debug('message on stderr');
 
+
+<!--english end-->
 
 동기적인 출력함수. 프로세스를 블락할 것이고 `stderr`에 즉각적으로
 `string`을 출력한다.
@@ -84,10 +96,14 @@ output `string` immediately to `stderr`.
 
 ## util.log(string)
 
+<!--english start-->
+
 Output with timestamp on `stdout`.
 
     require('util').log('Timestamped message.');
 
+
+<!--english end-->
 
 `stdout`에 타임스탬프를 출력한다.
 
@@ -95,6 +111,8 @@ Output with timestamp on `stdout`.
 
 
 ## util.inspect(object, [showHidden], [depth], [colors])
+
+<!--english start-->
 
 Return a string representation of `object`, which is useful for debugging.
 
@@ -117,6 +135,8 @@ Example of inspecting all properties of the `util` object:
     console.log(util.inspect(util, true, null));
 
 
+<!--english end-->
+
 디버깅에 유용한 `object`의 문자열 표현을 리턴한다.
 
 `showHidden`가 `true`이면 객체의 enumerable하지 않는 프로퍼티도 보여준다.
@@ -138,6 +158,8 @@ Example of inspecting all properties of the `util` object:
 
 ## util.isArray(object)
 
+<!--english start-->
+
 Returns `true` if the given "object" is an `Array`. `false` otherwise.
 
     var util = require('util');
@@ -149,6 +171,8 @@ Returns `true` if the given "object" is an `Array`. `false` otherwise.
     util.isArray({})
       // false
 
+
+<!--english end-->
 
 주어진 "object"가 `Array`이면 `true`를 리턴하고 `Array`가 아니면 `false`를
 리턴한다.
@@ -165,6 +189,8 @@ Returns `true` if the given "object" is an `Array`. `false` otherwise.
 
 ## util.isRegExp(object)
 
+<!--english start-->
+
 Returns `true` if the given "object" is a `RegExp`. `false` otherwise.
 
     var util = require('util');
@@ -176,6 +202,8 @@ Returns `true` if the given "object" is a `RegExp`. `false` otherwise.
     util.isRegExp({})
       // false
 
+
+<!--english end-->
 
 주어진 "object"가 `RegExp`이면 `true`를 리턴하고 `RegExp`가 아니면 
 `false`를 리턴한다.
@@ -192,6 +220,8 @@ Returns `true` if the given "object" is a `RegExp`. `false` otherwise.
 
 ## util.isDate(object)
 
+<!--english start-->
+
 Returns `true` if the given "object" is a `Date`. `false` otherwise.
 
     var util = require('util');
@@ -203,6 +233,8 @@ Returns `true` if the given "object" is a `Date`. `false` otherwise.
     util.isDate({})
       // false
 
+
+<!--english end-->
 
 주어진 "object"가 `Date`이면 `true`를 리턴하고 `Date`가 아니면 
 `false`를 리턴한다.
@@ -219,6 +251,8 @@ Returns `true` if the given "object" is a `Date`. `false` otherwise.
 
 ## util.isError(object)
 
+<!--english start-->
+
 Returns `true` if the given "object" is an `Error`. `false` otherwise.
 
     var util = require('util');
@@ -230,6 +264,8 @@ Returns `true` if the given "object" is an `Error`. `false` otherwise.
     util.isError({ name: 'Error', message: 'an error occurred' })
       // false
 
+
+<!--english end-->
 
 주어진 "object"가 `Error`이면 `true`를 리턴하고 `Error`가 아니면 
 `false`를 리턴한다.
@@ -246,6 +282,8 @@ Returns `true` if the given "object" is an `Error`. `false` otherwise.
 
 ## util.pump(readableStream, writableStream, [callback])
 
+<!--english start-->
+
 Experimental
 
 Read the data from `readableStream` and send it to the `writableStream`.
@@ -254,6 +292,8 @@ paused until the `drain` event occurs on the `writableStream`. `callback` gets
 an error as its only argument and is called when `writableStream` is closed or
 when an error occurs.
 
+
+<!--english end-->
 
 실험적
 
@@ -264,6 +304,8 @@ when an error occurs.
 
 
 ## util.inherits(constructor, superConstructor)
+
+<!--english start-->
 
 Inherit the prototype methods from one
 [constructor](https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/constructor)
@@ -295,6 +337,8 @@ through the `constructor.super_` property.
         console.log('Received data: "' + data + '"');
     })
     stream.write("It works!"); // Received data: "It works!"
+
+<!--english end-->
 
 한 객체의 
 [생성자](https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/constructor)

@@ -1,5 +1,7 @@
 # Modules
 
+<!--english start-->
+
     Stability: 5 - Locked
 
 <!--name=module-->
@@ -36,6 +38,8 @@ private to `circle.js`.
 
 The module system is implemented in the `require("module")` module.
 
+<!--english end-->
+
     안정성: 5 - Locked
 
 <!--name=module-->
@@ -67,6 +71,8 @@ The module system is implemented in the `require("module")` module.
 이 모듈 시스템은 `module`이라는 모듈에 구현했다.
 
 ## Cycles
+
+<!--english start-->
 
 <!--type=misc-->
 
@@ -122,6 +128,8 @@ The output of this program would thus be:
 If you have cyclic module dependencies in your program, make sure to
 plan accordingly.
 
+<!--english end-->
+
 <!--type=misc-->
 
 두 모듈이 `require()` 함수로 서로 참조할 때는 한쪽 모듈은 아직 완전히 로딩하지 못한 미완성 모듈을 그냥 반환한다.
@@ -171,6 +179,8 @@ plan accordingly.
 
 ## Core Modules
 
+<!--english start-->
+
 <!--type=misc-->
 
 Node has several modules compiled into the binary.  These modules are
@@ -182,6 +192,8 @@ Core modules are always preferentially loaded if their identifier is
 passed to `require()`.  For instance, `require('http')` will always
 return the built in HTTP module, even if there is a file by that name.
 
+<!--english end-->
+
 <!--type=misc-->
 
 Node 모듈 중에서는 바이너리로 컴파일해야 하는 모듈이 있다. 코어 모듈은 이 문서 곳곳에서 설명한다.
@@ -191,6 +203,8 @@ Node 모듈 중에서는 바이너리로 컴파일해야 하는 모듈이 있다
 모듈을 require하면 항상 코어 모듈이 먼저 로드된다. 예를 들어, `require('http')`로 로드될 것 같은 파일이 있어도 Node에 들어 있는 HTTP 모듈이 반환된다.
 
 ## File Modules
+
+<!--english start-->
 
 <!--type=misc-->
 
@@ -212,6 +226,8 @@ That is, `circle.js` must be in the same directory as `foo.js` for
 Without a leading '/' or './' to indicate a file, the module is either a
 "core module" or is loaded from a `node_modules` folder.
 
+<!--english end-->
+
 <!--type=misc-->
 
 입력한 이름으로 파일을 못 찾으면 Node는 그 이름에 `.js`, `.json`, `.node`를 붙이고 해당 파일이 있는지 찾는다.
@@ -225,6 +241,8 @@ Without a leading '/' or './' to indicate a file, the module is either a
 '/'이나 './'로 시작하지 않으면 그냥 파일이 아니라 코어 모듈이나 `node_modules` 폴더에 있는 모듈을 찾는다.
 
 ## Loading from `node_modules` Folders
+
+<!--english start-->
 
 <!--type=misc-->
 
@@ -248,6 +266,8 @@ this order:
 This allows programs to localize their dependencies, so that they do not
 clash.
 
+<!--english end-->
+
 <!--type=misc-->
 
 `require()`에 넘어온 모듈 ID가 네이티브 모듈을 가리키는 것도 아니고, 그 모듈 ID가 `'/'`, `'./'`, `'../'`로 시작하지도 않으면 Node는 그 모듈의 상위 디렉토리에서 찾기 시작한다. 상위 디렉토리에 있는 `/node_modules`에서 해당 모듈을 찾는다.
@@ -264,6 +284,8 @@ clash.
 그래서 해당 프로그램만의 의존성을 독립적으로 관리할 수 있다. 다른 프로그램에 영향을 끼치지 않는다.
 
 ## Folders as Modules
+
+<!--english start-->
 
 <!--type=misc-->
 
@@ -293,6 +315,8 @@ example, then `require('./some-library')` would attempt to load:
 * `./some-library/index.js`
 * `./some-library/index.node`
 
+<!--english end-->
+
 <!--type=misc-->
 
 모듈을 폴더로 관리하면 프로그램과 라이브러리를 묶음으로 관리할 수 있어 편리하다. 마치 한 파일로 된 모듈처럼 취급한다. 모듈이 폴더일 때 `require()`는 세 가지 방법으로 모듈을 찾는다.
@@ -313,6 +337,8 @@ Node가 package.json을 읽고 사용하기 때문에 이런 게 가능하다.
 
 ## Caching
 
+<!--english start-->
+
 <!--type=misc-->
 
 Modules are cached after the first time they are loaded.  This means
@@ -327,6 +353,8 @@ dependencies to be loaded even when they would cause cycles.
 If you want to have a module execute code multiple times, then export a
 function, and call that function.
 
+<!--english end-->
+
 <!--type=misc-->
 
 한 번 로드한 모듈은 계속 캐싱한다. 그래서 `require('foo')`을 여러 번 호출해도 계속 같은 객체를 반환한다. 단, `require('foo')가 계속 같은 파일을 로드할 때만 그렇다.
@@ -337,6 +365,8 @@ function, and call that function.
 
 ### Module Caching Caveats
 
+<!--english start-->
+
 <!--type=misc-->
 
 Modules are cached based on their resolved filename.  Since modules may
@@ -345,11 +375,15 @@ module (loading from `node_modules` folders), it is not a *guarantee*
 that `require('foo')` will always return the exact same object, if it
 would resolve to different files.
 
+<!--english end-->
+
 <!--type=misc-->
 
 모듈은 찾은(resolved) 파일 이름을 키로 캐싱한다. `node_modules` 폴더에서 로딩하는 것이기 때문에 같은 require 코드라도 호출하는 위치에 따라 찾은 파일이 다를 수 있다. 즉, `require('foo')`가 다른 파일을 찾아낸다면 다른 객체를 리턴한다.
 
 ## The `module` Object
+
+<!--english start-->
 
 <!-- type=var -->
 <!-- name=module -->
@@ -361,6 +395,8 @@ representing the current module.  In particular
 `module.exports` is the same as the `exports` object.
 `module` isn't actually a global but rather local to each module.
 
+<!--english end-->
+
 <!-- type=var -->
 <!-- name=module -->
 
@@ -369,6 +405,8 @@ representing the current module.  In particular
 모듈에서 `module` 변수는 해당 모듈 객체를 가리킨다. 특히 `module.exports`는 `exports`와 같은 객체를 가리킨다. `module`은 글로벌 변수가 아니라 모듈마다 다른 객체를 가리키는 로컬 변수다.
 
 ### module.exports
+
+<!--english start-->
 
 * {Object}
 
@@ -410,6 +448,8 @@ y.js:
     console.log(x.a);
 
 
+<!--english end-->
+
 * {Object}
 
 `exports` 객체는 Module 시스템이 자동으로 만들어 준다. Export하려는 객체를 `module.exports`에 할당해서 직접 만든 객체가 반환되게 할 수도 있다. `.js`라는 모듈을 만들어 보자:
@@ -447,6 +487,8 @@ y.js:
 
 ### module.require(id)
 
+<!--english start-->
+
 * `id` {String}
 * Return: {Object} `exports` from the resolved module
 
@@ -459,6 +501,8 @@ typically *only* available within a specific module's code, it must be
 explicitly exported in order to be used.
 
 
+<!--english end-->
+
 * `id` {문자열}
 * Return: {객체} 처리된 모듈의 `exports`
 
@@ -469,11 +513,15 @@ explicitly exported in order to be used.
 
 ### module.id
 
+<!--english start-->
+
 * {String}
 
 The identifier for the module.  Typically this is the fully resolved
 filename.
 
+
+<!--english end-->
 
 * {String}
 
@@ -482,10 +530,14 @@ filename.
 
 ### module.filename
 
+<!--english start-->
+
 * {String}
 
 The fully resolved filename to the module.
 
+
+<!--english end-->
 
 * {String}
 
@@ -494,11 +546,15 @@ The fully resolved filename to the module.
 
 ### module.loaded
 
+<!--english start-->
+
 * {Boolean}
 
 Whether or not the module is done loading, or is in the process of
 loading.
 
+
+<!--english end-->
 
 * {Boolean}
 
@@ -507,10 +563,14 @@ loading.
 
 ### module.parent
 
+<!--english start-->
+
 * {Module Object}
 
 The module that required this one.
 
+
+<!--english end-->
 
 * {Module Object}
 
@@ -519,11 +579,15 @@ The module that required this one.
 
 ### module.children
 
+<!--english start-->
+
 * {Array}
 
 The module objects required by this one.
 
 
+
+<!--english end-->
 
 * {Array}
 
@@ -532,6 +596,8 @@ The module objects required by this one.
 
 
 ## All Together...
+
+<!--english start-->
 
 <!-- type=misc -->
 
@@ -581,6 +647,8 @@ in pseudocode of what require.resolve does:
        b. DIRS = DIRS + DIR
        c. let I = I - 1
     6. return DIRS
+
+<!--english end-->
 
 <!-- type=misc -->
 
@@ -641,6 +709,8 @@ require.resolve가 정확히 어떻게 동작하는지 슈도 코드로 살펴�
 
 ## Loading from the global folders
 
+<!--english start-->
+
 <!-- type=misc -->
 
 If the `NODE_PATH` environment variable is set to a colon-delimited list
@@ -661,6 +731,8 @@ These are mostly for historic reasons.  You are highly encouraged to
 place your dependencies locally in `node_modules` folders.  They will be
 loaded faster, and more reliably.
 
+<!--english end-->
+
 <!-- type=misc -->
 
 Node는 모듈을 못 찾으면 환경변수 `NODE_PATH`에 등록된 경로에서도 찾는다. 절대경로를 `NODE_PATH`에 할당하면 되는데 콜론(`:`)으로 구분해서 절대경로를 여러 개 등록할 수 있다(주의: 윈도우는 세미콜론(`;`)으로 구분한다).
@@ -677,6 +749,8 @@ Node는 모듈을 못 찾으면 환경변수 `NODE_PATH`에 등록된 경로에�
 
 ## Accessing the main module
 
+<!--english start-->
+
 <!-- type=misc -->
 
 When a file is run directly from Node, `require.main` is set to its
@@ -692,6 +766,8 @@ Because `module` provides a `filename` property (normally equivalent to
 `__filename`), the entry point of the current application can be obtained
 by checking `require.main.filename`.
 
+<!--english end-->
+
 <!-- type=misc -->
 
 node로 어떤 파일을 실행하면 `require.main`은 그 파일의 `module` 객체를 가리킨다. 그래서 Node로 파일을 직접 실행한 건지 아닌지 알 수 있다:
@@ -703,6 +779,8 @@ node로 어떤 파일을 실행하면 `require.main`은 그 파일의 `module` �
 `module`에는 `filename` 프로퍼티가 있어서(`__filename`과 같은 값이다) `require.main.filename`의 값을 확인하면 처음 실행한 파일을 무엇인지 알 수 있다.
 
 ## Addenda: Package Manager Tips
+
+<!--english start-->
 
 <!-- type=misc -->
 
@@ -755,6 +833,8 @@ also add the `/usr/lib/node_modules` folder to the `$NODE_PATH` environment
 variable.  Since the module lookups using `node_modules` folders are all
 relative, and based on the real path of the files making the calls to
 `require()`, the packages themselves can be anywhere.
+
+<!--english end-->
 
 <!-- type=misc -->
 

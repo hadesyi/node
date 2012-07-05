@@ -1,5 +1,7 @@
 # Cluster
 
+<!--english start-->
+
     Stability: 1 Experimental - Drastic changes in future versions
 
 A single instance of Node runs in a single thread. To take advantage of
@@ -74,6 +76,8 @@ in the master process via message passing:
 
 
 
+<!--english end-->
+
     안정성: 1 Experimental - 차후 버전에서 많은 변경이 있을 예정
 
 Node 프로세스 하나는 쓰레드 하나로 동작한다. 멀티 코어 시스템을 이용해서 부하를 처리하려면 Node 프로세스를 여러개 띄울 필요가 있다.
@@ -142,20 +146,30 @@ Node 프로세스 하나는 쓰레드 하나로 동작한다. 멀티 코어 시�
 
 ## cluster.fork()
 
+<!--english start-->
+
 Spawn a new worker process. This can only be called from the master process.
+
+<!--english end-->
 
 새 워커 프로세스를 띄운다. 이 함수는 마스터 프로세스에서만 호출할 수 있다.
 
 ## cluster.isMaster
 ## cluster.isWorker
 
+<!--english start-->
+
 Boolean flags to determine if the current process is a master or a worker
 process in a cluster. A process `isMaster` if `process.env.NODE_WORKER_ID`
 is undefined.
 
+<!--english end-->
+
 현 프로세스가 마스터 프로세스인지 워커 프로세스인지 판별하는 이진 플래그. 프로세스가 `isMaster`라면 `process.env.NODE_WORKER_ID`는 undefined가 된다.
 
 ## Event: 'death'
+
+<!--english start-->
 
 When any of the workers die the cluster module will emit the 'death' event.
 This can be used to restart the worker by calling `fork()` again.
@@ -167,6 +181,8 @@ This can be used to restart the worker by calling `fork()` again.
 
 Different techniques can be used to restart the worker depending on the
 application.
+
+<!--english end-->
 
 워커가 죽을 때 cluster 모듈에는 `death` 이벤트가 발생한다. 이 이벤트가 발생하면 `fork()`를 다시 호출해서 워커를 재시작시킬 수 있다.
 

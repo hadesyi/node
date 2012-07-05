@@ -1,5 +1,7 @@
 # Events
 
+<!--english start-->
+
     Stability: 4 - API Frozen
 
 <!--type=module-->
@@ -15,6 +17,8 @@ there aren't any strict restrictions on that, as any string will be accepted.
 Functions can then be attached to objects, to be executed when an event
 is emitted. These functions are called _listeners_.
 
+
+<!--english end-->
 
     안정성: 4 - API Frozen
 
@@ -34,6 +38,8 @@ _리스너(listener)_라고 부른다.
 
 ## Class: events.EventEmitter
 
+<!--english start-->
+
 To access the EventEmitter class, `require('events').EventEmitter`.
 
 When an `EventEmitter` instance experiences an error, the typical action is
@@ -43,6 +49,8 @@ trace and exit the program.
 
 All EventEmitters emit the event `'newListener'` when new listeners are
 added.
+
+<!--english end-->
 
 EventEmitter 클래스에 접근하려면 `require('events').EventEmitter`를 사용한다.
 
@@ -55,11 +63,15 @@ EventEmitter 클래스에 접근하려면 `require('events').EventEmitter`를 �
 ### emitter.addListener(event, listener)
 ### emitter.on(event, listener)
 
+<!--english start-->
+
 Adds a listener to the end of the listeners array for the specified event.
 
     server.on('connection', function (stream) {
       console.log('someone connected!');
     });
+
+<!--english end-->
 
 지정한 event에 대한 리스너 배열의 끝에 listener를 추가한다.
 
@@ -69,6 +81,8 @@ Adds a listener to the end of the listeners array for the specified event.
 
 ### emitter.once(event, listener)
 
+<!--english start-->
+
 Adds a **one time** listener for the event. This listener is
 invoked only the next time the event is fired, after which
 it is removed.
@@ -76,6 +90,8 @@ it is removed.
     server.once('connection', function (stream) {
       console.log('Ah, we have our first user!');
     });
+
+<!--english end-->
 
 event에 **일회성** listener를 추가한다. 이 리스너는
 이벤트가 다음 번에 발생했을 때 딱 한번만 실행된 후 제거된다.
@@ -85,6 +101,8 @@ event에 **일회성** listener를 추가한다. 이 리스너는
     });
 
 ### emitter.removeListener(event, listener)
+
+<!--english start-->
 
 Remove a listener from the listener array for the specified event.
 **Caution**: changes array indices in the listener array behind the listener.
@@ -96,6 +114,8 @@ Remove a listener from the listener array for the specified event.
     // ...
     server.removeListener('connection', callback);
 
+
+<!--english end-->
 
 지정한 event에 대한 리스너 배열에서 listener를 제거한다.
 **주의**: 리스너보다 뒤쪽에서 리스너 배열의 배열인덱스를 수정해라.
@@ -110,7 +130,11 @@ Remove a listener from the listener array for the specified event.
 
 ### emitter.removeAllListeners([event])
 
+<!--english start-->
+
 Removes all listeners, or those of the specified event.
+
+<!--english end-->
 
 event를 지정하지 않으면 모든 리스너를 제거하고 event를 지정하면 지정한 이벤트의
 모든 리스너를 제거한다.
@@ -118,10 +142,14 @@ event를 지정하지 않으면 모든 리스너를 제거하고 event를 지정
 
 ### emitter.setMaxListeners(n)
 
+<!--english start-->
+
 By default EventEmitters will print a warning if more than 10 listeners are
 added for a particular event. This is a useful default which helps finding memory leaks.
 Obviously not all Emitters should be limited to 10. This function allows
 that to be increased. Set to zero for unlimited.
+
+<!--english end-->
 
 기본적으로 EventEmitter는 특정 이벤트에 10개 이상의 리스너가 추가되면 경고메시지를
 출력할 것이다. 이 경고메시지는 메모리 누출을 찾는데 도움을 주는 유용한 기본기능이다.
@@ -131,6 +159,8 @@ that to be increased. Set to zero for unlimited.
 
 ### emitter.listeners(event)
 
+<!--english start-->
+
 Returns an array of listeners for the specified event. This array can be
 manipulated, e.g. to remove listeners.
 
@@ -138,6 +168,8 @@ manipulated, e.g. to remove listeners.
       console.log('someone connected!');
     });
     console.log(util.inspect(server.listeners('connection'))); // [ [Function] ]
+
+<!--english end-->
 
 지정한 이벤트의 리스너 배열을 리턴한다. 이 배열을 사용해서 리스너를 제거하는 등의
 조작을 할 수 있다.
@@ -149,16 +181,24 @@ manipulated, e.g. to remove listeners.
 
 ### emitter.emit(event, [arg1], [arg2], [...])
 
+<!--english start-->
+
 Execute each of the listeners in order with the supplied arguments.
+
+<!--english end-->
 
 전달한 아규먼트의 순서대로 각 리스너를 실행한다.
 
 ### Event: 'newListener'
 
+<!--english start-->
+
 * `event` {String} The event name
 * `listener` {Function} The event handler function
 
 This event is emitted any time someone adds a new listener.
+
+<!--english end-->
 
 * `event` {String} 이벤트명
 * `listener` {Function} 이벤트 핸들러 함수

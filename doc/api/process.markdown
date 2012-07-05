@@ -1,10 +1,14 @@
 # process
 
+<!--english start-->
+
 <!-- type=global -->
 
 The `process` object is a global object and can be accessed from anywhere.
 It is an instance of `EventEmitter`.
 
+
+<!--english end-->
 
 <!-- type=global -->
 
@@ -13,6 +17,8 @@ It is an instance of `EventEmitter`.
 
 
 ## Event: 'exit'
+
+<!--english start-->
 
 Emitted when the process is about to exit.  This is a good hook to perform
 constant time checks of the module's state (like for unit tests).  The main
@@ -28,6 +34,8 @@ Example of listening for `exit`:
       console.log('About to exit.');
     });
 
+<!--english end-->
+
 프로세스가 종료될 때 발생한다. 이 이벤트는 모듈의 상태를 상수시간으로 확인하는데 좋은 
 훅(hook)이다.(유닛테스트에서처럼) 메인 이벤트루프는 'exit' 콜백이 종료된 후에는 더이상
 실행되지 않으므로 타이머도 스케쥴링되지 않을 것이다.
@@ -42,6 +50,8 @@ Example of listening for `exit`:
     });
 
 ## Event: 'uncaughtException'
+
+<!--english start-->
 
 Emitted when an exception bubbles all the way back to the event loop. If a
 listener is added for this exception, the default action (which is to print
@@ -67,6 +77,8 @@ your program's flow.  Especially for server programs that are designed to
 stay running forever, `uncaughtException` can be a useful safety mechanism.
 
 
+<!--english end-->
+
 예외가 이벤트루프까지 버블링되었을 때 발생한다. 이 예외에 대한 리스너를 추가하면
 기본 동작(스택트레이스를 출력하고 종료한다)은 수행되지 않을 것이다.
 
@@ -91,6 +103,8 @@ stay running forever, `uncaughtException` can be a useful safety mechanism.
 
 ## Signal Events
 
+<!--english start-->
+
 <!--type=event-->
 <!--name=SIGINT, SIGUSR1, etc.-->
 
@@ -109,6 +123,8 @@ Example of listening for `SIGINT`:
 An easy way to send the `SIGINT` signal is with `Control-C` in most terminal
 programs.
 
+
+<!--english end-->
 
 <!--type=event-->
 <!--name=SIGINT, SIGUSR1, etc.-->
@@ -131,6 +147,8 @@ programs.
 
 ## process.stdout
 
+<!--english start-->
+
 A `Writable Stream` to `stdout`.
 
 Example: the definition of `console.log`
@@ -144,6 +162,8 @@ that writes to them are usually blocking.  They are blocking in the case
 that they refer to regular files or TTY file descriptors. In the case they
 refer to pipes, they are non-blocking like other streams.
 
+
+<!--english end-->
 
 `stdout`에 대한 `Writable Stream`이다.
 
@@ -160,6 +180,8 @@ refer to pipes, they are non-blocking like other streams.
 
 ## process.stderr
 
+<!--english start-->
+
 A writable stream to stderr.
 
 `process.stderr` and `process.stdout` are unlike other streams in Node in
@@ -167,6 +189,8 @@ that writes to them are usually blocking.  They are blocking in the case
 that they refer to regular files or TTY file descriptors. In the case they
 refer to pipes, they are non-blocking like other streams.
 
+
+<!--english end-->
 
 stderr에 대한 writable stream이다.
 
@@ -176,6 +200,8 @@ stderr에 대한 writable stream이다.
 
 
 ## process.stdin
+
+<!--english start-->
 
 A `Readable Stream` for stdin. The stdin stream is paused by default, so one
 must call `process.stdin.resume()` to read from it.
@@ -193,6 +219,8 @@ Example of opening standard input and listening for both events:
       process.stdout.write('end');
     });
 
+
+<!--english end-->
 
 stdin에 대한 `Readable Stream`이다. stdin 스트림은 기본적으로 멈추기 때문에 stdin에서
 읽으려면 `process.stdin.resume()`를 호출해야 한다.
@@ -213,6 +241,8 @@ stdin에 대한 `Readable Stream`이다. stdin 스트림은 기본적으로 멈�
 
 ## process.argv
 
+<!--english start-->
+
 An array containing the command line arguments.  The first element will be
 'node', the second element will be the name of the JavaScript file.  The
 next elements will be any additional command line arguments.
@@ -231,6 +261,8 @@ This will generate:
     3: two=three
     4: four
 
+
+<!--english end-->
 
 커맨드라인 아규먼트를 담고 있는 배열이다. 첫 엘리먼트는 'node'일 것이고 두 번째 
 엘리먼트는 자바스트립트 파일명이 될 것이다. 다음 엘리먼트들은 추가적인 커맨드라인
@@ -253,12 +285,16 @@ This will generate:
 
 ## process.execPath
 
+<!--english start-->
+
 This is the absolute pathname of the executable that started the process.
 
 Example:
 
     /usr/local/bin/node
 
+
+<!--english end-->
 
 프로세스가 시작되는 실행가능한 절대경로명이다.
 
@@ -268,6 +304,8 @@ Example:
 
 
 ## process.chdir(directory)
+
+<!--english start-->
 
 Changes the current working directory of the process or throws an exception if that fails.
 
@@ -281,6 +319,8 @@ Changes the current working directory of the process or throws an exception if t
     }
 
 
+
+<!--english end-->
 
 프로세스의 현재 워킹디렉토리를 바꾸거나 바꾸는데 실패할 경우 예외를 던진다.
 
@@ -297,10 +337,14 @@ Changes the current working directory of the process or throws an exception if t
 
 ## process.cwd()
 
+<!--english start-->
+
 Returns the current working directory of the process.
 
     console.log('Current directory: ' + process.cwd());
 
+
+<!--english end-->
 
 프로세스의 현재 워킹디렉토리를 리턴한다.
 
@@ -309,12 +353,18 @@ Returns the current working directory of the process.
 
 ## process.env
 
+<!--english start-->
+
 An object containing the user environment. See environ(7).
+
+<!--english end-->
 
 사용자의 환경변수를 담고 있는 객체다. environ(7)를 봐라.
 
 
 ## process.exit([code])
+
+<!--english start-->
 
 Ends the process with the specified `code`.  If omitted, exit uses the
 'success' code `0`.
@@ -325,6 +375,8 @@ To exit with a 'failure' code:
 
 The shell that executed node should see the exit code as 1.
 
+
+<!--english end-->
 
 지정한 `code`로 프로세스를 종료한다. `code`를 생략하면 'success' 코드 `0`을
 사용해서 종료한다.
@@ -338,11 +390,15 @@ node를 실행한 쉘은 1을 종료코드로 간주할 것이다.
 
 ## process.getgid()
 
+<!--english start-->
+
 Gets the group identity of the process. (See getgid(2).)
 This is the numerical group id, not the group name.
 
     console.log('Current gid: ' + process.getgid());
 
+
+<!--english end-->
 
 프로세스의 그룹식별자를 얻는다.(getgid(2)를 봐라.)
 이는 그룹 이름이 아니라 숫자로 된 그룹 id 이다.
@@ -351,6 +407,8 @@ This is the numerical group id, not the group name.
 
 
 ## process.setgid(id)
+
+<!--english start-->
 
 Sets the group identity of the process. (See setgid(2).)  This accepts either
 a numerical ID or a groupname string. If a groupname is specified, this method
@@ -365,6 +423,8 @@ blocks while resolving it to a numerical ID.
       console.log('Failed to set gid: ' + err);
     }
 
+
+<!--english end-->
 
 프로세스의 그룹 식별자를 설정한다.(setgid(2)를 봐라.) 이 함수는 숫자로 된 ID나 문자열로 된
 그룹명을 모두 받아들인다. 그룹명을 지정하면 이 메서드가 그룹명을 숫자로된 ID로 처리할 때까지
@@ -382,11 +442,15 @@ blocks while resolving it to a numerical ID.
 
 ## process.getuid()
 
+<!--english start-->
+
 Gets the user identity of the process. (See getuid(2).)
 This is the numerical userid, not the username.
 
     console.log('Current uid: ' + process.getuid());
 
+
+<!--english end-->
 
 프로세스의 사용자 식별자를 얻는다.(getuid(2)를 봐라.)
 이는 사용자명이 아니라 숫자로된 userid이다.
@@ -395,6 +459,8 @@ This is the numerical userid, not the username.
 
 
 ## process.setuid(id)
+
+<!--english start-->
 
 Sets the user identity of the process. (See setuid(2).)  This accepts either
 a numerical ID or a username string.  If a username is specified, this method
@@ -409,6 +475,8 @@ blocks while resolving it to a numerical ID.
       console.log('Failed to set uid: ' + err);
     }
 
+
+<!--english end-->
 
 프로세스의 사용자 식별자를 설정한다. (setuid(2)를 봐라.) 이는 숫자로된 ID와 문자열로 된
 사용자명을 모두 받아들인다. 사용자명을 지정하면 이 메서드가 사용자명을 숫자로 된 ID로 
@@ -426,15 +494,21 @@ blocks while resolving it to a numerical ID.
 
 ## process.version
 
+<!--english start-->
+
 A compiled-in property that exposes `NODE_VERSION`.
 
     console.log('Version: ' + process.version);
+
+<!--english end-->
 
 `NODE_VERSION`으로 노출된 컴파일된 프로퍼티이다.
 
     console.log('Version: ' + process.version);
 
 ## process.versions
+
+<!--english start-->
 
 A property exposing version strings of node and its dependencies.
 
@@ -448,6 +522,8 @@ Will output:
       ev: '4.4',
       openssl: '1.0.0e-fips' }
 
+
+<!--english end-->
 
 node와 의존성에 대한 버전 문자열을 노출하는 프로퍼티이다.
 
@@ -464,10 +540,14 @@ node와 의존성에 대한 버전 문자열을 노출하는 프로퍼티이다.
 
 ## process.installPrefix
 
+<!--english start-->
+
 A compiled-in property that exposes `NODE_PREFIX`.
 
     console.log('Prefix: ' + process.installPrefix);
 
+
+<!--english end-->
 
 `NODE_PREFIX`으로 노출된 컴파일된 프로퍼티이다.
 
@@ -475,6 +555,8 @@ A compiled-in property that exposes `NODE_PREFIX`.
 
 
 ## process.kill(pid, [signal])
+
+<!--english start-->
 
 Send a signal to a process. `pid` is the process id and `signal` is the
 string describing the signal to send.  Signal names are strings like
@@ -499,6 +581,8 @@ Example of sending a signal to yourself:
     process.kill(process.pid, 'SIGHUP');
 
 
+<!--english end-->
+
 프로세스에 신호를 보낸다. `pid`는 프로세스 id이고 `signal`은 보내려는 신호를
 설명하는 문자열이다. 신호이름은 'SIGINT'나 'SIGUSR1'같은 문자열이다. `signal`을
 생략하면 'SIGTERM'가 될 것이다. 더 자세한 내용은 kill(2)를 봐라.
@@ -522,9 +606,13 @@ Example of sending a signal to yourself:
 
 ## process.pid
 
+<!--english start-->
+
 The PID of the process.
 
     console.log('This process is pid ' + process.pid);
+
+<!--english end-->
 
 프로세스의 PID.
 
@@ -532,17 +620,25 @@ The PID of the process.
 
 ## process.title
 
+<!--english start-->
+
 Getter/setter to set what is displayed in 'ps'.
+
+<!--english end-->
 
 'ps'에서 표시될 어떻게 표시되는 지에 대한 Getter와 Setter
 
 
 ## process.arch
 
+<!--english start-->
+
 What processor architecture you're running on: `'arm'`, `'ia32'`, or `'x64'`.
 
     console.log('This processor architecture is ' + process.arch);
 
+
+<!--english end-->
 
 어떤 프로세스 아키텍쳐에서 실행되고 있는지 보여준다.: `'arm'`, `'ia32'`, `'x64'`.
 
@@ -551,10 +647,14 @@ What processor architecture you're running on: `'arm'`, `'ia32'`, or `'x64'`.
 
 ## process.platform
 
+<!--english start-->
+
 What platform you're running on. `'linux2'`, `'darwin'`, etc.
 
     console.log('This platform is ' + process.platform);
 
+
+<!--english end-->
 
 어떤 플랫폼에서 실행되고 있는지 보여준다. `'linux2'`, `'darwin'`, 등
 
@@ -562,6 +662,8 @@ What platform you're running on. `'linux2'`, `'darwin'`, etc.
 
 
 ## process.memoryUsage()
+
+<!--english start-->
 
 Returns an object describing the memory usage of the Node process
 measured in bytes.
@@ -578,6 +680,8 @@ This will generate:
 
 `heapTotal` and `heapUsed` refer to V8's memory usage.
 
+
+<!--english end-->
 
 Node 프로세스의 메모리 사용량을 바이트로 나타내서 보여주는 객체를 리턴한다.
 
@@ -596,6 +700,8 @@ Node 프로세스의 메모리 사용량을 바이트로 나타내서 보여주�
 
 ## process.nextTick(callback)
 
+<!--english start-->
+
 On the next loop around the event loop call this callback.
 This is *not* a simple alias to `setTimeout(fn, 0)`, it's much more
 efficient.
@@ -604,6 +710,8 @@ efficient.
       console.log('nextTick callback');
     });
 
+
+<!--english end-->
 
 이벤트 루프의 다음 번 루프에서 이 callback을 호출한다.
 이는 단순히 `setTimeout(fn, 0)`에 대한 별칭이 *아니라* 훨씬 더 효율적이다.
@@ -615,6 +723,8 @@ efficient.
 
 ## process.umask([mask])
 
+<!--english start-->
+
 Sets or reads the process's file mode creation mask. Child processes inherit
 the mask from the parent process. Returns the old mask if `mask` argument is
 given, otherwise returns the current mask.
@@ -625,6 +735,8 @@ given, otherwise returns the current mask.
     console.log('Changed umask from: ' + oldmask.toString(8) +
                 ' to ' + newmask.toString(8));
 
+
+<!--english end-->
 
 프로세스의 파일 모드 생성 마스크를 설정하거나 읽는다. 자식 프로세스는 부모 프로세스에서
 이 마스크를 상속받는다. `mask`아규먼트를 전달하면 이전의 마스크를 리턴하고 `mask`아규먼트를 
@@ -639,6 +751,10 @@ given, otherwise returns the current mask.
 
 ## process.uptime()
 
+<!--english start-->
+
 Number of seconds Node has been running.
+
+<!--english end-->
 
 Node가 실행되고 있는 시간을 초단위로 나타낸다.

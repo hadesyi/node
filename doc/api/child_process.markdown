@@ -1,5 +1,7 @@
 # Child Process
 
+<!--english start-->
+
     Stability: 3 - Stable
 
 Node provides a tri-directional `popen(3)` facility through the
@@ -11,6 +13,8 @@ It is possible to stream data through a child's `stdin`, `stdout`, and
 To create a child process use `require('child_process').spawn()` or
 `require('child_process').fork()`.  The semantics of each are slightly
 different, and explained below.
+
+<!--english end-->
 
     안정성: 3 - Stable
 
@@ -26,6 +30,8 @@ Node는 `child_process` 모듈로 세 가지 방향의 `popen(3)` 기능을
 
 ## Class: ChildProcess
 
+<!--english start-->
+
 `ChildProcess` is an `EventEmitter`.
 
 Child processes always have three streams associated with them. `child.stdin`,
@@ -35,6 +41,8 @@ which can be piped to and from.
 
 The ChildProcess class is not intended to be used directly.  Use the
 `spawn()` or `fork()` methods to create a Child Process instance.
+
+<!--english end-->
 
 `ChildProcess`는 `EventEmitter`이다..
 
@@ -47,6 +55,8 @@ ChildProcess 클래스는 직접 사용하도록 만들어 진 것이 아니다.
 
 ### Event:  'exit'
 
+<!--english start-->
+
 * `code` {Number} the exit code, if it exited normally.
 * `signal` {String} the signal passed to kill the child process, if it
   was killed by the parent.
@@ -57,6 +67,8 @@ the process terminated due to receipt of a signal, `signal` is the string name
 of the signal, otherwise `null`.
 
 See `waitpid(2)`.
+
+<!--english end-->
 
 * `code` {숫자} 정상적으로 종료되는 경우의 종료코드.
 * `signal` {String} 부모가 자식프로세스를 죽일 때 자식 프로세스에 전달하는 신호.
@@ -70,6 +82,8 @@ See `waitpid(2)`.
 
 ### child.stdin
 
+<!--english start-->
+
 * {Stream object}
 
 A `Writable Stream` that represents the child process's `stdin`.
@@ -77,6 +91,8 @@ Closing this stream via `end()` often causes the child process to terminate.
 
 If the child stdio streams are shared with the parent, then this will
 not be set.
+
+<!--english end-->
 
 * {Stream 객체}
 
@@ -88,12 +104,16 @@ not be set.
 
 ### child.stdout
 
+<!--english start-->
+
 * {Stream object}
 
 A `Readable Stream` that represents the child process's `stdout`.
 
 If the child stdio streams are shared with the parent, then this will
 not be set.
+
+<!--english end-->
 
 * {Stream 객체}
 
@@ -104,12 +124,16 @@ not be set.
 
 ### child.stderr
 
+<!--english start-->
+
 * {Stream object}
 
 A `Readable Stream` that represents the child process's `stderr`.
 
 If the child stdio streams are shared with the parent, then this will
 not be set.
+
+<!--english end-->
 
 * {Stream 객체}
 
@@ -119,6 +143,8 @@ not be set.
 않을 것이다.
 
 ### child.pid
+
+<!--english start-->
 
 * {Integer}
 
@@ -131,6 +157,8 @@ Example:
 
     console.log('Spawned child pid: ' + grep.pid);
     grep.stdin.end();
+
+<!--english end-->
 
 * {정수}
 
@@ -145,6 +173,8 @@ Example:
     grep.stdin.end();
 
 ### child.kill([signal])
+
+<!--english start-->
 
 * `signal` {String}
 
@@ -165,6 +195,8 @@ Note that while the function is called `kill`, the signal delivered to the child
 process may not actually kill it.  `kill` really just sends a signal to a process.
 
 See `kill(2)`
+
+<!--english end-->
 
 * `signal` {문자열}
 
@@ -188,12 +220,16 @@ See `kill(2)`
 
 ### child.send(message, [sendHandle])
 
+<!--english start-->
+
 * `message` {Object}
 * `sendHandle` {Handle object}
 
 Send a message (and, optionally, a handle object) to a child process.
 
 See `child_process.fork()` for details.
+
+<!--english end-->
 
 * `message` {객체}
 * `sendHandle` {Handle 객체}
@@ -203,6 +239,8 @@ See `child_process.fork()` for details.
 자세한 내용은 `child_process.fork()`를 참고해라..
 
 ## child_process.spawn(command, [args], [options])
+
+<!--english start-->
 
 * `command` {String} The command to run
 * `args` {Array} List of string arguments
@@ -311,6 +349,8 @@ undocumented APIs in Node, they should not be used.
 
 See also: `child_process.exec()` and `child_process.fork()`
 
+<!--english end-->
+
 * `command` {문자열} 실행할 명령어
 * `args` {배열} 문자열 아규먼트의 리스트
 * `options` {객체}
@@ -387,7 +427,7 @@ See also: `child_process.exec()` and `child_process.fork()`
     });
 
 
-실대한 실행을 확인하는 예제.
+실패한 실행을 확인하는 예제.
 
     var spawn = require('child_process').spawn,
         child = spawn('bad_command');
@@ -416,6 +456,8 @@ spawn이 비어 있는 옵션 객체를 받으면 `process.env`를 사용하는 
 `child_process.exec()`와 `child_process.fork()`도 참고해라.
 
 ## child_process.exec(command, [options], callback)
+
+<!--english start-->
 
 * `command` {String} The command to run, with space-separated arguments
 * `options` {Object}
@@ -469,6 +511,8 @@ if it runs longer than `timeout` milliseconds. The child process is killed with
 amount of data allowed on stdout or stderr - if this value is exceeded then
 the child process is killed.
 
+<!--english end-->
+
 * `command` {문자열} 실행할 명령어로 전달할 아규먼트는 공백으로 구분한다
 * `options` {객체}
   * `cwd` {문자열} 자식 프로세스의 현재 워킹 디렉토리
@@ -520,6 +564,8 @@ the child process is killed.
 
 ## child_process.execFile(file, args, options, callback)
 
+<!--english start-->
+
 * `file` {String} The filename of the program to run
 * `args` {Array} List of string arguments
 * `options` {Object}
@@ -540,6 +586,8 @@ the child process is killed.
 This is similar to `child_process.exec()` except it does not execute a
 subshell but rather the specified file directly. This makes it slightly
 leaner than `child_process.exec`. It has the same options.
+
+<!--english end-->
 
 * `file` {문자열} 실행할 프로그램의 파일명
 * `args` {배열} 문자열 아규먼트의 목록
@@ -564,6 +612,8 @@ leaner than `child_process.exec`. It has the same options.
 
 
 ## child_process.fork(modulePath, [args], [options])
+
+<!--english start-->
 
 * `modulePath` {String} The module to run in the child
 * `args` {Array} List of string arguments
@@ -632,6 +682,8 @@ processes:
         server.listen(serverHandle);
       }
     });
+
+<!--english end-->
 
 * `modulePath` {문자열} 자식프로세스에서 실행될 모듈
 * `args` {배열} 문자열 아규먼트의 목록
