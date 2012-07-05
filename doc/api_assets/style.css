@@ -28,6 +28,18 @@ a {
       color: #b950b7;
     }
 
+aside {
+  display: none;
+}
+
+.apidoc #apicontent aside p,
+.apidoc #apicontent aside li,
+.apidoc #apicontent aside code,
+.apidoc #apicontent aside pre,
+.apidoc #apicontent aside tt {
+  color: #8F8F8F;
+}
+
 #changelog #gtoc {
   display: none;
 }
