@@ -33,9 +33,21 @@ function doJSON(input, filename, cb) {
   var current = root;
   var state = null;
   var lexed = marked.lexer(input);
+  var isEnglish = false;
   lexed.forEach(function (tok) {
     var type = tok.type;
     var text = tok.text;
+
+    // english text doesn't make to JSON
+    if (/<!--english start-->/g.test(text)) {
+      isEnglish = true;
+    }
+    if (/<!--english end-->/g.test(text)) {
+      isEnglish = false;
+      return;
+    }
+
+    if(isEnglish) { return;}
 
     // <!-- type = module -->
     // This is for cases where the markdown semantic structure is lacking.
