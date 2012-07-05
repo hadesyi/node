@@ -1,14 +1,14 @@
 html {
-	-webkit-font-smoothing: antialiased;
+    -webkit-font-smoothing: antialiased;
 }
 
 body {
-	background: #46483e;
-	color: #eee;
-	font-size: 12px;
-	line-height: 180%;
+    background: #46483e;
+    color: #eee;
+    font-size: 12px;
+    line-height: 180%;
     font-family: "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Verdana, Tahoma, sans-serif;
-	margin: 0;
+    margin: 0;
     padding-top: 40px;
     border-top: 6px #8cc84b solid;
 }
@@ -23,19 +23,19 @@ body.int {
 }
 
 img {
-	border: 0;
+    border: 0;
 }
 @media all and (min-height: 650px) { #toc { position: fixed; }}
 #toctitle {
   display: none;
 }
 h1, h2, h3, h4 {
-	color: #d2d8ba;
-	font-family: Helvetica, Arial, sans-serif;
-	margin-top: 2em;
-	margin-right: 0;
-	margin-bottom: 10px;
-	margin-left: 0;
+    color: #d2d8ba;
+    font-family: Helvetica, Arial, sans-serif;
+    margin-top: 2em;
+    margin-right: 0;
+    margin-bottom: 10px;
+    margin-left: 0;
     text-transform: uppercase;
 }
 h1 {
@@ -64,7 +64,7 @@ h1 a, h2 a, h3 a, h4 a
     width: 775px;
     margin: 0 auto;
     text-align: center;
-	color: #d2d8ba;
+    color: #d2d8ba;
 
   /* preload platform-icons.png */
   background-image: url(http://nodejs.org/images/platform-icons.png);
@@ -241,6 +241,7 @@ h1 a, h2 a, h3 a, h4 a
 #column2.interior li a.community { background: url(http://nodejs.org/images/icons-interior.png) no-repeat -156px -141px; }
 #column2.interior li a.logos { background: url(http://nodejs.org/images/icons-interior.png) no-repeat -156px -165px; }
 #column2.interior li a.jobs { background: url(http://nodejs.org/images/icons-interior.png) no-repeat -156px -189px; } 
+#column2.interior li a.contributors { background: url(http://nodejs.org/images/icons-interior.png) no-repeat -156px -44px; }
 
 #column2.interior li a.home.current { background-position: 2px 3px; }
 #column2.interior li a.download.current { background-position: 2px -21px; }
@@ -251,6 +252,7 @@ h1 a, h2 a, h3 a, h4 a
 #column2.interior li a.community.current { background-position: 2px -141px; }
 #column2.interior li a.logos.current { background-position: 2px -165px; }
 #column2.interior li a.jobs.current { background-position: 2px -189px; }
+#column2.interior li a.contributors.current { background-position: 2px -45px; }
 #column2.interior li a.current { color: #8cc84b; font-weight: bold; }
 
 #column2.interior li a.home:hover { background-position: -331px 3px; }
@@ -262,6 +264,7 @@ h1 a, h2 a, h3 a, h4 a
 #column2.interior li a.community:hover { background-position: -331px -141px; }
 #column2.interior li a.logos:hover { background-position: -331px -165px; }
 #column2.interior li a.jobs:hover { background-position: -331px -189px; }
+#column2.interior li a.contributors:hover { background-position: -331px -45px; }
 #column2.interior li a:hover { color: #000000; text-decoration: none; }
 
 #column2.interior li + li {
@@ -542,7 +545,7 @@ div#download ul#documentation li a {
 }
 
   pre, tt, code {
-	  color: #d2d8ba;
+      color: #d2d8ba;
     font-size: 14px;
     line-height: 22px;
     font-family: Monaco, Consolas, "Lucida Console", monospace;
@@ -554,11 +557,11 @@ div#download ul#documentation li a {
   }
 
 pre {
-	padding-left: 1em;
+    padding-left: 1em;
     margin-left: -1em;
-	border-left-width: 1px;
-	border-left-style: solid;
-	border-left-color: #626557;
+    border-left-width: 1px;
+    border-left-style: solid;
+    border-left-color: #626557;
 }
 
 .alt pre {
@@ -582,8 +585,8 @@ dd {
 
 
 a {
-	color: #690;
-	text-decoration: none;
+    color: #690;
+    text-decoration: none;
 }
 a:hover { text-decoration: underline; }
 
@@ -596,12 +599,22 @@ a:hover { text-decoration: underline; }
     background-color: transparent;
 }
 
+.alt .contributors a {
+    background-color: #fff;
+    padding: 0 2px;
+}
+
+.alt ul.contributors {
+    margin-left: 50px;
+    margin-top: 20px;
+}
+
 .highlight {
   background: #733;
   padding: 0.2em 0;
 }
 .desktops {
-	font-size: 12px;
+    font-size: 12px;
 }
 
 .release {

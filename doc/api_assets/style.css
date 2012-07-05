@@ -1,6 +1,6 @@
 /*--------------------- Layout and Typography ----------------------------*/
 html {
-	-webkit-font-smoothing: antialiased;
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
@@ -364,6 +364,7 @@ p tt, p code {
 #column2.interior li a.community { background: url(http://nodejs.org/images/icons-interior.png) no-repeat -156px -141px; }
 #column2.interior li a.logos { background: url(http://nodejs.org/images/icons-interior.png) no-repeat -156px -165px; }
 #column2.interior li a.jobs { background: url(http://nodejs.org/images/icons-interior.png) no-repeat -156px -189px; } 
+#column2.interior li a.contributors { background: url(http://nodejs.org/images/icons-interior.png) no-repeat -156px -45px; }
 
 #column2.interior li a.home.current { background-position: 2px 3px; }
 #column2.interior li a.download.current { background-position: 2px -21px; }
@@ -374,6 +375,7 @@ p tt, p code {
 #column2.interior li a.community.current { background-position: 2px -141px; }
 #column2.interior li a.logos.current { background-position: 2px -165px; }
 #column2.interior li a.jobs.current { background-position: 2px -189px; }
+#column2.interior li a.contributors.current { background-position: 2px -45px; }
 #column2.interior li a.current { color: #8cc84b; font-weight: bold; }
 
 #column2.interior li a.home:hover { background-position: -331px 3px; }
@@ -385,6 +387,7 @@ p tt, p code {
 #column2.interior li a.community:hover { background-position: -331px -141px; }
 #column2.interior li a.logos:hover { background-position: -331px -165px; }
 #column2.interior li a.jobs:hover { background-position: -331px -189px; }
+#column2.interior li a.contributors:hover { background-position: -331px -45px; }
 #column2.interior li a:hover { color: #000000; text-decoration: none; }
 
 #column2.interior li + li {
