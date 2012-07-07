@@ -129,7 +129,7 @@ programs.
 <!--type=event-->
 <!--name=SIGINT, SIGUSR1, etc.-->
 
-프로세스가 Signal을 받았을 때 밸상한다. SIGINT, SIGUSR1와 같은 표준 POSIX 신호이름의
+프로세스가 Signal을 받았을 때 발상한다. SIGINT, SIGUSR1와 같은 표준 POSIX 신호이름의
 목록은 sigaction(2)를 봐라.
 
 `SIGINT` 예제:

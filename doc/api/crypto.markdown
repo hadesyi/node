@@ -55,8 +55,8 @@ If no 'ca' details are given, then node.js will use the default publicly trusted
 * `ciphers`: 사용하거나 제외할 암호(cipher)를 설명하는 문자열. 자세한 형식은 
   <http://www.openssl.org/docs/apps/ciphers.html#CIPHER_LIST_FORMAT>를 참조해라.
 
-'ca'에 대한 세부내용을 전달하지 않는다면 node.js는 공개적으로 신뢰할 수 있는 CAㅇ의 리스트를 
-<http://mxr.mozilla.org/mozilla/source/security/nss/lib/ckfw/builtins/certdata.txt>에서 받아서 기본으로 사용할 것이다.
+'ca'에 대한 세부내용을 전달하지 않는다면 node.js는 공개적으로 신뢰할 수 있는 CA의 리스트를 기본으로
+<http://mxr.mozilla.org/mozilla/source/security/nss/lib/ckfw/builtins/certdata.txt>에서 받아서 사용할 것이다.
 
 
 ## crypto.createHash(algorithm)

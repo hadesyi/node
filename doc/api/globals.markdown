@@ -33,7 +33,7 @@ scope; `var something` inside a Node module will be local to that module.
 
 * {Object} 전역 네임스페이스 객체.
 
-브라우저에서 최상위 범위는 전역 번위이다. 이는 브라우저의 전역 범위에서 `var something`가
+브라우저에서 최상위 범위는 전역 범위이다. 이는 브라우저의 전역 범위에서 `var something`가
 전역 변수를 정의한다는 것을 의미한다. Node에서는 다르다. 최상위 범위는 전역 범위가 아니다.
 Node 모듈에서 `var something`는 해당 모듈의 지역 범위가 된다.
 
