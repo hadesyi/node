@@ -18,10 +18,10 @@ different, and explained below.
 
     Stability: 3 - Stable
 
-Node는 `child_process` 모듈로 세 가지 방향의 `popen(3)` 기능을 
+Node는 `child_process` 모듈로 세 방향의 `popen(3)` 기능을 
 제공한다.
 
-완전한 넌블락킹 방ㅃ으로 자식 프로세스의 `stdin`, `stdout`, `stderr`에 
+완전한 넌블락킹 방법으로 자식 프로세스의 `stdin`, `stdout`, `stderr`에 
 데이터를 스트리밍하는 것이 가능하다.
 
 자식 프로세스를 생성하려면 `require('child_process').spawn()`나 

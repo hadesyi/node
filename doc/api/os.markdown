@@ -181,7 +181,7 @@ Example inspection of os.cpus:
 
 <!--english end-->
 
-모든 CPU/코어에 대한 정보를 배열에 담아서 그 배열을 리턴한다. CPU/코어에 대한 정보는 model, speed(MHz 단위), times(user, nide, sys, idle, irq로 분류해서 각각 사용한 CPU 타임(CPU 틱의 수.)이다.
+모든 CPU/코어에 대한 정보를 배열에 담아서 그 배열을 리턴한다. CPU/코어에 대한 정보는 model, speed(MHz 단위), times(user, nide, sys, idle, irq로 분류해서 각각 사용한 CPU 타임(CPU 틱의 수)이다.
 
 os.cpus의 결과:
 
