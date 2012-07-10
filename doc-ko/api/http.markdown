@@ -1,33 +1,5 @@
 # HTTP
 
-<!--english start-->
-
-    Stability: 3 - Stable
-
-To use the HTTP server and client one must `require('http')`.
-
-The HTTP interfaces in Node are designed to support many features
-of the protocol which have been traditionally difficult to use.
-In particular, large, possibly chunk-encoded, messages. The interface is
-careful to never buffer entire requests or responses--the
-user is able to stream data.
-
-HTTP message headers are represented by an object like this:
-
-    { 'content-length': '123',
-      'content-type': 'text/plain',
-      'connection': 'keep-alive',
-      'accept': '*/*' }
-
-Keys are lowercased. Values are not modified.
-
-In order to support the full spectrum of possible HTTP applications, Node's
-HTTP API is very low-level. It deals with stream handling and message
-parsing only. It parses a message into headers and body but it does not
-parse the actual headers or the body.
-
-<!--english end-->
-
     Stability: 3 - Stable
 
 HTTP 서버와 클라이언트를 사용하려면 `require('http')`를 사용해라.
@@ -53,15 +25,6 @@ HTTP 어플리케이션이 가능한 전체 범위를 다 지원하기 위해서
 
 ## http.createServer([requestListener])
 
-<!--english start-->
-
-Returns a new web server object.
-
-The `requestListener` is a function which is automatically
-added to the `'request'` event.
-
-<!--english end-->
-
 새로운 웹서버 객체를 반환한다.
 
 `requestListener`는 자동으로 `'request'` 이벤트에 추가되는 
@@ -69,26 +32,9 @@ added to the `'request'` event.
 
 ## Class: http.Server
 
-<!--english start-->
-
-This is an `EventEmitter` with the following events:
-
-<!--english end-->
-
 이 클래스는 다음의 이벤트를 가진 `EventEmitter`다.
 
 ### Event: 'request'
-
-<!--english start-->
-
-`function (request, response) { }`
-
-Emitted each time there is a request. Note that there may be multiple requests
-per connection (in the case of keep-alive connections).
- `request` is an instance of `http.ServerRequest` and `response` is
- an instance of `http.ServerResponse`
-
-<!--english end-->
 
 `function (request, response) { }`
 
@@ -99,16 +45,6 @@ per connection (in the case of keep-alive connections).
 
 ### Event: 'connection'
 
-<!--english start-->
-
-`function (socket) { }`
-
- When a new TCP stream is established. `socket` is an object of type
- `net.Socket`. Usually users will not want to access this event. The
- `socket` can also be accessed at `request.connection`.
-
-<!--english end-->
-
 `function (socket) { }`
 
  새로운 TCP 스트림이 생성되었을 때 발생한다. `socket`은 `net.Socket` 타입의 
@@ -117,37 +53,11 @@ per connection (in the case of keep-alive connections).
 
 ### Event: 'close'
 
-<!--english start-->
-
-`function () { }`
-
- Emitted when the server closes.
-
-<!--english end-->
-
 `function () { }`
 
  서버가 닫혔을 때 발생한다.
 
 ### Event: 'checkContinue'
-
-<!--english start-->
-
-`function (request, response) { }`
-
-Emitted each time a request with an http Expect: 100-continue is received.
-If this event isn't listened for, the server will automatically respond
-with a 100 Continue as appropriate.
-
-Handling this event involves calling `response.writeContinue` if the client
-should continue to send the request body, or generating an appropriate HTTP
-response (e.g., 400 Bad Request) if the client should not continue to send the
-request body.
-
-Note that when this event is emitted and handled, the `request` event will
-not be emitted.
-
-<!--english end-->
 
 `function (request, response) { }`
 
@@ -160,24 +70,6 @@ http Expect: 100-continue 헤더를 가진 요청을 받을 때마다 발생한�
 적절한 HTTP 응답(예시: 400 Bad Request)을 생성한다.
 
 ### Event: 'upgrade'
-
-<!--english start-->
-
-`function (request, socket, head) { }`
-
-Emitted each time a client requests a http upgrade. If this event isn't
-listened for, then clients requesting an upgrade will have their connections
-closed.
-
-* `request` is the arguments for the http request, as it is in the request event.
-* `socket` is the network socket between the server and client.
-* `head` is an instance of Buffer, the first packet of the upgraded stream, this may be empty.
-
-After this event is emitted, the request's socket will not have a `data`
-event listener, meaning you will need to bind to it in order to handle data
-sent to the server on that socket.
-
-<!--english end-->
 
 `function (request, socket, head) { }`
 
@@ -195,33 +87,11 @@ sent to the server on that socket.
 
 ### Event: 'clientError'
 
-<!--english start-->
-
-`function (exception) { }`
-
-If a client connection emits an 'error' event - it will forwarded here.
-
-<!--english end-->
-
 `function (exception) { }`
 
 클라이언트 연결에서 'error' 이벤트가 발생하면 이 이벤트가 진행된다.
 
 ### server.listen(port, [hostname], [callback])
-
-<!--english start-->
-
-Begin accepting connections on the specified port and hostname.  If the
-hostname is omitted, the server will accept connections directed to any
-IPv4 address (`INADDR_ANY`).
-
-To listen to a unix socket, supply a filename instead of port and hostname.
-
-This function is asynchronous. The last parameter `callback` will be added as
-a listener for the ['listening'](net.html#event_listening_) event.
-See also [net.Server.listen()](net.html#server.listen).
-
-<!--english end-->
 
 지정한 hostname과 port에서 열결을 받아들이기 시작한다. hostname을 생락하면 서버는 
 IPv4 주소(`INADDR_ANY`)에서 들어오는 연결을 모두 받아들일 것이다.
@@ -235,16 +105,6 @@ IPv4 주소(`INADDR_ANY`)에서 들어오는 연결을 모두 받아들일 것�
 
 ### server.listen(path, [callback])
 
-<!--english start-->
-
-Start a UNIX socket server listening for connections on the given `path`.
-
-This function is asynchronous. The last parameter `callback` will be added as
-a listener for the ['listening'](net.html#event_listening_) event.
-See also [net.Server.listen()](net.html#server.listen).
-
-<!--english end-->
-
 전달한 `path`에서 연결을 받아들이는 UNIX 소켓 서버를 시작한다.
 
 이 함수는 비동기 함수다. 마지막 파라미터 `callback`은 
@@ -254,28 +114,11 @@ See also [net.Server.listen()](net.html#server.listen).
 
 ### server.close()
 
-<!--english start-->
-
-Stops the server from accepting new connections.
-See [net.Server.close()](net.html#server.close).
-
-<!--english end-->
-
 서버가 새로운 연결을 받아들이는 것을 멈춘다.
 [net.Server.close()](net.html#server.close)를 봐라.
 
 
 ## Class: http.ServerRequest
-
-<!--english start-->
-
-This object is created internally by a HTTP server -- not by
-the user -- and passed as the first argument to a `'request'` listener.
-
-The request implements the [Readable Stream](stream.html#readable_stream)
-interface. This is an `EventEmitter` with the following events:
-
-<!--english end-->
 
 사용자가 아니라 HTTP 서버 내부적으로 생성되는 객체다. 
 `'request'` 리스너의 첫번째 아규먼트로 전달한다.
@@ -284,19 +127,6 @@ interface. This is an `EventEmitter` with the following events:
 이 클래스는 다음의 이벤트를 가지는 `EventEmitter`이다.
 
 ### Event: 'data'
-
-<!--english start-->
-
-`function (chunk) { }`
-
-Emitted when a piece of the message body is received. The chunk is a string if
-an encoding has been set with `request.setEncoding()`, otherwise it's a
-[Buffer](buffer.html).
-
-Note that the __data will be lost__ if there is no listener when a
-`ServerRequest` emits a `'data'` event.
-
-<!--english end-->
 
 `function (chunk) { }`
 
@@ -308,35 +138,12 @@ __데이터를 읽어버릴 것이다.__
 
 ### Event: 'end'
 
-<!--english start-->
-
-`function () { }`
-
-Emitted exactly once for each request. After that, no more `'data'` events
-will be emitted on the request.
-
-<!--english end-->
-
 `function () { }`
 
 각 요청마다 정확히 한번씩만 발생한다. 이 이벤트 후에는 해당 요청에서 `'data'` 이벤트가 
 더이상 발생하지 않을 것이다.
 
 ### Event: 'close'
-
-<!--english start-->
-
-`function () { }`
-
-Indicates that the underlaying connection was terminated before
-`response.end()` was called or able to flush.
-
-Just like `'end'`, this event occurs only once per request, and no more `'data'`
-events will fire afterwards.
-
-Note: `'close'` can fire after `'end'`, but not vice versa.
-
-<!--english end-->
 
 `function () { }`
 
@@ -350,51 +157,10 @@ Note: `'end'`후에 `'close'`가 발생할 수 있지만 그 반대로는 안된
 
 ### request.method
 
-<!--english start-->
-
-The request method as a string. Read only. Example:
-`'GET'`, `'DELETE'`.
-
-<!--english end-->
-
 요청 메서드의 문자열 표현. 읽기 전용이다. 예시: `'GET'`, `'DELETE'`
 
 
 ### request.url
-
-<!--english start-->
-
-Request URL string. This contains only the URL that is
-present in the actual HTTP request. If the request is:
-
-    GET /status?name=ryan HTTP/1.1\r\n
-    Accept: text/plain\r\n
-    \r\n
-
-Then `request.url` will be:
-
-    '/status?name=ryan'
-
-If you would like to parse the URL into its parts, you can use
-`require('url').parse(request.url)`.  Example:
-
-    node> require('url').parse('/status?name=ryan')
-    { href: '/status?name=ryan',
-      search: '?name=ryan',
-      query: 'name=ryan',
-      pathname: '/status' }
-
-If you would like to extract the params from the query string,
-you can use the `require('querystring').parse` function, or pass
-`true` as the second argument to `require('url').parse`.  Example:
-
-    node> require('url').parse('/status?name=ryan', true)
-    { href: '/status?name=ryan',
-      search: '?name=ryan',
-      query: { name: 'ryan' },
-      pathname: '/status' }
-
-<!--english end-->
 
 요청 URL 문자열. 이 값은 실제 HTTP 요청에 있는 URL만 담고 있다. 
 요청이 다음과 같다면,
@@ -430,34 +196,13 @@ URL을 부분별로 파싱하고 싶다면 `require('url').parse(request.url)`�
 
 ### request.headers
 
-<!--english start-->
-
-Read only.
-
-<!--english end-->
-
 읽기 전용.
 
 ### request.trailers
 
-<!--english start-->
-
-Read only; HTTP trailers (if present). Only populated after the 'end' event.
-
-<!--english end-->
-
 읽기 전용. (존재하는 경우) HTTP trailers이다. 'end' 이벤트 후에만 존재한다.
 
 ### request.httpVersion
-
-<!--english start-->
-
-The HTTP protocol version as a string. Read only. Examples:
-`'1.1'`, `'1.0'`.
-Also `request.httpVersionMajor` is the first integer and
-`request.httpVersionMinor` is the second.
-
-<!--english end-->
 
 HTTP 프로토콜 버전의 문자열 표현이다. 읽기 전용. 
 예시: `'1.1'`, `'1.0'` 
@@ -467,50 +212,20 @@ HTTP 프로토콜 버전의 문자열 표현이다. 읽기 전용.
 
 ### request.setEncoding([encoding])
 
-<!--english start-->
-
-Set the encoding for the request body. Either `'utf8'` or `'binary'`. Defaults
-to `null`, which means that the `'data'` event will emit a `Buffer` object..
-
-<!--english end-->
-
 요청 바디의 인코딩을 설정하고 `'utf8'`나 `'binary'`가 가능하다. 기본값은 `'data'` 
 이벤트가 `Buffer` 객체를 발생시킨다는 것을 나타내는 `null`이다.
 
 
 ### request.pause()
 
-<!--english start-->
-
-Pauses request from emitting events.  Useful to throttle back an upload.
-
-<!--english end-->
-
 요청이 이벤트를 발생키시는 것을 멈춘다. 흐름을 제어하는 데 유용하다.
 
 
 ### request.resume()
 
-<!--english start-->
-
-Resumes a paused request.
-
-<!--english end-->
-
 멈췄던 요청을 복구한다.
 
 ### request.connection
-
-<!--english start-->
-
-The `net.Socket` object associated with the connection.
-
-
-With HTTPS support, use request.connection.verifyPeer() and
-request.connection.getPeerCertificate() to obtain the client's
-authentication details.
-
-<!--english end-->
 
 요청과 연결된 `net.Socket` 객체다.
 
@@ -523,16 +238,6 @@ request.connection.getPeerCertificate()를 사용해라.
 
 ## Class: http.ServerResponse
 
-<!--english start-->
-
-This object is created internally by a HTTP server--not by the user. It is
-passed as the second parameter to the `'request'` event.
-
-The response implements the [Writable  Stream](stream.html#writable_stream)
-interface. This is an `EventEmitter` with the following events:
-
-<!--english end-->
-
 사용자가 아니라 HTTP 서버가 내부적으로 생성하는 객체다. `'request'` 이벤트의 
 두번째 파라미터로 전달된다.
 
@@ -541,15 +246,6 @@ interface. This is an `EventEmitter` with the following events:
 
 ### Event: 'close'
 
-<!--english start-->
-
-`function () { }`
-
-Indicates that the underlaying connection was terminated before
-`response.end()` was called or able to flush.
-
-<!--english end-->
-
 `function () { }`
 
 `response.end()`가 호출되기 전이나 플러시할 수 있을 때 의존하는 연결을 
@@ -557,48 +253,11 @@ Indicates that the underlaying connection was terminated before
 
 ### response.writeContinue()
 
-<!--english start-->
-
-Sends a HTTP/1.1 100 Continue message to the client, indicating that
-the request body should be sent. See the [checkContinue](#event_checkContinue_) event on
-`Server`.
-
-<!--english end-->
-
 클라이언트에 요청 바디가 보내질 것이라는 것을 나타내는 HTTP/1.1 100 Continue 
 메시지를 보낸다. `Server`의 [checkContinue](#event_checkContinue_) 이벤트를 봐라.
 
 
 ### response.writeHead(statusCode, [reasonPhrase], [headers])
-
-<!--english start-->
-
-Sends a response header to the request. The status code is a 3-digit HTTP
-status code, like `404`. The last argument, `headers`, are the response headers.
-Optionally one can give a human-readable `reasonPhrase` as the second
-argument.
-
-Example:
-
-    var body = 'hello world';
-    response.writeHead(200, {
-      'Content-Length': body.length,
-      'Content-Type': 'text/plain' });
-
-This method must only be called once on a message and it must
-be called before `response.end()` is called.
-
-If you call `response.write()` or `response.end()` before calling this, the
-implicit/mutable headers will be calculated and call this function for you.
-
-Note: that Content-Length is given in bytes not characters. The above example
-works because the string `'hello world'` contains only single byte characters.
-If the body contains higher coded characters then `Buffer.byteLength()`
-should be used to determine the number of bytes in a given encoding.
-And Node does not check whether Content-Length and the length of the body
-which has been transmitted are equal or not.
-
-<!--english end-->
 
 요청에 응답 헤더를 보낸다. 상태코드는 `404`같은 3자리 수의 HTTP 상태코드이다. 
 마지막 파리미터인 `headers`는 응답 헤더다. 선택적으로 두번째 파라미터에 사람이 읽을 수 
@@ -624,21 +283,6 @@ Note: 해당 Content-Length는 문자가 아니라 바이트로 주어진다. �
 
 ### response.statusCode
 
-<!--english start-->
-
-When using implicit headers (not calling `response.writeHead()` explicitly), this property
-controls the status code that will be send to the client when the headers get
-flushed.
-
-Example:
-
-    response.statusCode = 404;
-
-After response header was sent to the client, this property indicates the
-status code which was sent out.
-
-<!--english end-->
-
 (명시적으로 `response.writeHead()`를 호출하지 않고) 암묵적인 헤더를 사용하는 경우 헤더가 플러시됐을 
 때 클라이언트에 보낼 상태코드를 이 프로퍼티가 제어한다. 
 
@@ -649,22 +293,6 @@ status code which was sent out.
 응답해더가 클라이언트에 보내진 후 이 프로퍼티는 보낸 상태코드를 나타낸다.
 
 ### response.setHeader(name, value)
-
-<!--english start-->
-
-Sets a single header value for implicit headers.  If this header already exists
-in the to-be-sent headers, its value will be replaced.  Use an array of strings
-here if you need to send multiple headers with the same name.
-
-Example:
-
-    response.setHeader("Content-Type", "text/html");
-
-or
-
-    response.setHeader("Set-Cookie", ["type=ninja", "language=javascript"]);
-
-<!--english end-->
 
 암묵적인 헤더에 단일 헤더값을 설정한다. 전송할 헤더에 이미 이 헤더가 존재한다면 해당 값은 
 덮어써질 것이다. 같은 이름을 가진 여러 헤더를 전송해야 한다면 여기에 문자열 배열을 
@@ -681,18 +309,6 @@ or
 
 ### response.getHeader(name)
 
-<!--english start-->
-
-Reads out a header that's already been queued but not sent to the client.  Note
-that the name is case insensitive.  This can only be called before headers get
-implicitly flushed.
-
-Example:
-
-    var contentType = response.getHeader('content-type');
-
-<!--english end-->
-
 이미 큐에 들어갔지만 아직 클라이언트에는 보내지 않은 헤더를 읽는다. 이름이 대소문자를 
 구분한다는 점에 주의해라. 이 함수는 헤더가 암묵적으로 플러시 되기 전에만 호출할 수 있다.
 
@@ -702,16 +318,6 @@ Example:
 
 ### response.removeHeader(name)
 
-<!--english start-->
-
-Removes a header that's queued for implicit sending.
-
-Example:
-
-    response.removeHeader("Content-Encoding");
-
-<!--english end-->
-
 암묵적으로 보내려고 큐에 있는 헤더를 제거한다.
 
 예제:
@@ -720,29 +326,6 @@ Example:
 
 
 ### response.write(chunk, [encoding])
-
-<!--english start-->
-
-If this method is called and `response.writeHead()` has not been called, it will
-switch to implicit header mode and flush the implicit headers.
-
-This sends a chunk of the response body. This method may
-be called multiple times to provide successive parts of the body.
-
-`chunk` can be a string or a buffer. If `chunk` is a string,
-the second parameter specifies how to encode it into a byte stream.
-By default the `encoding` is `'utf8'`.
-
-**Note**: This is the raw HTTP body and has nothing to do with
-higher-level multi-part body encodings that may be used.
-
-The first time `response.write()` is called, it will send the buffered
-header information and the first body to the client. The second time
-`response.write()` is called, Node assumes you're going to be streaming
-data, and sends that separately. That is, the response is buffered up to the
-first chunk of body.
-
-<!--english end-->
 
 이 메서드는 호출하고 `response.writeHead()`는 호출하지 않았다면 암묵적인 헤더 모드로 
 바꾸고 암묵적인 헤더를 플러시할 것이다.
@@ -762,26 +345,6 @@ first chunk of body.
 
 ### response.addTrailers(headers)
 
-<!--english start-->
-
-This method adds HTTP trailing headers (a header but at the end of the
-message) to the response.
-
-Trailers will **only** be emitted if chunked encoding is used for the
-response; if it is not (e.g., if the request was HTTP/1.0), they will
-be silently discarded.
-
-Note that HTTP requires the `Trailer` header to be sent if you intend to
-emit trailers, with a list of the header fields in its value. E.g.,
-
-    response.writeHead(200, { 'Content-Type': 'text/plain',
-                              'Trailer': 'Content-MD5' });
-    response.write(fileData);
-    response.addTrailers({'Content-MD5': "7895bf4b8828b55ceaf47747b4bca667"});
-    response.end();
-
-<!--english end-->
-
 이 메서드는 HTTP trailing headers(헤더이지만 메시지 끝에 오는 헤더)를 응답에 
 추가한다. 
 
@@ -799,18 +362,6 @@ emit trailers, with a list of the header fields in its value. E.g.,
 
 ### response.end([data], [encoding])
 
-<!--english start-->
-
-This method signals to the server that all of the response headers and body
-has been sent; that server should consider this message complete.
-The method, `response.end()`, MUST be called on each
-response.
-
-If `data` is specified, it is equivalent to calling `response.write(data, encoding)`
-followed by `response.end()`.
-
-<!--english end-->
-
 이 메서드는 모든 응답 헤더와 바디를 보냈다고 서버에 신호를 보낸다. 해당 서버는 이 메시지를 
 완료된 것으로 간주해야 한다. `response.end()` 메서드는 반드시 각 응답마다 호출되어야 
 한다.
@@ -820,89 +371,6 @@ followed by `response.end()`.
 
 
 ## http.request(options, callback)
-
-<!--english start-->
-
-Node maintains several connections per server to make HTTP requests.
-This function allows one to transparently issue requests.  `options` align
-with [url.parse()](url.html#url.parse).
-
-Options:
-
-- `host`: A domain name or IP address of the server to issue the request to.
-  Defaults to `'localhost'`.
-- `hostname`: To support `url.parse()` `hostname` is preferred over `host`
-- `port`: Port of remote server. Defaults to 80.
-- `socketPath`: Unix Domain Socket (use one of host:port or socketPath)
-- `method`: A string specifying the HTTP request method. Defaults to `'GET'`.
-- `path`: Request path. Defaults to `'/'`. Should include query string if any.
-  E.G. `'/index.html?page=12'`
-- `headers`: An object containing request headers.
-- `auth`: Basic authentication i.e. `'user:password'` to compute an
-  Authorization header.
-- `agent`: Controls [Agent](#http.Agent) behavior. When an Agent is used
-  request will default to `Connection: keep-alive`. Possible values:
- - `undefined` (default): use [global Agent](#http.globalAgent) for this host
-   and port.
- - `Agent` object: explicitly use the passed in `Agent`.
- - `false`: opts out of connection pooling with an Agent, defaults request to
-   `Connection: close`.
-
-`http.request()` returns an instance of the `http.ClientRequest`
-class. The `ClientRequest` instance is a writable stream. If one needs to
-upload a file with a POST request, then write to the `ClientRequest` object.
-
-Example:
-
-    var options = {
-      host: 'www.google.com',
-      port: 80,
-      path: '/upload',
-      method: 'POST'
-    };
-
-    var req = http.request(options, function(res) {
-      console.log('STATUS: ' + res.statusCode);
-      console.log('HEADERS: ' + JSON.stringify(res.headers));
-      res.setEncoding('utf8');
-      res.on('data', function (chunk) {
-        console.log('BODY: ' + chunk);
-      });
-    });
-
-    req.on('error', function(e) {
-      console.log('problem with request: ' + e.message);
-    });
-
-    // write data to request body
-    req.write('data\n');
-    req.write('data\n');
-    req.end();
-
-Note that in the example `req.end()` was called. With `http.request()` one
-must always call `req.end()` to signify that you're done with the request -
-even if there is no data being written to the request body.
-
-If any error is encountered during the request (be that with DNS resolution,
-TCP level errors, or actual HTTP parse errors) an `'error'` event is emitted
-on the returned request object.
-
-There are a few special headers that should be noted.
-
-* Sending a 'Connection: keep-alive' will notify Node that the connection to
-  the server should be persisted until the next request.
-
-* Sending a 'Content-length' header will disable the default chunked encoding.
-
-* Sending an 'Expect' header will immediately send the request headers.
-  Usually, when sending 'Expect: 100-continue', you should both set a timeout
-  and listen for the `continue` event. See RFC2616 Section 8.2.3 for more
-  information.
-
-* Sending an Authorization header will override using the `auth` option
-  to compute basic authentication.
-
-<!--english end-->
 
 Node는 HTTP 요청에 대한 연결을 서버당 여러 개 유지하고 있다. 이 함수는 투명하게 
 요청을 진행한다. `options`은 [url.parse()](url.html#url.parse)를 지원한다.
@@ -979,28 +447,6 @@ Node maintains several connections per server to make HTTP requests.ㅏ
 
 ## http.get(options, callback)
 
-<!--english start-->
-
-Since most requests are GET requests without bodies, Node provides this
-convenience method. The only difference between this method and `http.request()` is
-that it sets the method to GET and calls `req.end()` automatically.
-
-Example:
-
-    var options = {
-      host: 'www.google.com',
-      port: 80,
-      path: '/index.html'
-    };
-
-    http.get(options, function(res) {
-      console.log("Got response: " + res.statusCode);
-    }).on('error', function(e) {
-      console.log("Got error: " + e.message);
-    });
-
-<!--english end-->
-
 대부분의 요청은 바디가 없는 GET 요청이기 때문에 Node는 이 편리한 메서드를 제공한다. 
 이 메서드와 `http.request()`간의 유일한 차이점은 자동적으로 메서드를 GET으로 설정하고 
 `req.end()`를 호출한다는 점이다.
@@ -1021,39 +467,6 @@ Example:
 
 
 ## Class: http.Agent
-
-<!--english start-->
-
-In node 0.5.3+ there is a new implementation of the HTTP Agent which is used
-for pooling sockets used in HTTP client requests.
-
-Previously, a single agent instance help the pool for single host+port. The
-current implementation now holds sockets for any number of hosts.
-
-The current HTTP Agent also defaults client requests to using
-Connection:keep-alive. If no pending HTTP requests are waiting on a socket
-to become free the socket is closed. This means that node's pool has the
-benefit of keep-alive when under load but still does not require developers
-to manually close the HTTP clients using keep-alive.
-
-Sockets are removed from the agent's pool when the socket emits either a
-"close" event or a special "agentRemove" event. This means that if you intend
-to keep one HTTP request open for a long time and don't want it to stay in the
-pool you can do something along the lines of:
-
-    http.get(options, function(res) {
-      // Do stuff
-    }).on("socket", function (socket) {
-      socket.emit("agentRemove");
-    });
-
-Alternatively, you could just opt out of pooling entirely using `agent:false`:
-
-    http.get({host:'localhost', port:80, path:'/', agent:false}, function (res) {
-      // Do stuff
-    })
-
-<!--english end-->
 
 node 0.5.3이상부터는 HTTP 클라이언트 요청의 풀링 소켓에 사용하는 HTTP 에이전트의 
 새로운 구현체가 있다. 
@@ -1084,96 +497,23 @@ keep-alive 이점을 가지지만 여전히 keep-alive를 사용하는 HTTP 클�
 
 ### agent.maxSockets
 
-<!--english start-->
-
-By default set to 5. Determines how many concurrent sockets the agent can have 
-open per host.
-
-<!--english end-->
-
 기본적으로 5로 설정되어 있다. 에이전트가 얼마나 많은 동시 소켓을 호스트당 열 수 있는지를 
 결정한다.
 
 ### agent.sockets
 
-<!--english start-->
-
-An object which contains arrays of sockets currently in use by the Agent. Do not 
-modify.
-
-<!--english end-->
-
 Agent가 현재 사용하고 있는 소켓의 배열을 담고 있는 객체다. 수정하면 안된다.
 
 ### agent.requests
-
-<!--english start-->
-
-An object which contains queues of requests that have not yet been assigned to 
-sockets. Do not modify.
-
-<!--english end-->
 
 소켓에 아직 할당되지 않은 요청의 큐를 담고 있는 객체다. 수정하면 안된다.
 
 ## http.globalAgent
 
-<!--english start-->
-
-Global instance of Agent which is used as the default for all http client
-requests.
-
-<!--english end-->
-
 모든 HTTP 클라이언트 요청에 기본적으로 사용되는 Agent의 전역 인스턴스다. 
 
 
 ## Class: http.ClientRequest
-
-<!--english start-->
-
-This object is created internally and returned from `http.request()`.  It
-represents an _in-progress_ request whose header has already been queued.  The
-header is still mutable using the `setHeader(name, value)`, `getHeader(name)`,
-`removeHeader(name)` API.  The actual header will be sent along with the first
-data chunk or when closing the connection.
-
-To get the response, add a listener for `'response'` to the request object.
-`'response'` will be emitted from the request object when the response
-headers have been received.  The `'response'` event is executed with one
-argument which is an instance of `http.ClientResponse`.
-
-During the `'response'` event, one can add listeners to the
-response object; particularly to listen for the `'data'` event. Note that
-the `'response'` event is called before any part of the response body is received,
-so there is no need to worry about racing to catch the first part of the
-body. As long as a listener for `'data'` is added during the `'response'`
-event, the entire body will be caught.
-
-
-    // Good
-    request.on('response', function (response) {
-      response.on('data', function (chunk) {
-        console.log('BODY: ' + chunk);
-      });
-    });
-
-    // Bad - misses all or part of the body
-    request.on('response', function (response) {
-      setTimeout(function () {
-        response.on('data', function (chunk) {
-          console.log('BODY: ' + chunk);
-        });
-      }, 10);
-    });
-
-Note: Node does not check whether Content-Length and the length of the body
-which has been transmitted are equal or not.
-
-The request implements the [Writable  Stream](stream.html#writable_stream)
-interface. This is an `EventEmitter` with the following events:
-
-<!--english end-->
 
 내부적으로 생성하고 `http.request()`가 반환하는 객체다. 헤더는 이미 큐에 들어간 
 _처리중인_ 요청을 나타낸다. `setHeader(name, value)`, `getHeader(name)`,
@@ -1214,21 +554,6 @@ Note: Node는 Content-Length와 전송된 바디의 길이가 같은지 같지 �
 
 ### Event 'response'
 
-<!--english start-->
-
-`function (response) { }`
-
-Emitted when a response is received to this request. This event is emitted only once. The
-`response` argument will be an instance of `http.ClientResponse`.
-
-Options:
-
-- `host`: A domain name or IP address of the server to issue the request to.
-- `port`: Port of remote server.
-- `socketPath`: Unix Domain Socket (use one of host:port or socketPath)
-
-<!--english end-->
-
 `function (response) { }`
 
 해당 요청에 대한 응답을 받았을 때 발생한다. 이 이벤트는 딱 한번만 발생한다. `response` 아규먼트는 
@@ -1242,73 +567,11 @@ Options:
 
 ### Event: 'socket'
 
-<!--english start-->
-
-`function (socket) { }`
-
-Emitted after a socket is assigned to this request.
-
-<!--english end-->
-
 `function (socket) { }`
 
 해당 요청에 소켓이 할당된 후에 발생한다.
 
 ### Event: 'upgrade'
-
-<!--english start-->
-
-`function (response, socket, head) { }`
-
-Emitted each time a server responds to a request with an upgrade. If this
-event isn't being listened for, clients receiving an upgrade header will have
-their connections closed.
-
-A client server pair that show you how to listen for the `upgrade` event using `http.getAgent`:
-
-    var http = require('http');
-    var net = require('net');
-
-    // Create an HTTP server
-    var srv = http.createServer(function (req, res) {
-      res.writeHead(200, {'Content-Type': 'text/plain'});
-      res.end('okay');
-    });
-    srv.on('upgrade', function(req, socket, upgradeHead) {
-      socket.write('HTTP/1.1 101 Web Socket Protocol Handshake\r\n' +
-                   'Upgrade: WebSocket\r\n' +
-                   'Connection: Upgrade\r\n' +
-                   '\r\n\r\n');
-
-      socket.ondata = function(data, start, end) {
-        socket.write(data.toString('utf8', start, end), 'utf8'); // echo back
-      };
-    });
-
-    // now that server is running
-    srv.listen(1337, '127.0.0.1', function() {
-
-      // make a request
-      var options = {
-        port: 1337,
-        host: '127.0.0.1',
-        headers: {
-          'Connection': 'Upgrade',
-          'Upgrade': 'websocket'
-        }
-      };
-
-      var req = http.request(options);
-      req.end();
-
-      req.on('upgrade', function(res, socket, upgradeHead) {
-        console.log('got upgraded!');
-        socket.end();
-        process.exit(0);
-      });
-    });
-
-<!--english end-->
 
 `function (response, socket, head) { }`
 
@@ -1361,37 +624,12 @@ A client server pair that show you how to listen for the `upgrade` event using `
 
 ### Event: 'continue'
 
-<!--english start-->
-
-`function () { }`
-
-Emitted when the server sends a '100 Continue' HTTP response, usually because
-the request contained 'Expect: 100-continue'. This is an instruction that
-the client should send the request body.
-
-<!--english end-->
-
 `function () { }`
 
 보통 요청이 'Expect: 100-continue'를 답고 있기 때문에서버가 '100 Continue' HTTP 
 응답을 보냈을 때 발생한다. 이는 클라이언트가 요청 바디를 보내야 한다는 것을 알려준다.
 
 ### request.write(chunk, [encoding])
-
-<!--english start-->
-
-Sends a chunk of the body.  By calling this method
-many times, the user can stream a request body to a
-server--in that case it is suggested to use the
-`['Transfer-Encoding', 'chunked']` header line when
-creating the request.
-
-The `chunk` argument should be a [buffer](buffer.html) or a string.
-
-The `encoding` argument is optional and only applies when `chunk` is a string.
-Defaults to `'utf8'`.
-
-<!--english end-->
 
 바디의 청크를 전송한다. 이 메서드를 여러번 호출해서 
 사용자는 요청 바디를 서버에 스트리밍할 수 있다. - 
@@ -1407,17 +645,6 @@ Defaults to `'utf8'`.
 
 ### request.end([data], [encoding])
 
-<!--english start-->
-
-Finishes sending the request. If any parts of the body are
-unsent, it will flush them to the stream. If the request is
-chunked, this will send the terminating `'0\r\n\r\n'`.
-
-If `data` is specified, it is equivalent to calling
-`request.write(data, encoding)` followed by `request.end()`.
-
-<!--english end-->
-
 요청 전송을 종료한다. 바디의 일부를 보내지 않았다면 스트림으로 플러시할 
 것이다. 요청이 청크라면 종료하는 `'0\r\n\r\n'`를 보낼 것이다.
 
@@ -1426,23 +653,9 @@ If `data` is specified, it is equivalent to calling
 
 ### request.abort()
 
-<!--english start-->
-
-Aborts a request.  (New since v0.3.8.)
-
-<!--english end-->
-
 요청을 중단한다. (v0.3.8부터 추가되었다.)
 
 ### request.setTimeout(timeout, [callback])
-
-<!--english start-->
-
-Once a socket is assigned to this request and is connected 
-[socket.setTimeout(timeout, [callback])](net.html#socket.setTimeout)
-will be called.
-
-<!--english end-->
 
 해당 요청에 소켓이 바인딩되고 소켓이 연결되면 
 [socket.setTimeout(timeout, [callback])](net.html#socket.setTimeout)
@@ -1450,43 +663,17 @@ will be called.
 
 ### request.setNoDelay([noDelay])
 
-<!--english start-->
-
-Once a socket is assigned to this request and is connected 
-[socket.setNoDelay(noDelay)](net.html#socket.setNoDelay)
-will be called.
-
-<!--english end-->
-
 해당 요청에 소켓이 바인딩되고 소켓이 연결되면 
 [socket.setNoDelay(noDelay)](net.html#socket.setNoDelay)
 이 호출될 것이다.
 
 ### request.setSocketKeepAlive([enable], [initialDelay])
 
-<!--english start-->
-
-Once a socket is assigned to this request and is connected 
-[socket.setKeepAlive(enable, [initialDelay])](net.html#socket.setKeepAlive)
-will be called.
-
-<!--english end-->
-
 해당 요청에 소켓이 바인딩되고 소켓이 연결되면 
 [socket.setKeepAlive(enable, [initialDelay])](net.html#socket.setKeepAlive)
 이 호출될 것이다.
 
 ## http.ClientResponse
-
-<!--english start-->
-
-This object is created when making a request with `http.request()`. It is
-passed to the `'response'` event of the request object.
-
-The response implements the [Readable Stream](stream.html#readable_stream)
-interface. This is an `EventEmitter` with the following events:
-
-<!--english end-->
 
 `http.request()`로 요청했을 때 생성되는 객체다. 요청 객체의 `'response'` 이벤트에 
 전달된다.
@@ -1496,17 +683,6 @@ interface. This is an `EventEmitter` with the following events:
 
 
 ### Event: 'data'
-
-<!--english start-->
-
-`function (chunk) { }`
-
-Emitted when a piece of the message body is received.
-
-Note that the __data will be lost__ if there is no listener when a
-`ClientResponse` emits a `'data'` event.
-
-<!--english end-->
 
 `function (chunk) { }`
 
@@ -1518,32 +694,12 @@ __데이터를 잃을 수 있다__는 것을 명심해라.
 
 ### Event: 'end'
 
-<!--english start-->
-
-`function () { }`
-
-Emitted exactly once for each message. No arguments. After
-emitted no other events will be emitted on the response.
-
-<!--english end-->
-
 `function () { }`
 
 각 메시지마다 정확히 한번만 발생한다. 아규먼트는 없다. 
 이 이벤트가 발생한 후에는 어떤 메시지도 응답에 발생시키지 않을 것이다.
 
 ### Event: 'close'
-
-<!--english start-->
-
-`function (err) { }`
-
-Indicates that the underlaying connection was terminated before
-`end` event was emitted.
-See [http.ServerRequest](#http.ServerRequest)'s `'close'` event for more
-information.
-
-<!--english end-->
 
 `function (err) { }`
 
@@ -1554,24 +710,9 @@ information.
 
 ### response.statusCode
 
-<!--english start-->
-
-The 3-digit HTTP response status code. E.G. `404`.
-
-<!--english end-->
-
 3자리 수의 HTTP 응답 상태코드다. 예시: `404`.
 
 ### response.httpVersion
-
-<!--english start-->
-
-The HTTP version of the connected-to server. Probably either
-`'1.1'` or `'1.0'`.
-Also `response.httpVersionMajor` is the first integer and
-`response.httpVersionMinor` is the second.
-
-<!--english end-->
 
 서버에 연결된 HTTP 버전이다. 아마 `'1.1'`나 `'1.0'`일 것이다.
 `response.httpVersionMajor`는 첫 숫자이고 
@@ -1579,53 +720,21 @@ Also `response.httpVersionMajor` is the first integer and
 
 ### response.headers
 
-<!--english start-->
-
-The response headers object.
-
-<!--english end-->
-
 응답 헤더 객체다.
 
 ### response.trailers
 
-<!--english start-->
-
-The response trailers object. Only populated after the 'end' event.
-
-<!--english end-->
-
 응답의 trailers 객체다. 'end' 이벤트 후에만 존재한다.
 
 ### response.setEncoding([encoding])
-
-<!--english start-->
-
-Set the encoding for the response body. Either `'utf8'`, `'ascii'`, or
-`'base64'`. Defaults to `null`, which means that the `'data'` event will emit
-a `Buffer` object.
-
-<!--english end-->
 
 응답 바디의 인코딩을 설정한다. `'utf8'`, `'ascii'`, `'base64'`가 될 수 있다.
 기본값은 `'data'` 이벤트라 `Buffer` 객체를 발생시킨다는 의미로 `null`이다.
 
 ### response.pause()
 
-<!--english start-->
-
-Pauses response from emitting events.  Useful to throttle back a download.
-
-<!--english end-->
-
 발생하는 이벤트에서 응답을 멈춘다. 다운로드 트래픽을 조절하는데 유용하다.
 
 ### response.resume()
-
-<!--english start-->
-
-Resumes a paused response.
-
-<!--english end-->
 
 멈춘 응답을 복구한다.

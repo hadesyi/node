@@ -1,70 +1,5 @@
 # URL
 
-<!--english start-->
-
-    Stability: 3 - Stable
-
-This module has utilities for URL resolution and parsing.
-Call `require('url')` to use it.
-
-Parsed URL objects have some or all of the following fields, depending on
-whether or not they exist in the URL string. Any parts that are not in the URL
-string will not be in the parsed object. Examples are shown for the URL
-
-`'http://user:pass@host.com:8080/p/a/t/h?query=string#hash'`
-
-* `href`: The full URL that was originally parsed. Both the protocol and host are lowercased.
-
-    Example: `'http://user:pass@host.com:8080/p/a/t/h?query=string#hash'`
-
-* `protocol`: The request protocol, lowercased.
-
-    Example: `'http:'`
-
-* `host`: The full lowercased host portion of the URL, including port
-  information.
-
-    Example: `'host.com:8080'`
-
-* `auth`: The authentication information portion of a URL.
-
-    Example: `'user:pass'`
-
-* `hostname`: Just the lowercased hostname portion of the host.
-
-    Example: `'host.com'`
-
-* `port`: The port number portion of the host.
-
-    Example: `'8080'`
-
-* `pathname`: The path section of the URL, that comes after the host and
-  before the query, including the initial slash if present.
-
-    Example: `'/p/a/t/h'`
-
-* `search`: The 'query string' portion of the URL, including the leading
-  question mark.
-
-    Example: `'?query=string'`
-
-* `path`: Concatenation of `pathname` and `search`.
-
-    Example: `'/p/a/t/h?query=string'`
-
-* `query`: Either the 'params' portion of the query string, or a
-  querystring-parsed object.
-
-    Example: `'query=string'` or `{'query':'string'}`
-
-* `hash`: The 'fragment' portion of the URL including the pound-sign.
-
-    Example: `'#hash'`
-
-The following methods are provided by the URL module:
-
-<!--english end-->
-
     Stability: 3 - Stable
 
 이 모듈은 URL 처리와 파싱에 관한 유틸리티 모듈이다.
@@ -125,20 +60,6 @@ URL 모듈에서 다음 메서드들을 제공한다.
 
 ## url.parse(urlStr, [parseQueryString], [slashesDenoteHost])
 
-<!--english start-->
-
-Take a URL string, and return an object.
-
-Pass `true` as the second argument to also parse
-the query string using the `querystring` module.
-Defaults to `false`.
-
-Pass `true` as the third argument to treat `//foo/bar` as
-`{ host: 'foo', pathname: '/bar' }` rather than
-`{ pathname: '//foo/bar' }`. Defaults to `false`.
-
-<!--english end-->
-
 URL 문자열을 받아서 객체를 반환한다.
 
 `querystring` 모듈을 사용해서 쿼리스트링을 파싱하려면 
@@ -151,28 +72,6 @@ URL 문자열을 받아서 객체를 반환한다.
 기본값은 `false`이다.
 
 ## url.format(urlObj)
-
-<!--english start-->
-
-Take a parsed URL object, and return a formatted URL string.
-
-* `href` will be ignored.
-* `protocol`is treated the same with or without the trailing `:` (colon).
-  * The protocols `http`, `https`, `ftp`, `gopher`, `file` will be
-    postfixed with `://` (colon-slash-slash).
-  * All other protocols `mailto`, `xmpp`, `aim`, `sftp`, `foo`, etc will
-    be postfixed with `:` (colon)
-* `auth` will be used if present.
-* `hostname` will only be used if `host` is absent.
-* `port` will only be used if `host` is absent.
-* `host` will be used in place of `auth`, `hostname`, and `port`
-* `pathname` is treated the same with or without the leading `/` (slash)
-* `search` will be used in place of `query`
-* `query` (object; see `querystring`) will only be used if `search` is absent.
-* `search` is treated the same with or without the leading `?` (question mark)
-* `hash` is treated the same with or without the leading `#` (pound sign, anchor)
-
-<!--english end-->
 
 파싱된 URL 객체를 받아서 포매팅된 URL 문자열을 반환한다.
 
@@ -193,12 +92,5 @@ Take a parsed URL object, and return a formatted URL string.
 * `hash`는 `#` (해시기호, 앵커)로 시작하는 부분을 포함하거나 포함하지 않고 다룬다.
 
 ## url.resolve(from, to)
-
-<!--english start-->
-
-Take a base URL, and a href URL, and resolve them as a browser would for
-an anchor tag.
-
-<!--english end-->
 
 기준 URL과 href URL을 받아서 앵커테그를 위해서 브라우저처럼 처리한다.

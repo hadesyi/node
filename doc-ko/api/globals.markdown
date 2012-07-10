@@ -1,33 +1,11 @@
 # Global Objects
 
-<!--english start-->
-
-<!-- type=misc -->
-
-These objects are available in all modules. Some of these objects aren't
-actually in the global scope but in the module scope - this will be noted.
-
-<!--english end-->
-
 <!-- type=misc -->
 
 이 객체들은 모든 모듈에서 이용할 수 있다. 이 객체들 중 일부는 실제로 전역 범위를 가지지
 않고 모듈 범위를 가진다. - 이는 따로 표시할 것이다.
 
 ## global
-
-<!--english start-->
-
-<!-- type=global -->
-
-* {Object} The global namespace object.
-
-In browsers, the top-level scope is the global scope. That means that in
-browsers if you're in the global scope `var something` will define a global
-variable. In Node this is different. The top-level scope is not the global
-scope; `var something` inside a Node module will be local to that module.
-
-<!--english end-->
 
 <!-- type=global -->
 
@@ -39,16 +17,6 @@ Node 모듈에서 `var something`는 해당 모듈의 지역 범위가 된다.
 
 ## process
 
-<!--english start-->
-
-<!-- type=global -->
-
-* {Object}
-
-The process object. See the [process object](process.html#process) section.
-
-<!--english end-->
-
 <!-- type=global -->
 
 * {Object}
@@ -56,16 +24,6 @@ The process object. See the [process object](process.html#process) section.
 process 객체. [process object](process.html#process)부분을 봐라.
 
 ## console
-
-<!--english start-->
-
-<!-- type=global -->
-
-* {Object}
-
-Used to print to stdout and stderr. See the [stdio](stdio.html) section.
-
-<!--english end-->
 
 <!-- type=global -->
 
@@ -75,16 +33,6 @@ stdout와 stderr에 출력하는 데 사용한다. [stdio](stdio.html)부분을 
 
 ## Buffer
 
-<!--english start-->
-
-<!-- type=global -->
-
-* {Object}
-
-Used to handle binary data. See the [buffer section](buffer.html).
-
-<!--english end-->
-
 <!-- type=global -->
 
 * {Object}
@@ -92,18 +40,6 @@ Used to handle binary data. See the [buffer section](buffer.html).
 바이너리 데이터를 다루는데 사용한다. [buffer section](buffer.html)를 봐라.
 
 ## require()
-
-<!--english start-->
-
-<!-- type=var -->
-
-* {Function}
-
-To require modules. See the [Modules](modules.html#modules) section.
-`require` isn't actually a global but rather local to each module.
-
-
-<!--english end-->
 
 <!-- type=var -->
 
@@ -115,26 +51,10 @@ To require modules. See the [Modules](modules.html#modules) section.
 
 ### require.resolve()
 
-<!--english start-->
-
-Use the internal `require()` machinery to look up the location of a module,
-but rather than loading the module, just return the resolved filename.
-
-<!--english end-->
-
 모듈의 위치를 검색하는데 내부 `require()` 장치(machinery)를 사용한다. 모듈을 로딩하는 
 것이 아니라 처리된 파일명을 리턴할 뿐이다.
 
 ### require.cache
-
-<!--english start-->
-
-* {Object}
-
-Modules are cached in this object when they are required. By deleting a key
-value from this object, the next `require` will reload the module.
-
-<!--english end-->
 
 * {Object}
 
@@ -142,26 +62,6 @@ value from this object, the next `require` will reload the module.
 `require`에서 해당 모듈을 다시 로드할 것이다.
 
 ## __filename
-
-<!--english start-->
-
-<!-- type=var -->
-
-* {String}
-
-The filename of the code being executed.  This is the resolved absolute path
-of this code file.  For a main program this is not necessarily the same
-filename used in the command line.  The value inside a module is the path
-to that module file.
-
-Example: running `node example.js` from `/Users/mjr`
-
-    console.log(__filename);
-    // /Users/mjr/example.js
-
-`__filename` isn't actually a global but rather local to each module.
-
-<!--english end-->
 
 <!-- type=var -->
 
@@ -180,24 +80,6 @@ Example: running `node example.js` from `/Users/mjr`
 
 ## __dirname
 
-<!--english start-->
-
-<!-- type=var -->
-
-* {String}
-
-The name of the directory that the currently executing script resides in.
-
-Example: running `node example.js` from `/Users/mjr`
-
-    console.log(__dirname);
-    // /Users/mjr
-
-`__dirname` isn't actually a global but rather local to each module.
-
-
-<!--english end-->
-
 <!-- type=var -->
 
 * {String}
@@ -214,20 +96,6 @@ Example: running `node example.js` from `/Users/mjr`
 
 ## module
 
-<!--english start-->
-
-<!-- type=var -->
-
-* {Object}
-
-A reference to the current module. In particular
-`module.exports` is the same as the `exports` object. See `src/node.js`
-for more information.
-`module` isn't actually a global but rather local to each module.
-
-
-<!--english end-->
-
 <!-- type=var -->
 
 * {Object}
@@ -238,23 +106,6 @@ for more information.
 
 
 ## exports
-
-<!--english start-->
-
-<!-- type=var -->
-
-An object which is shared between all instances of the current module and
-made accessible through `require()`.
-`exports` is the same as the `module.exports` object. See `src/node.js`
-for more information.
-`exports` isn't actually a global but rather local to each module.
-
-See the [module system documentation](modules.html) for more
-information.
-
-See the [module section](modules.html) for more information.
-
-<!--english end-->
 
 <!-- type=var -->
 
@@ -270,14 +121,6 @@ See the [module section](modules.html) for more information.
 ## clearTimeout(t)
 ## setInterval(cb, ms)
 ## clearInterval(t)
-
-<!--english start-->
-
-<!--type=global-->
-
-The timer functions are global variables. See the [timers](timers.html) section.
-
-<!--english end-->
 
 <!--type=global-->
 

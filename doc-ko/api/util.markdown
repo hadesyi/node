@@ -1,14 +1,5 @@
 # util
 
-<!--english start-->
-
-    Stability: 5 - Locked
-
-These functions are in the module `'util'`. Use `require('util')` to access
-them.
-
-<!--english end-->
-
     Stability: 5 - Locked
 
 이 함수들은 `'util'` 모듈에 있다. 이 모듈에 접근하려면 `require('util')`를 사용해야
@@ -16,39 +7,6 @@ them.
 
 
 ## util.format()
-
-<!--english start-->
-
-Returns a formatted string using the first argument as a `printf`-like format.
-
-The first argument is a string that contains zero or more *placeholders*.
-Each placeholder is replaced with the converted value from its corresponding
-argument. Supported placeholders are:
-
-* `%s` - String.
-* `%d` - Number (both integer and float).
-* `%j` - JSON.
-* `%%` - single percent sign (`'%'`). This does not consume an argument.
-
-If the placeholder does not have a corresponding argument, the placeholder is
-not replaced.
-
-    util.format('%s:%s', 'foo'); // 'foo:%s'
-
-If there are more arguments than placeholders, the extra arguments are
-converted to strings with `util.inspect()` and these strings are concatenated,
-delimited by a space.
-
-    util.format('%s:%s', 'foo', 'bar', 'baz'); // 'foo:bar baz'
-
-If the first argument is not a format string then `util.format()` returns
-a string that is the concatenation of all its arguments separated by spaces.
-Each argument is converted to a string with `util.inspect()`.
-
-    util.format(1, 2, 3); // '1 2 3'
-
-
-<!--english end-->
 
 `printf`같은 형식으로 첫 아규먼트를 사용해서 포매팅된 문자열을 반환한다.
 
@@ -78,16 +36,6 @@ Each argument is converted to a string with `util.inspect()`.
 
 ## util.debug(string)
 
-<!--english start-->
-
-A synchronous output function. Will block the process and
-output `string` immediately to `stderr`.
-
-    require('util').debug('message on stderr');
-
-
-<!--english end-->
-
 동기적인 출력함수. 프로세스를 블락할 것이고 `stderr`에 즉각적으로
 `string`을 출력한다.
 
@@ -96,46 +44,12 @@ output `string` immediately to `stderr`.
 
 ## util.log(string)
 
-<!--english start-->
-
-Output with timestamp on `stdout`.
-
-    require('util').log('Timestamped message.');
-
-
-<!--english end-->
-
 `stdout`에 타임스탬프를 출력한다.
 
     require('util').log('Timestamped message.');
 
 
 ## util.inspect(object, [showHidden], [depth], [colors])
-
-<!--english start-->
-
-Return a string representation of `object`, which is useful for debugging.
-
-If `showHidden` is `true`, then the object's non-enumerable properties will be
-shown too. Defaults to `false`.
-
-If `depth` is provided, it tells `inspect` how many times to recurse while
-formatting the object. This is useful for inspecting large complicated objects.
-
-The default is to only recurse twice.  To make it recurse indefinitely, pass
-in `null` for `depth`.
-
-If `colors` is `true`, the output will be styled with ANSI color codes.
-Defaults to `false`.
-
-Example of inspecting all properties of the `util` object:
-
-    var util = require('util');
-
-    console.log(util.inspect(util, true, null));
-
-
-<!--english end-->
 
 디버깅에 유용한 `object`의 문자열 표현을 리턴한다.
 
@@ -158,22 +72,6 @@ Example of inspecting all properties of the `util` object:
 
 ## util.isArray(object)
 
-<!--english start-->
-
-Returns `true` if the given "object" is an `Array`. `false` otherwise.
-
-    var util = require('util');
-
-    util.isArray([])
-      // true
-    util.isArray(new Array)
-      // true
-    util.isArray({})
-      // false
-
-
-<!--english end-->
-
 주어진 "object"가 `Array`이면 `true`를 리턴하고 `Array`가 아니면 `false`를
 리턴한다.
 
@@ -188,22 +86,6 @@ Returns `true` if the given "object" is an `Array`. `false` otherwise.
 
 
 ## util.isRegExp(object)
-
-<!--english start-->
-
-Returns `true` if the given "object" is a `RegExp`. `false` otherwise.
-
-    var util = require('util');
-
-    util.isRegExp(/some regexp/)
-      // true
-    util.isRegExp(new RegExp('another regexp'))
-      // true
-    util.isRegExp({})
-      // false
-
-
-<!--english end-->
 
 주어진 "object"가 `RegExp`이면 `true`를 리턴하고 `RegExp`가 아니면 
 `false`를 리턴한다.
@@ -220,22 +102,6 @@ Returns `true` if the given "object" is a `RegExp`. `false` otherwise.
 
 ## util.isDate(object)
 
-<!--english start-->
-
-Returns `true` if the given "object" is a `Date`. `false` otherwise.
-
-    var util = require('util');
-
-    util.isDate(new Date())
-      // true
-    util.isDate(Date())
-      // false (without 'new' returns a String)
-    util.isDate({})
-      // false
-
-
-<!--english end-->
-
 주어진 "object"가 `Date`이면 `true`를 리턴하고 `Date`가 아니면 
 `false`를 리턴한다.
 
@@ -250,22 +116,6 @@ Returns `true` if the given "object" is a `Date`. `false` otherwise.
 
 
 ## util.isError(object)
-
-<!--english start-->
-
-Returns `true` if the given "object" is an `Error`. `false` otherwise.
-
-    var util = require('util');
-
-    util.isError(new Error())
-      // true
-    util.isError(new TypeError())
-      // true
-    util.isError({ name: 'Error', message: 'an error occurred' })
-      // false
-
-
-<!--english end-->
 
 주어진 "object"가 `Error`이면 `true`를 리턴하고 `Error`가 아니면 
 `false`를 리턴한다.
@@ -282,19 +132,6 @@ Returns `true` if the given "object" is an `Error`. `false` otherwise.
 
 ## util.pump(readableStream, writableStream, [callback])
 
-<!--english start-->
-
-Experimental
-
-Read the data from `readableStream` and send it to the `writableStream`.
-When `writableStream.write(data)` returns `false` `readableStream` will be
-paused until the `drain` event occurs on the `writableStream`. `callback` gets
-an error as its only argument and is called when `writableStream` is closed or
-when an error occurs.
-
-
-<!--english end-->
-
 실험적
 
 `readableStream`에서 데이터를 읽어서 읽은 데이터를 `writableStream`으로 보낸다.
@@ -304,41 +141,6 @@ when an error occurs.
 
 
 ## util.inherits(constructor, superConstructor)
-
-<!--english start-->
-
-Inherit the prototype methods from one
-[constructor](https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/constructor)
-into another.  The prototype of `constructor` will be set to a new
-object created from `superConstructor`.
-
-As an additional convenience, `superConstructor` will be accessible
-through the `constructor.super_` property.
-
-    var util = require("util");
-    var events = require("events");
-
-    function MyStream() {
-        events.EventEmitter.call(this);
-    }
-
-    util.inherits(MyStream, events.EventEmitter);
-
-    MyStream.prototype.write = function(data) {
-        this.emit("data", data);
-    }
-
-    var stream = new MyStream();
-
-    console.log(stream instanceof events.EventEmitter); // true
-    console.log(MyStream.super_ === events.EventEmitter); // true
-
-    stream.on("data", function(data) {
-        console.log('Received data: "' + data + '"');
-    })
-    stream.write("It works!"); // Received data: "It works!"
-
-<!--english end-->
 
 한 객체의 
 [생성자](https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/constructor)
