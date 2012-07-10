@@ -79,17 +79,26 @@ function parseLists(input, englishFilename) {
 
       if (tok.type === 'heading') {
         var isParagraph = false;
+        var hasContents = false;
+        var asideStartTag = null;
         englishInput.forEach(function(eTok) {
           if (isParagraph && eTok.type === 'heading' && tok.text !== eTok.text) {
             isParagraph = false;
-            output.push({ type:'html', text: '</aside>' });
+            if (hasContents) {
+              output.push({ type:'html', text: '</aside>' });
+            }
           }
           if (isParagraph) {
+            if (asideStartTag) {
+              output.push(asideStartTag);
+              asideStartTag = null;
+            }
             output.push(eTok);
+            hasContents = true;
           }
           if (tok.text === eTok.text) {
             isParagraph = true;
-            output.push({ type:'html', text: '<aside>' });
+            asideStartTag = { type:'html', text: '<aside>' };
           }
         });
         if (isParagraph) {
