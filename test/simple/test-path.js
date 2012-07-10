@@ -78,9 +78,6 @@ if (isWindows) {
                '\\\\unc\\share\\foo\\bar');
 }
 
-path.exists(f, function(y) { assert.equal(y, true) });
-
-assert.equal(path.existsSync(f), true);
 
 assert.equal(path.extname(''), '');
 assert.equal(path.extname('/path/to/file'), '');
@@ -278,3 +275,11 @@ relativeTests.forEach(function(test) {
 });
 assert.equal(failures.length, 0, failures.join(''));
 
+// path.sep tests
+if (isWindows) {
+    // windows
+    assert.equal(path.sep, '\\');
+} else {
+    // posix
+    assert.equal(path.sep, '/');
+}

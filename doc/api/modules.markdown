@@ -127,6 +127,9 @@ That is, `circle.js` must be in the same directory as `foo.js` for
 Without a leading '/' or './' to indicate a file, the module is either a
 "core module" or is loaded from a `node_modules` folder.
 
+If the given path does not exist, `require()` will throw an Error with its
+`code` property set to `'MODULE_NOT_FOUND'`.
+
 ## Loading from `node_modules` Folders
 
 <!--type=misc-->
@@ -380,7 +383,7 @@ Additionally, node will search in the following locations:
 * 3: `$PREFIX/lib/node`
 
 Where `$HOME` is the user's home directory, and `$PREFIX` is node's
-configured `installPrefix`.
+configured `node_prefix`.
 
 These are mostly for historic reasons.  You are highly encouraged to
 place your dependencies locally in `node_modules` folders.  They will be

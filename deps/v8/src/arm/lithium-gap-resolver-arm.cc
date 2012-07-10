@@ -36,7 +36,7 @@ namespace internal {
 static const Register kSavedValueRegister = { 9 };
 
 LGapResolver::LGapResolver(LCodeGen* owner)
-    : cgen_(owner), moves_(32), root_index_(0), in_cycle_(false),
+    : cgen_(owner), moves_(32, owner->zone()), root_index_(0), in_cycle_(false),
       saved_destination_(NULL) { }
 
 
@@ -79,7 +79,7 @@ void LGapResolver::BuildInitialMoveList(LParallelMove* parallel_move) {
   const ZoneList<LMoveOperands>* moves = parallel_move->move_operands();
   for (int i = 0; i < moves->length(); ++i) {
     LMoveOperands move = moves->at(i);
-    if (!move.IsRedundant()) moves_.Add(move);
+    if (!move.IsRedundant()) moves_.Add(move, cgen_->zone());
   }
   Verify();
 }
@@ -245,13 +245,24 @@ void LGapResolver::EmitMove(int index) {
     }
 
   } else if (source->IsConstantOperand()) {
-    Operand source_operand = cgen_->ToOperand(source);
+    LConstantOperand* constant_source = LConstantOperand::cast(source);
     if (destination->IsRegister()) {
-      __ mov(cgen_->ToRegister(destination), source_operand);
+      Register dst = cgen_->ToRegister(destination);
+      if (cgen_->IsInteger32(constant_source)) {
+        __ mov(dst, Operand(cgen_->ToInteger32(constant_source)));
+      } else {
+        __ LoadObject(dst, cgen_->ToHandle(constant_source));
+      }
     } else {
       ASSERT(destination->IsStackSlot());
       ASSERT(!in_cycle_);  // Constant moves happen after all cycles are gone.
-      __ mov(kSavedValueRegister, source_operand);
+      if (cgen_->IsInteger32(constant_source)) {
+        __ mov(kSavedValueRegister,
+               Operand(cgen_->ToInteger32(constant_source)));
+      } else {
+        __ LoadObject(kSavedValueRegister,
+                      cgen_->ToHandle(constant_source));
+      }
       __ str(kSavedValueRegister, cgen_->ToMemOperand(destination));
     }
 

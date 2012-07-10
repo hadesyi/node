@@ -1,4 +1,4 @@
-// Copyright 2011 the V8 project authors. All rights reserved.
+// Copyright 2012 the V8 project authors. All rights reserved.
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -34,6 +34,7 @@
 #include "compiler.h"
 #include "debug.h"
 #include "full-codegen.h"
+#include "isolate-inl.h"
 #include "parser.h"
 #include "scopes.h"
 #include "stub-cache.h"
@@ -42,11 +43,6 @@ namespace v8 {
 namespace internal {
 
 #define __ ACCESS_MASM(masm_)
-
-
-static unsigned GetPropertyId(Property* property) {
-  return property->id();
-}
 
 
 class JumpPatchSite BASE_EMBEDDED {
@@ -111,17 +107,19 @@ class JumpPatchSite BASE_EMBEDDED {
 // formal parameter count expected by the function.
 //
 // The live registers are:
-//   o rdi: the JS function object being called (ie, ourselves)
+//   o rdi: the JS function object being called (i.e. ourselves)
 //   o rsi: our context
 //   o rbp: our caller's frame pointer
 //   o rsp: stack pointer (pointing to return address)
 //
 // The function builds a JS frame.  Please see JavaScriptFrameConstants in
 // frames-x64.h for its layout.
-void FullCodeGenerator::Generate(CompilationInfo* info) {
-  ASSERT(info_ == NULL);
-  info_ = info;
-  scope_ = info->scope();
+void FullCodeGenerator::Generate() {
+  CompilationInfo* info = info_;
+  handler_table_ =
+      isolate()->factory()->NewFixedArray(function()->handler_count(), TENURED);
+  profiling_counter_ = isolate()->factory()->NewJSGlobalPropertyCell(
+      Handle<Smi>(Smi::FromInt(FLAG_interrupt_budget)));
   SetFunctionPosition(function());
   Comment cmnt(masm_, "[ function compiled by full code generator");
 
@@ -136,7 +134,7 @@ void FullCodeGenerator::Generate(CompilationInfo* info) {
   // with undefined when called as functions (without an explicit
   // receiver object). rcx is zero for method calls and non-zero for
   // function calls.
-  if (info->is_strict_mode() || info->is_native()) {
+  if (!info->is_classic_mode() || info->is_native()) {
     Label ok;
     __ testq(rcx, rcx);
     __ j(zero, &ok, Label::kNear);
@@ -146,6 +144,11 @@ void FullCodeGenerator::Generate(CompilationInfo* info) {
     __ movq(Operand(rsp, receiver_offset), kScratchRegister);
     __ bind(&ok);
   }
+
+  // Open a frame scope to indicate that there is a frame on the stack.  The
+  // MANUAL indicates that the scope shouldn't actually generate code to set up
+  // the frame (that is done below).
+  FrameScope frame_scope(masm_, StackFrame::MANUAL);
 
   __ push(rbp);  // Caller's frame pointer.
   __ movq(rbp, rsp);
@@ -195,11 +198,9 @@ void FullCodeGenerator::Generate(CompilationInfo* info) {
         // Store it in the context.
         int context_offset = Context::SlotOffset(var->index());
         __ movq(Operand(rsi, context_offset), rax);
-        // Update the write barrier. This clobbers all involved
-        // registers, so we have use a third register to avoid
-        // clobbering rsi.
-        __ movq(rcx, rsi);
-        __ RecordWrite(rcx, context_offset, rax, rbx);
+        // Update the write barrier.  This clobbers rax and rbx.
+        __ RecordWriteContextSlot(
+            rsi, context_offset, rax, rbx, kDontSaveFPRegs);
       }
     }
   }
@@ -226,9 +227,15 @@ void FullCodeGenerator::Generate(CompilationInfo* info) {
     //   function, receiver address, parameter count.
     // The stub will rewrite receiver and parameter count if the previous
     // stack frame was an arguments adapter frame.
-    ArgumentsAccessStub stub(
-        is_strict_mode() ? ArgumentsAccessStub::NEW_STRICT
-                         : ArgumentsAccessStub::NEW_NON_STRICT_SLOW);
+    ArgumentsAccessStub::Type type;
+    if (!is_classic_mode()) {
+      type = ArgumentsAccessStub::NEW_STRICT;
+    } else if (function()->has_duplicate_parameters()) {
+      type = ArgumentsAccessStub::NEW_NON_STRICT_SLOW;
+    } else {
+      type = ArgumentsAccessStub::NEW_NON_STRICT_FAST;
+    }
+    ArgumentsAccessStub stub(type);
     __ CallStub(&stub);
 
     SetVar(arguments, rax, rbx, rdx);
@@ -250,8 +257,11 @@ void FullCodeGenerator::Generate(CompilationInfo* info) {
       // For named function expressions, declare the function name as a
       // constant.
       if (scope()->is_function_scope() && scope()->function() != NULL) {
-        int ignored = 0;
-        EmitDeclaration(scope()->function(), Variable::CONST, NULL, &ignored);
+        VariableDeclaration* function = scope()->function();
+        ASSERT(function->proxy()->var()->mode() == CONST ||
+               function->proxy()->var()->mode() == CONST_HARMONY);
+        ASSERT(function->proxy()->var()->location() != Variable::UNALLOCATED);
+        VisitVariableDeclaration(function);
       }
       VisitDeclarations(scope()->declarations());
     }
@@ -287,13 +297,60 @@ void FullCodeGenerator::ClearAccumulator() {
 }
 
 
-void FullCodeGenerator::EmitStackCheck(IterationStatement* stmt) {
+void FullCodeGenerator::EmitProfilingCounterDecrement(int delta) {
+  __ movq(rbx, profiling_counter_, RelocInfo::EMBEDDED_OBJECT);
+  __ SmiAddConstant(FieldOperand(rbx, JSGlobalPropertyCell::kValueOffset),
+                    Smi::FromInt(-delta));
+}
+
+
+void FullCodeGenerator::EmitProfilingCounterReset() {
+  int reset_value = FLAG_interrupt_budget;
+  if (info_->ShouldSelfOptimize() && !FLAG_retry_self_opt) {
+    // Self-optimization is a one-off thing; if it fails, don't try again.
+    reset_value = Smi::kMaxValue;
+  }
+  if (isolate()->IsDebuggerActive()) {
+    // Detect debug break requests as soon as possible.
+    reset_value = 10;
+  }
+  __ movq(rbx, profiling_counter_, RelocInfo::EMBEDDED_OBJECT);
+  __ movq(kScratchRegister,
+          reinterpret_cast<uint64_t>(Smi::FromInt(reset_value)),
+          RelocInfo::NONE);
+  __ movq(FieldOperand(rbx, JSGlobalPropertyCell::kValueOffset),
+          kScratchRegister);
+}
+
+
+static const int kMaxBackEdgeWeight = 127;
+static const int kBackEdgeDistanceDivisor = 162;
+
+
+void FullCodeGenerator::EmitStackCheck(IterationStatement* stmt,
+                                       Label* back_edge_target) {
   Comment cmnt(masm_, "[ Stack check");
   Label ok;
-  __ CompareRoot(rsp, Heap::kStackLimitRootIndex);
-  __ j(above_equal, &ok, Label::kNear);
-  StackCheckStub stub;
-  __ CallStub(&stub);
+
+  if (FLAG_count_based_interrupts) {
+    int weight = 1;
+    if (FLAG_weighted_back_edges) {
+      ASSERT(back_edge_target->is_bound());
+      int distance = masm_->SizeOfCodeGeneratedSince(back_edge_target);
+      weight = Min(kMaxBackEdgeWeight,
+                   Max(1, distance / kBackEdgeDistanceDivisor));
+    }
+    EmitProfilingCounterDecrement(weight);
+    __ j(positive, &ok, Label::kNear);
+    InterruptStub stub;
+    __ CallStub(&stub);
+  } else {
+    __ CompareRoot(rsp, Heap::kStackLimitRootIndex);
+    __ j(above_equal, &ok, Label::kNear);
+    StackCheckStub stub;
+    __ CallStub(&stub);
+  }
+
   // Record a mapping of this PC offset to the OSR id.  This is used to find
   // the AST id from the unoptimized code in order to use it as a key into
   // the deoptimization input data found in the optimized code.
@@ -305,6 +362,10 @@ void FullCodeGenerator::EmitStackCheck(IterationStatement* stmt) {
   // builtin.
   ASSERT(loop_depth() > 0);
   __ testl(rax, Immediate(Min(loop_depth(), Code::kMaxLoopNestingMarker)));
+
+  if (FLAG_count_based_interrupts) {
+    EmitProfilingCounterReset();
+  }
 
   __ bind(&ok);
   PrepareForBailoutForId(stmt->EntryId(), NO_REGISTERS);
@@ -324,6 +385,31 @@ void FullCodeGenerator::EmitReturnSequence() {
     if (FLAG_trace) {
       __ push(rax);
       __ CallRuntime(Runtime::kTraceExit, 1);
+    }
+    if (FLAG_interrupt_at_exit || FLAG_self_optimization) {
+      // Pretend that the exit is a backwards jump to the entry.
+      int weight = 1;
+      if (info_->ShouldSelfOptimize()) {
+        weight = FLAG_interrupt_budget / FLAG_self_opt_count;
+      } else if (FLAG_weighted_back_edges) {
+        int distance = masm_->pc_offset();
+        weight = Min(kMaxBackEdgeWeight,
+                     Max(1, distance = kBackEdgeDistanceDivisor));
+      }
+      EmitProfilingCounterDecrement(weight);
+      Label ok;
+      __ j(positive, &ok, Label::kNear);
+      __ push(rax);
+      if (info_->ShouldSelfOptimize() && FLAG_direct_self_opt) {
+        __ push(Operand(rbp, JavaScriptFrameConstants::kFunctionOffset));
+        __ CallRuntime(Runtime::kOptimizeFunctionOnNextCall, 1);
+      } else {
+        InterruptStub stub;
+        __ CallStub(&stub);
+      }
+      __ pop(rax);
+      EmitProfilingCounterReset();
+      __ bind(&ok);
     }
 #ifdef DEBUG
     // Add a label for checking the size of the code used for returning.
@@ -377,7 +463,7 @@ void FullCodeGenerator::StackValueContext::Plug(Variable* var) const {
 
 void FullCodeGenerator::TestContext::Plug(Variable* var) const {
   codegen()->GetVar(result_register(), var);
-  codegen()->PrepareForBailoutBeforeSplit(TOS_REG, false, NULL, NULL);
+  codegen()->PrepareForBailoutBeforeSplit(condition(), false, NULL, NULL);
   codegen()->DoTest(this);
 }
 
@@ -399,7 +485,7 @@ void FullCodeGenerator::StackValueContext::Plug(
 
 
 void FullCodeGenerator::TestContext::Plug(Heap::RootListIndex index) const {
-  codegen()->PrepareForBailoutBeforeSplit(TOS_REG,
+  codegen()->PrepareForBailoutBeforeSplit(condition(),
                                           true,
                                           true_label_,
                                           false_label_);
@@ -432,7 +518,7 @@ void FullCodeGenerator::StackValueContext::Plug(Handle<Object> lit) const {
 
 
 void FullCodeGenerator::TestContext::Plug(Handle<Object> lit) const {
-  codegen()->PrepareForBailoutBeforeSplit(TOS_REG,
+  codegen()->PrepareForBailoutBeforeSplit(condition(),
                                           true,
                                           true_label_,
                                           false_label_);
@@ -491,7 +577,7 @@ void FullCodeGenerator::TestContext::DropAndPlug(int count,
   // For simplicity we always test the accumulator register.
   __ Drop(count);
   __ Move(result_register(), reg);
-  codegen()->PrepareForBailoutBeforeSplit(TOS_REG, false, NULL, NULL);
+  codegen()->PrepareForBailoutBeforeSplit(condition(), false, NULL, NULL);
   codegen()->DoTest(this);
 }
 
@@ -555,7 +641,7 @@ void FullCodeGenerator::StackValueContext::Plug(bool flag) const {
 
 
 void FullCodeGenerator::TestContext::Plug(bool flag) const {
-  codegen()->PrepareForBailoutBeforeSplit(TOS_REG,
+  codegen()->PrepareForBailoutBeforeSplit(condition(),
                                           true,
                                           true_label_,
                                           false_label_);
@@ -573,7 +659,7 @@ void FullCodeGenerator::DoTest(Expression* condition,
                                Label* fall_through) {
   ToBooleanStub stub(result_register());
   __ push(result_register());
-  __ CallStub(&stub);
+  __ CallStub(&stub, condition->test_id());
   __ testq(result_register(), result_register());
   // The stub returns nonzero for true.
   Split(not_zero, if_true, if_false, fall_through);
@@ -638,15 +724,16 @@ void FullCodeGenerator::SetVar(Variable* var,
   ASSERT(!scratch1.is(src));
   MemOperand location = VarOperand(var, scratch0);
   __ movq(location, src);
+
   // Emit the write barrier code if the location is in the heap.
   if (var->IsContextSlot()) {
     int offset = Context::SlotOffset(var->index());
-    __ RecordWrite(scratch0, offset, src, scratch1);
+    __ RecordWriteContextSlot(scratch0, offset, src, scratch1, kDontSaveFPRegs);
   }
 }
 
 
-void FullCodeGenerator::PrepareForBailoutBeforeSplit(State state,
+void FullCodeGenerator::PrepareForBailoutBeforeSplit(Expression* expr,
                                                      bool should_normalize,
                                                      Label* if_true,
                                                      Label* if_false) {
@@ -657,13 +744,7 @@ void FullCodeGenerator::PrepareForBailoutBeforeSplit(State state,
 
   Label skip;
   if (should_normalize) __ jmp(&skip, Label::kNear);
-
-  ForwardBailoutStack* current = forward_bailout_stack_;
-  while (current != NULL) {
-    PrepareForBailout(current->expr(), state);
-    current = current->parent();
-  }
-
+  PrepareForBailout(expr, TOS_REG);
   if (should_normalize) {
     __ CompareRoot(rax, Heap::kTrueValueRootIndex);
     Split(equal, if_true, if_false, NULL);
@@ -672,54 +753,52 @@ void FullCodeGenerator::PrepareForBailoutBeforeSplit(State state,
 }
 
 
-void FullCodeGenerator::EmitDeclaration(VariableProxy* proxy,
-                                        Variable::Mode mode,
-                                        FunctionLiteral* function,
-                                        int* global_count) {
+void FullCodeGenerator::EmitDebugCheckDeclarationContext(Variable* variable) {
+  // The variable in the declaration always resides in the current function
+  // context.
+  ASSERT_EQ(0, scope()->ContextChainLength(variable->scope()));
+  if (FLAG_debug_code) {
+    // Check that we're not inside a with or catch context.
+    __ movq(rbx, FieldOperand(rsi, HeapObject::kMapOffset));
+    __ CompareRoot(rbx, Heap::kWithContextMapRootIndex);
+    __ Check(not_equal, "Declaration in with context.");
+    __ CompareRoot(rbx, Heap::kCatchContextMapRootIndex);
+    __ Check(not_equal, "Declaration in catch context.");
+  }
+}
+
+
+void FullCodeGenerator::VisitVariableDeclaration(
+    VariableDeclaration* declaration) {
   // If it was not possible to allocate the variable at compile time, we
   // need to "declare" it at runtime to make sure it actually exists in the
   // local context.
+  VariableProxy* proxy = declaration->proxy();
+  VariableMode mode = declaration->mode();
   Variable* variable = proxy->var();
+  bool hole_init = mode == CONST || mode == CONST_HARMONY || mode == LET;
   switch (variable->location()) {
     case Variable::UNALLOCATED:
-      ++(*global_count);
+      globals_->Add(variable->name(), zone());
+      globals_->Add(variable->binding_needs_init()
+                        ? isolate()->factory()->the_hole_value()
+                    : isolate()->factory()->undefined_value(),
+                    zone());
       break;
 
     case Variable::PARAMETER:
     case Variable::LOCAL:
-      if (function != NULL) {
-        Comment cmnt(masm_, "[ Declaration");
-        VisitForAccumulatorValue(function);
-        __ movq(StackOperand(variable), result_register());
-      } else if (mode == Variable::CONST || mode == Variable::LET) {
-        Comment cmnt(masm_, "[ Declaration");
+      if (hole_init) {
+        Comment cmnt(masm_, "[ VariableDeclaration");
         __ LoadRoot(kScratchRegister, Heap::kTheHoleValueRootIndex);
         __ movq(StackOperand(variable), kScratchRegister);
       }
       break;
 
     case Variable::CONTEXT:
-      // The variable in the decl always resides in the current function
-      // context.
-      ASSERT_EQ(0, scope()->ContextChainLength(variable->scope()));
-      if (FLAG_debug_code) {
-        // Check that we're not inside a with or catch context.
-        __ movq(rbx, FieldOperand(rsi, HeapObject::kMapOffset));
-        __ CompareRoot(rbx, Heap::kWithContextMapRootIndex);
-        __ Check(not_equal, "Declaration in with context.");
-        __ CompareRoot(rbx, Heap::kCatchContextMapRootIndex);
-        __ Check(not_equal, "Declaration in catch context.");
-      }
-      if (function != NULL) {
-        Comment cmnt(masm_, "[ Declaration");
-        VisitForAccumulatorValue(function);
-        __ movq(ContextOperand(rsi, variable->index()), result_register());
-        int offset = Context::SlotOffset(variable->index());
-        __ movq(rbx, rsi);
-        __ RecordWrite(rbx, offset, result_register(), rcx);
-        PrepareForBailoutForId(proxy->id(), NO_REGISTERS);
-      } else if (mode == Variable::CONST || mode == Variable::LET) {
-        Comment cmnt(masm_, "[ Declaration");
+      if (hole_init) {
+        Comment cmnt(masm_, "[ VariableDeclaration");
+        EmitDebugCheckDeclarationContext(variable);
         __ LoadRoot(kScratchRegister, Heap::kTheHoleValueRootIndex);
         __ movq(ContextOperand(rsi, variable->index()), kScratchRegister);
         // No write barrier since the hole value is in old space.
@@ -728,22 +807,20 @@ void FullCodeGenerator::EmitDeclaration(VariableProxy* proxy,
       break;
 
     case Variable::LOOKUP: {
-      Comment cmnt(masm_, "[ Declaration");
+      Comment cmnt(masm_, "[ VariableDeclaration");
       __ push(rsi);
       __ Push(variable->name());
-      // Declaration nodes are always introduced in one of three modes.
-      ASSERT(mode == Variable::VAR ||
-             mode == Variable::CONST ||
-             mode == Variable::LET);
-      PropertyAttributes attr = (mode == Variable::CONST) ? READ_ONLY : NONE;
+      // Declaration nodes are always introduced in one of four modes.
+      ASSERT(mode == VAR || mode == LET ||
+             mode == CONST || mode == CONST_HARMONY);
+      PropertyAttributes attr =
+          (mode == CONST || mode == CONST_HARMONY) ? READ_ONLY : NONE;
       __ Push(Smi::FromInt(attr));
       // Push initial value, if any.
       // Note: For variables we must not push an initial value (such as
       // 'undefined') because we may have a (legal) redeclaration and we
       // must not destroy the current value.
-      if (function != NULL) {
-        VisitForStackValue(function);
-      } else if (mode == Variable::CONST || mode == Variable::LET) {
+      if (hole_init) {
         __ PushRoot(Heap::kTheHoleValueRootIndex);
       } else {
         __ Push(Smi::FromInt(0));  // Indicates no initial value.
@@ -755,7 +832,117 @@ void FullCodeGenerator::EmitDeclaration(VariableProxy* proxy,
 }
 
 
-void FullCodeGenerator::VisitDeclaration(Declaration* decl) { }
+void FullCodeGenerator::VisitFunctionDeclaration(
+    FunctionDeclaration* declaration) {
+  VariableProxy* proxy = declaration->proxy();
+  Variable* variable = proxy->var();
+  switch (variable->location()) {
+    case Variable::UNALLOCATED: {
+      globals_->Add(variable->name(), zone());
+      Handle<SharedFunctionInfo> function =
+          Compiler::BuildFunctionInfo(declaration->fun(), script());
+      // Check for stack-overflow exception.
+      if (function.is_null()) return SetStackOverflow();
+      globals_->Add(function, zone());
+      break;
+    }
+
+    case Variable::PARAMETER:
+    case Variable::LOCAL: {
+      Comment cmnt(masm_, "[ FunctionDeclaration");
+      VisitForAccumulatorValue(declaration->fun());
+      __ movq(StackOperand(variable), result_register());
+      break;
+    }
+
+    case Variable::CONTEXT: {
+      Comment cmnt(masm_, "[ FunctionDeclaration");
+      EmitDebugCheckDeclarationContext(variable);
+      VisitForAccumulatorValue(declaration->fun());
+      __ movq(ContextOperand(rsi, variable->index()), result_register());
+      int offset = Context::SlotOffset(variable->index());
+      // We know that we have written a function, which is not a smi.
+      __ RecordWriteContextSlot(rsi,
+                                offset,
+                                result_register(),
+                                rcx,
+                                kDontSaveFPRegs,
+                                EMIT_REMEMBERED_SET,
+                                OMIT_SMI_CHECK);
+      PrepareForBailoutForId(proxy->id(), NO_REGISTERS);
+      break;
+    }
+
+    case Variable::LOOKUP: {
+      Comment cmnt(masm_, "[ FunctionDeclaration");
+      __ push(rsi);
+      __ Push(variable->name());
+      __ Push(Smi::FromInt(NONE));
+      VisitForStackValue(declaration->fun());
+      __ CallRuntime(Runtime::kDeclareContextSlot, 4);
+      break;
+    }
+  }
+}
+
+
+void FullCodeGenerator::VisitModuleDeclaration(ModuleDeclaration* declaration) {
+  VariableProxy* proxy = declaration->proxy();
+  Variable* variable = proxy->var();
+  Handle<JSModule> instance = declaration->module()->interface()->Instance();
+  ASSERT(!instance.is_null());
+
+  switch (variable->location()) {
+    case Variable::UNALLOCATED: {
+      Comment cmnt(masm_, "[ ModuleDeclaration");
+      globals_->Add(variable->name(), zone());
+      globals_->Add(instance, zone());
+      Visit(declaration->module());
+      break;
+    }
+
+    case Variable::CONTEXT: {
+      Comment cmnt(masm_, "[ ModuleDeclaration");
+      EmitDebugCheckDeclarationContext(variable);
+      __ Move(ContextOperand(rsi, variable->index()), instance);
+      Visit(declaration->module());
+      break;
+    }
+
+    case Variable::PARAMETER:
+    case Variable::LOCAL:
+    case Variable::LOOKUP:
+      UNREACHABLE();
+  }
+}
+
+
+void FullCodeGenerator::VisitImportDeclaration(ImportDeclaration* declaration) {
+  VariableProxy* proxy = declaration->proxy();
+  Variable* variable = proxy->var();
+  switch (variable->location()) {
+    case Variable::UNALLOCATED:
+      // TODO(rossberg)
+      break;
+
+    case Variable::CONTEXT: {
+      Comment cmnt(masm_, "[ ImportDeclaration");
+      EmitDebugCheckDeclarationContext(variable);
+      // TODO(rossberg)
+      break;
+    }
+
+    case Variable::PARAMETER:
+    case Variable::LOCAL:
+    case Variable::LOOKUP:
+      UNREACHABLE();
+  }
+}
+
+
+void FullCodeGenerator::VisitExportDeclaration(ExportDeclaration* declaration) {
+  // TODO(rossberg)
+}
 
 
 void FullCodeGenerator::DeclareGlobals(Handle<FixedArray> pairs) {
@@ -819,7 +1006,7 @@ void FullCodeGenerator::VisitSwitchStatement(SwitchStatement* stmt) {
     // Record position before stub call for type feedback.
     SetSourcePosition(clause->position());
     Handle<Code> ic = CompareIC::GetUninitialized(Token::EQ_STRICT);
-    __ call(ic, RelocInfo::CODE_TARGET, clause->CompareId());
+    CallIC(ic, RelocInfo::CODE_TARGET, clause->CompareId());
     patch_site.EmitPatchInfo();
 
     __ testq(rax, rax);
@@ -871,6 +1058,8 @@ void FullCodeGenerator::VisitForInStatement(ForInStatement* stmt) {
   __ cmpq(rax, null_value);
   __ j(equal, &exit);
 
+  PrepareForBailoutForId(stmt->PrepareId(), TOS_REG);
+
   // Convert the object to a JS object.
   Label convert, done_convert;
   __ JumpIfSmi(rax, &convert);
@@ -882,51 +1071,17 @@ void FullCodeGenerator::VisitForInStatement(ForInStatement* stmt) {
   __ bind(&done_convert);
   __ push(rax);
 
+  // Check for proxies.
+  Label call_runtime;
+  STATIC_ASSERT(FIRST_JS_PROXY_TYPE == FIRST_SPEC_OBJECT_TYPE);
+  __ CmpObjectType(rax, LAST_JS_PROXY_TYPE, rcx);
+  __ j(below_equal, &call_runtime);
+
   // Check cache validity in generated code. This is a fast case for
   // the JSObject::IsSimpleEnum cache validity checks. If we cannot
   // guarantee cache validity, call the runtime system to check cache
   // validity or get the property names in a fixed array.
-  Label next, call_runtime;
-  Register empty_fixed_array_value = r8;
-  __ LoadRoot(empty_fixed_array_value, Heap::kEmptyFixedArrayRootIndex);
-  Register empty_descriptor_array_value = r9;
-  __ LoadRoot(empty_descriptor_array_value,
-              Heap::kEmptyDescriptorArrayRootIndex);
-  __ movq(rcx, rax);
-  __ bind(&next);
-
-  // Check that there are no elements.  Register rcx contains the
-  // current JS object we've reached through the prototype chain.
-  __ cmpq(empty_fixed_array_value,
-          FieldOperand(rcx, JSObject::kElementsOffset));
-  __ j(not_equal, &call_runtime);
-
-  // Check that instance descriptors are not empty so that we can
-  // check for an enum cache.  Leave the map in rbx for the subsequent
-  // prototype load.
-  __ movq(rbx, FieldOperand(rcx, HeapObject::kMapOffset));
-  __ movq(rdx, FieldOperand(rbx, Map::kInstanceDescriptorsOrBitField3Offset));
-  __ JumpIfSmi(rdx, &call_runtime);
-
-  // Check that there is an enum cache in the non-empty instance
-  // descriptors (rdx).  This is the case if the next enumeration
-  // index field does not contain a smi.
-  __ movq(rdx, FieldOperand(rdx, DescriptorArray::kEnumerationIndexOffset));
-  __ JumpIfSmi(rdx, &call_runtime);
-
-  // For all objects but the receiver, check that the cache is empty.
-  Label check_prototype;
-  __ cmpq(rcx, rax);
-  __ j(equal, &check_prototype, Label::kNear);
-  __ movq(rdx, FieldOperand(rdx, DescriptorArray::kEnumCacheBridgeCacheOffset));
-  __ cmpq(rdx, empty_fixed_array_value);
-  __ j(not_equal, &call_runtime);
-
-  // Load the prototype from the map and loop if non-null.
-  __ bind(&check_prototype);
-  __ movq(rcx, FieldOperand(rbx, Map::kPrototypeOffset));
-  __ cmpq(rcx, null_value);
-  __ j(not_equal, &next);
+  __ CheckEnumCache(null_value, &call_runtime);
 
   // The enum cache is valid.  Load the map of the object being
   // iterated over and use the cache for the iteration.
@@ -953,7 +1108,7 @@ void FullCodeGenerator::VisitForInStatement(ForInStatement* stmt) {
   __ movq(rcx, FieldOperand(rcx, DescriptorArray::kEnumerationIndexOffset));
   __ movq(rdx, FieldOperand(rcx, DescriptorArray::kEnumCacheBridgeCacheOffset));
 
-  // Setup the four remaining stack slots.
+  // Set up the four remaining stack slots.
   __ push(rax);  // Map.
   __ push(rdx);  // Enumeration cache.
   __ movq(rax, FieldOperand(rdx, FixedArray::kLengthOffset));
@@ -962,14 +1117,33 @@ void FullCodeGenerator::VisitForInStatement(ForInStatement* stmt) {
   __ jmp(&loop);
 
   // We got a fixed array in register rax. Iterate through that.
+  Label non_proxy;
   __ bind(&fixed_array);
-  __ Push(Smi::FromInt(0));  // Map (0) - force slow check.
-  __ push(rax);
+
+  Handle<JSGlobalPropertyCell> cell =
+      isolate()->factory()->NewJSGlobalPropertyCell(
+          Handle<Object>(
+              Smi::FromInt(TypeFeedbackCells::kForInFastCaseMarker)));
+  RecordTypeFeedbackCell(stmt->PrepareId(), cell);
+  __ LoadHeapObject(rbx, cell);
+  __ Move(FieldOperand(rbx, JSGlobalPropertyCell::kValueOffset),
+          Smi::FromInt(TypeFeedbackCells::kForInSlowCaseMarker));
+
+  __ Move(rbx, Smi::FromInt(1));  // Smi indicates slow check
+  __ movq(rcx, Operand(rsp, 0 * kPointerSize));  // Get enumerated object
+  STATIC_ASSERT(FIRST_JS_PROXY_TYPE == FIRST_SPEC_OBJECT_TYPE);
+  __ CmpObjectType(rcx, LAST_JS_PROXY_TYPE, rcx);
+  __ j(above, &non_proxy);
+  __ Move(rbx, Smi::FromInt(0));  // Zero indicates proxy
+  __ bind(&non_proxy);
+  __ push(rbx);  // Smi
+  __ push(rax);  // Array
   __ movq(rax, FieldOperand(rax, FixedArray::kLengthOffset));
   __ push(rax);  // Fixed array length (as smi).
   __ Push(Smi::FromInt(0));  // Initial index.
 
   // Generate code for doing the condition check.
+  PrepareForBailoutForId(stmt->BodyId(), NO_REGISTERS);
   __ bind(&loop);
   __ movq(rax, Operand(rsp, 0 * kPointerSize));  // Get the current index.
   __ cmpq(rax, Operand(rsp, 1 * kPointerSize));  // Compare to the array length.
@@ -983,15 +1157,20 @@ void FullCodeGenerator::VisitForInStatement(ForInStatement* stmt) {
                             index.scale,
                             FixedArray::kHeaderSize));
 
-  // Get the expected map from the stack or a zero map in the
+  // Get the expected map from the stack or a smi in the
   // permanent slow case into register rdx.
   __ movq(rdx, Operand(rsp, 3 * kPointerSize));
 
   // Check if the expected map still matches that of the enumerable.
-  // If not, we have to filter the key.
+  // If not, we may have to filter the key.
   Label update_each;
   __ movq(rcx, Operand(rsp, 4 * kPointerSize));
   __ cmpq(rdx, FieldOperand(rcx, HeapObject::kMapOffset));
+  __ j(equal, &update_each, Label::kNear);
+
+  // For proxies, no filtering is done.
+  // TODO(rossberg): What if only a prototype is a proxy? Not specified yet.
+  __ Cmp(rdx, Smi::FromInt(0));
   __ j(equal, &update_each, Label::kNear);
 
   // Convert the entry to a string or null if it isn't a property
@@ -1010,7 +1189,7 @@ void FullCodeGenerator::VisitForInStatement(ForInStatement* stmt) {
   __ movq(result_register(), rbx);
   // Perform the assignment as if via '='.
   { EffectContext context(this);
-    EmitAssignment(stmt->each(), stmt->AssignmentId());
+    EmitAssignment(stmt->each());
   }
 
   // Generate code for the body of the loop.
@@ -1021,7 +1200,7 @@ void FullCodeGenerator::VisitForInStatement(ForInStatement* stmt) {
   __ bind(loop_statement.continue_label());
   __ SmiAddConstant(Operand(rsp, 0 * kPointerSize), Smi::FromInt(1));
 
-  EmitStackCheck(stmt);
+  EmitStackCheck(stmt, &loop);
   __ jmp(&loop);
 
   // Remove the pointers stored on the stack.
@@ -1029,6 +1208,7 @@ void FullCodeGenerator::VisitForInStatement(ForInStatement* stmt) {
   __ addq(rsp, Immediate(5 * kPointerSize));
 
   // Exit and decrement the loop depth.
+  PrepareForBailoutForId(stmt->ExitId(), NO_REGISTERS);
   __ bind(&exit);
   decrement_loop_depth();
 }
@@ -1047,7 +1227,7 @@ void FullCodeGenerator::EmitNewClosure(Handle<SharedFunctionInfo> info,
       !pretenure &&
       scope()->is_function_scope() &&
       info->num_literals() == 0) {
-    FastNewClosureStub stub(info->strict_mode() ? kStrictMode : kNonStrictMode);
+    FastNewClosureStub stub(info->language_mode());
     __ Push(info);
     __ CallStub(&stub);
   } else {
@@ -1077,7 +1257,7 @@ void FullCodeGenerator::EmitLoadGlobalCheckExtensions(Variable* var,
   Scope* s = scope();
   while (s != NULL) {
     if (s->num_heap_slots() > 0) {
-      if (s->calls_eval()) {
+      if (s->calls_non_strict_eval()) {
         // Check that extension is NULL.
         __ cmpq(ContextOperand(context, Context::EXTENSION_INDEX),
                 Immediate(0));
@@ -1091,7 +1271,7 @@ void FullCodeGenerator::EmitLoadGlobalCheckExtensions(Variable* var,
     // If no outer scope calls eval, we do not need to check more
     // context extensions.  If we have reached an eval scope, we check
     // all extensions from this point.
-    if (!s->outer_scope_calls_eval() || s->is_eval_scope()) break;
+    if (!s->outer_scope_calls_non_strict_eval() || s->is_eval_scope()) break;
     s = s->outer_scope();
   }
 
@@ -1125,7 +1305,7 @@ void FullCodeGenerator::EmitLoadGlobalCheckExtensions(Variable* var,
   RelocInfo::Mode mode = (typeof_state == INSIDE_TYPEOF)
       ? RelocInfo::CODE_TARGET
       : RelocInfo::CODE_TARGET_CONTEXT;
-  __ call(ic, mode);
+  CallIC(ic, mode);
 }
 
 
@@ -1137,7 +1317,7 @@ MemOperand FullCodeGenerator::ContextSlotOperandCheckExtensions(Variable* var,
 
   for (Scope* s = scope(); s != var->scope(); s = s->outer_scope()) {
     if (s->num_heap_slots() > 0) {
-      if (s->calls_eval()) {
+      if (s->calls_non_strict_eval()) {
         // Check that extension is NULL.
         __ cmpq(ContextOperand(context, Context::EXTENSION_INDEX),
                 Immediate(0));
@@ -1168,16 +1348,23 @@ void FullCodeGenerator::EmitDynamicLookupFastCase(Variable* var,
   // introducing variables.  In those cases, we do not want to
   // perform a runtime call for all variables in the scope
   // containing the eval.
-  if (var->mode() == Variable::DYNAMIC_GLOBAL) {
+  if (var->mode() == DYNAMIC_GLOBAL) {
     EmitLoadGlobalCheckExtensions(var, typeof_state, slow);
     __ jmp(done);
-  } else if (var->mode() == Variable::DYNAMIC_LOCAL) {
+  } else if (var->mode() == DYNAMIC_LOCAL) {
     Variable* local = var->local_if_not_shadowed();
     __ movq(rax, ContextSlotOperandCheckExtensions(local, slow));
-    if (local->mode() == Variable::CONST) {
+    if (local->mode() == CONST ||
+        local->mode() == CONST_HARMONY ||
+        local->mode() == LET) {
       __ CompareRoot(rax, Heap::kTheHoleValueRootIndex);
       __ j(not_equal, done);
-      __ LoadRoot(rax, Heap::kUndefinedValueRootIndex);
+      if (local->mode() == CONST) {
+        __ LoadRoot(rax, Heap::kUndefinedValueRootIndex);
+      } else {  // LET || CONST_HARMONY
+        __ Push(var->name());
+        __ CallRuntime(Runtime::kThrowReferenceError, 1);
+      }
     }
     __ jmp(done);
   }
@@ -1199,7 +1386,7 @@ void FullCodeGenerator::EmitVariableLoad(VariableProxy* proxy) {
       __ Move(rcx, var->name());
       __ movq(rax, GlobalObjectOperand());
       Handle<Code> ic = isolate()->builtins()->LoadIC_Initialize();
-      __ call(ic, RelocInfo::CODE_TARGET_CONTEXT);
+      CallIC(ic, RelocInfo::CODE_TARGET_CONTEXT);
       context()->Plug(rax);
       break;
     }
@@ -1208,23 +1395,63 @@ void FullCodeGenerator::EmitVariableLoad(VariableProxy* proxy) {
     case Variable::LOCAL:
     case Variable::CONTEXT: {
       Comment cmnt(masm_, var->IsContextSlot() ? "Context slot" : "Stack slot");
-      if (var->mode() != Variable::LET && var->mode() != Variable::CONST) {
-        context()->Plug(var);
-      } else {
-        // Let and const need a read barrier.
-        Label done;
-        GetVar(rax, var);
-        __ CompareRoot(rax, Heap::kTheHoleValueRootIndex);
-        __ j(not_equal, &done, Label::kNear);
-        if (var->mode() == Variable::LET) {
-          __ Push(var->name());
-          __ CallRuntime(Runtime::kThrowReferenceError, 1);
-        } else {  // Variable::CONST
-          __ LoadRoot(rax, Heap::kUndefinedValueRootIndex);
+      if (var->binding_needs_init()) {
+        // var->scope() may be NULL when the proxy is located in eval code and
+        // refers to a potential outside binding. Currently those bindings are
+        // always looked up dynamically, i.e. in that case
+        //     var->location() == LOOKUP.
+        // always holds.
+        ASSERT(var->scope() != NULL);
+
+        // Check if the binding really needs an initialization check. The check
+        // can be skipped in the following situation: we have a LET or CONST
+        // binding in harmony mode, both the Variable and the VariableProxy have
+        // the same declaration scope (i.e. they are both in global code, in the
+        // same function or in the same eval code) and the VariableProxy is in
+        // the source physically located after the initializer of the variable.
+        //
+        // We cannot skip any initialization checks for CONST in non-harmony
+        // mode because const variables may be declared but never initialized:
+        //   if (false) { const x; }; var y = x;
+        //
+        // The condition on the declaration scopes is a conservative check for
+        // nested functions that access a binding and are called before the
+        // binding is initialized:
+        //   function() { f(); let x = 1; function f() { x = 2; } }
+        //
+        bool skip_init_check;
+        if (var->scope()->DeclarationScope() != scope()->DeclarationScope()) {
+          skip_init_check = false;
+        } else {
+          // Check that we always have valid source position.
+          ASSERT(var->initializer_position() != RelocInfo::kNoPosition);
+          ASSERT(proxy->position() != RelocInfo::kNoPosition);
+          skip_init_check = var->mode() != CONST &&
+              var->initializer_position() < proxy->position();
         }
-        __ bind(&done);
-        context()->Plug(rax);
+
+        if (!skip_init_check) {
+          // Let and const need a read barrier.
+          Label done;
+          GetVar(rax, var);
+          __ CompareRoot(rax, Heap::kTheHoleValueRootIndex);
+          __ j(not_equal, &done, Label::kNear);
+          if (var->mode() == LET || var->mode() == CONST_HARMONY) {
+            // Throw a reference error when using an uninitialized let/const
+            // binding in harmony mode.
+            __ Push(var->name());
+            __ CallRuntime(Runtime::kThrowReferenceError, 1);
+          } else {
+            // Uninitalized const bindings outside of harmony mode are unholed.
+            ASSERT(var->mode() == CONST);
+            __ LoadRoot(rax, Heap::kUndefinedValueRootIndex);
+          }
+          __ bind(&done);
+          context()->Plug(rax);
+          break;
+        }
       }
+      context()->Plug(var);
       break;
     }
 
@@ -1300,12 +1527,22 @@ void FullCodeGenerator::VisitRegExpLiteral(RegExpLiteral* expr) {
 }
 
 
+void FullCodeGenerator::EmitAccessor(Expression* expression) {
+  if (expression == NULL) {
+    __ PushRoot(Heap::kNullValueRootIndex);
+  } else {
+    VisitForStackValue(expression);
+  }
+}
+
+
 void FullCodeGenerator::VisitObjectLiteral(ObjectLiteral* expr) {
   Comment cmnt(masm_, "[ ObjectLiteral");
+  Handle<FixedArray> constant_properties = expr->constant_properties();
   __ movq(rdi, Operand(rbp, JavaScriptFrameConstants::kFunctionOffset));
   __ push(FieldOperand(rdi, JSFunction::kLiteralsOffset));
   __ Push(Smi::FromInt(expr->literal_index()));
-  __ Push(expr->constant_properties());
+  __ Push(constant_properties);
   int flags = expr->fast_elements()
       ? ObjectLiteral::kFastElements
       : ObjectLiteral::kNoFlags;
@@ -1313,10 +1550,15 @@ void FullCodeGenerator::VisitObjectLiteral(ObjectLiteral* expr) {
       ? ObjectLiteral::kHasFunction
       : ObjectLiteral::kNoFlags;
   __ Push(Smi::FromInt(flags));
+  int properties_count = constant_properties->length() / 2;
   if (expr->depth() > 1) {
     __ CallRuntime(Runtime::kCreateObjectLiteral, 4);
-  } else {
+  } else if (flags != ObjectLiteral::kFastElements ||
+      properties_count > FastCloneShallowObjectStub::kMaximumClonedProperties) {
     __ CallRuntime(Runtime::kCreateObjectLiteralShallow, 4);
+  } else {
+    FastCloneShallowObjectStub stub(properties_count);
+    __ CallStub(&stub);
   }
 
   // If result_saved is true the result is on top of the stack.  If
@@ -1326,8 +1568,9 @@ void FullCodeGenerator::VisitObjectLiteral(ObjectLiteral* expr) {
   // Mark all computed expressions that are bound to a key that
   // is shadowed by a later occurrence of the same key. For the
   // marked expressions, no store code is emitted.
-  expr->CalculateEmitStore();
+  expr->CalculateEmitStore(zone());
 
+  AccessorTable accessor_table(isolate()->zone());
   for (int i = 0; i < expr->properties()->length(); i++) {
     ObjectLiteral::Property* property = expr->properties()->at(i);
     if (property->IsCompileTimeValue()) continue;
@@ -1350,10 +1593,10 @@ void FullCodeGenerator::VisitObjectLiteral(ObjectLiteral* expr) {
             VisitForAccumulatorValue(value);
             __ Move(rcx, key->handle());
             __ movq(rdx, Operand(rsp, 0));
-            Handle<Code> ic = is_strict_mode()
-                ? isolate()->builtins()->StoreIC_Initialize_Strict()
-                : isolate()->builtins()->StoreIC_Initialize();
-            __ call(ic, RelocInfo::CODE_TARGET, key->id());
+            Handle<Code> ic = is_classic_mode()
+                ? isolate()->builtins()->StoreIC_Initialize()
+                : isolate()->builtins()->StoreIC_Initialize_Strict();
+            CallIC(ic, RelocInfo::CODE_TARGET, key->id());
             PrepareForBailoutForId(key->id(), NO_REGISTERS);
           } else {
             VisitForEffect(value);
@@ -1372,17 +1615,26 @@ void FullCodeGenerator::VisitObjectLiteral(ObjectLiteral* expr) {
           __ Drop(3);
         }
         break;
-      case ObjectLiteral::Property::SETTER:
       case ObjectLiteral::Property::GETTER:
-        __ push(Operand(rsp, 0));  // Duplicate receiver.
-        VisitForStackValue(key);
-        __ Push(property->kind() == ObjectLiteral::Property::SETTER ?
-                Smi::FromInt(1) :
-                Smi::FromInt(0));
-        VisitForStackValue(value);
-        __ CallRuntime(Runtime::kDefineAccessor, 4);
+        accessor_table.lookup(key)->second->getter = value;
+        break;
+      case ObjectLiteral::Property::SETTER:
+        accessor_table.lookup(key)->second->setter = value;
         break;
     }
+  }
+
+  // Emit code to define accessors, using only a single call to the runtime for
+  // each pair of corresponding getters and setters.
+  for (AccessorTable::Iterator it = accessor_table.begin();
+       it != accessor_table.end();
+       ++it) {
+    __ push(Operand(rsp, 0));  // Duplicate receiver.
+    VisitForStackValue(it->first);
+    EmitAccessor(it->second->getter);
+    EmitAccessor(it->second->setter);
+    __ Push(Smi::FromInt(NONE));
+    __ CallRuntime(Runtime::kDefineOrRedefineAccessorProperty, 5);
   }
 
   if (expr->has_function()) {
@@ -1404,24 +1656,42 @@ void FullCodeGenerator::VisitArrayLiteral(ArrayLiteral* expr) {
 
   ZoneList<Expression*>* subexprs = expr->values();
   int length = subexprs->length();
+  Handle<FixedArray> constant_elements = expr->constant_elements();
+  ASSERT_EQ(2, constant_elements->length());
+  ElementsKind constant_elements_kind =
+      static_cast<ElementsKind>(Smi::cast(constant_elements->get(0))->value());
+  bool has_constant_fast_elements =
+      IsFastObjectElementsKind(constant_elements_kind);
+  Handle<FixedArrayBase> constant_elements_values(
+      FixedArrayBase::cast(constant_elements->get(1)));
 
   __ movq(rbx, Operand(rbp, JavaScriptFrameConstants::kFunctionOffset));
   __ push(FieldOperand(rbx, JSFunction::kLiteralsOffset));
   __ Push(Smi::FromInt(expr->literal_index()));
-  __ Push(expr->constant_elements());
-  if (expr->constant_elements()->map() ==
-      isolate()->heap()->fixed_cow_array_map()) {
-    FastCloneShallowArrayStub stub(
-        FastCloneShallowArrayStub::COPY_ON_WRITE_ELEMENTS, length);
-    __ CallStub(&stub);
+  __ Push(constant_elements);
+  Heap* heap = isolate()->heap();
+  if (has_constant_fast_elements &&
+      constant_elements_values->map() == heap->fixed_cow_array_map()) {
+    // If the elements are already FAST_*_ELEMENTS, the boilerplate cannot
+    // change, so it's possible to specialize the stub in advance.
     __ IncrementCounter(isolate()->counters()->cow_arrays_created_stub(), 1);
+    FastCloneShallowArrayStub stub(
+        FastCloneShallowArrayStub::COPY_ON_WRITE_ELEMENTS,
+        length);
+    __ CallStub(&stub);
   } else if (expr->depth() > 1) {
     __ CallRuntime(Runtime::kCreateArrayLiteral, 3);
   } else if (length > FastCloneShallowArrayStub::kMaximumClonedLength) {
     __ CallRuntime(Runtime::kCreateArrayLiteralShallow, 3);
   } else {
-    FastCloneShallowArrayStub stub(
-        FastCloneShallowArrayStub::CLONE_ELEMENTS, length);
+    ASSERT(IsFastSmiOrObjectElementsKind(constant_elements_kind) ||
+           FLAG_smi_only_arrays);
+    // If the elements are already FAST_*_ELEMENTS, the boilerplate cannot
+    // change, so it's possible to specialize the stub in advance.
+    FastCloneShallowArrayStub::Mode mode = has_constant_fast_elements
+        ? FastCloneShallowArrayStub::CLONE_ELEMENTS
+        : FastCloneShallowArrayStub::CLONE_ANY_ELEMENTS;
+    FastCloneShallowArrayStub stub(mode, length);
     __ CallStub(&stub);
   }
 
@@ -1444,14 +1714,28 @@ void FullCodeGenerator::VisitArrayLiteral(ArrayLiteral* expr) {
     }
     VisitForAccumulatorValue(subexpr);
 
-    // Store the subexpression value in the array's elements.
-    __ movq(rbx, Operand(rsp, 0));  // Copy of array literal.
-    __ movq(rbx, FieldOperand(rbx, JSObject::kElementsOffset));
-    int offset = FixedArray::kHeaderSize + (i * kPointerSize);
-    __ movq(FieldOperand(rbx, offset), result_register());
-
-    // Update the write barrier for the array store.
-    __ RecordWrite(rbx, offset, result_register(), rcx);
+    if (IsFastObjectElementsKind(constant_elements_kind)) {
+      // Fast-case array literal with ElementsKind of FAST_*_ELEMENTS, they
+      // cannot transition and don't need to call the runtime stub.
+      int offset = FixedArray::kHeaderSize + (i * kPointerSize);
+      __ movq(rbx, Operand(rsp, 0));  // Copy of array literal.
+      __ movq(rbx, FieldOperand(rbx, JSObject::kElementsOffset));
+      // Store the subexpression value in the array's elements.
+      __ movq(FieldOperand(rbx, offset), result_register());
+      // Update the write barrier for the array store.
+      __ RecordWriteField(rbx, offset, result_register(), rcx,
+                          kDontSaveFPRegs,
+                          EMIT_REMEMBERED_SET,
+                          INLINE_SMI_CHECK);
+    } else {
+      // Store the subexpression value in the array's elements.
+      __ movq(rbx, Operand(rsp, 0));  // Copy of array literal.
+      __ movq(rdi, FieldOperand(rbx, JSObject::kMapOffset));
+      __ Move(rcx, Smi::FromInt(i));
+      __ Move(rdx, Smi::FromInt(expr->literal_index()));
+      StoreArrayLiteralElementStub stub;
+      __ CallStub(&stub);
+    }
 
     PrepareForBailoutForId(expr->GetIdForElement(i), NO_REGISTERS);
   }
@@ -1582,14 +1866,14 @@ void FullCodeGenerator::EmitNamedPropertyLoad(Property* prop) {
   Literal* key = prop->key()->AsLiteral();
   __ Move(rcx, key->handle());
   Handle<Code> ic = isolate()->builtins()->LoadIC_Initialize();
-  __ call(ic, RelocInfo::CODE_TARGET, GetPropertyId(prop));
+  CallIC(ic, RelocInfo::CODE_TARGET, prop->id());
 }
 
 
 void FullCodeGenerator::EmitKeyedPropertyLoad(Property* prop) {
   SetSourcePosition(prop->position());
   Handle<Code> ic = isolate()->builtins()->KeyedLoadIC_Initialize();
-  __ call(ic, RelocInfo::CODE_TARGET, GetPropertyId(prop));
+  CallIC(ic, RelocInfo::CODE_TARGET, prop->id());
 }
 
 
@@ -1611,7 +1895,7 @@ void FullCodeGenerator::EmitInlineSmiBinaryOp(BinaryOperation* expr,
   __ bind(&stub_call);
   __ movq(rax, rcx);
   BinaryOpStub stub(op, mode);
-  __ call(stub.GetCode(), RelocInfo::CODE_TARGET, expr->id());
+  CallIC(stub.GetCode(), RelocInfo::CODE_TARGET, expr->id());
   patch_site.EmitPatchInfo();
   __ jmp(&done, Label::kNear);
 
@@ -1660,13 +1944,13 @@ void FullCodeGenerator::EmitBinaryOp(BinaryOperation* expr,
   __ pop(rdx);
   BinaryOpStub stub(op, mode);
   JumpPatchSite patch_site(masm_);    // unbound, signals no inlined smi code.
-  __ call(stub.GetCode(), RelocInfo::CODE_TARGET, expr->id());
+  CallIC(stub.GetCode(), RelocInfo::CODE_TARGET, expr->id());
   patch_site.EmitPatchInfo();
   context()->Plug(rax);
 }
 
 
-void FullCodeGenerator::EmitAssignment(Expression* expr, int bailout_ast_id) {
+void FullCodeGenerator::EmitAssignment(Expression* expr) {
   // Invalid left-hand sides are rewritten to have a 'throw
   // ReferenceError' on the left-hand side.
   if (!expr->IsValidLeftHandSide()) {
@@ -1698,10 +1982,10 @@ void FullCodeGenerator::EmitAssignment(Expression* expr, int bailout_ast_id) {
       __ movq(rdx, rax);
       __ pop(rax);  // Restore value.
       __ Move(rcx, prop->key()->AsLiteral()->handle());
-      Handle<Code> ic = is_strict_mode()
-          ? isolate()->builtins()->StoreIC_Initialize_Strict()
-          : isolate()->builtins()->StoreIC_Initialize();
-      __ call(ic);
+      Handle<Code> ic = is_classic_mode()
+          ? isolate()->builtins()->StoreIC_Initialize()
+          : isolate()->builtins()->StoreIC_Initialize_Strict();
+      CallIC(ic);
       break;
     }
     case KEYED_PROPERTY: {
@@ -1711,14 +1995,13 @@ void FullCodeGenerator::EmitAssignment(Expression* expr, int bailout_ast_id) {
       __ movq(rcx, rax);
       __ pop(rdx);
       __ pop(rax);  // Restore value.
-      Handle<Code> ic = is_strict_mode()
-          ? isolate()->builtins()->KeyedStoreIC_Initialize_Strict()
-          : isolate()->builtins()->KeyedStoreIC_Initialize();
-      __ call(ic);
+      Handle<Code> ic = is_classic_mode()
+          ? isolate()->builtins()->KeyedStoreIC_Initialize()
+          : isolate()->builtins()->KeyedStoreIC_Initialize_Strict();
+      CallIC(ic);
       break;
     }
   }
-  PrepareForBailoutForId(bailout_ast_id, TOS_REG);
   context()->Plug(rax);
 }
 
@@ -1729,10 +2012,10 @@ void FullCodeGenerator::EmitVariableAssignment(Variable* var,
     // Global var, const, or let.
     __ Move(rcx, var->name());
     __ movq(rdx, GlobalObjectOperand());
-    Handle<Code> ic = is_strict_mode()
-        ? isolate()->builtins()->StoreIC_Initialize_Strict()
-        : isolate()->builtins()->StoreIC_Initialize();
-    __ call(ic, RelocInfo::CODE_TARGET_CONTEXT);
+    Handle<Code> ic = is_classic_mode()
+        ? isolate()->builtins()->StoreIC_Initialize()
+        : isolate()->builtins()->StoreIC_Initialize_Strict();
+    CallIC(ic, RelocInfo::CODE_TARGET_CONTEXT);
   } else if (op == Token::INIT_CONST) {
     // Const initializers need a write barrier.
     ASSERT(!var->IsParameter());  // No const parameters.
@@ -1756,13 +2039,13 @@ void FullCodeGenerator::EmitVariableAssignment(Variable* var,
       __ CallRuntime(Runtime::kInitializeConstContextSlot, 3);
     }
 
-  } else if (var->mode() == Variable::LET && op != Token::INIT_LET) {
+  } else if (var->mode() == LET && op != Token::INIT_LET) {
     // Non-initializing assignment to let variable needs a write barrier.
     if (var->IsLookupSlot()) {
       __ push(rax);  // Value.
       __ push(rsi);  // Context.
       __ Push(var->name());
-      __ Push(Smi::FromInt(strict_mode_flag()));
+      __ Push(Smi::FromInt(language_mode()));
       __ CallRuntime(Runtime::kStoreContextSlot, 4);
     } else {
       ASSERT(var->IsStackAllocated() || var->IsContextSlot());
@@ -1777,12 +2060,14 @@ void FullCodeGenerator::EmitVariableAssignment(Variable* var,
       __ movq(location, rax);
       if (var->IsContextSlot()) {
         __ movq(rdx, rax);
-        __ RecordWrite(rcx, Context::SlotOffset(var->index()), rdx, rbx);
+        __ RecordWriteContextSlot(
+            rcx, Context::SlotOffset(var->index()), rdx, rbx, kDontSaveFPRegs);
       }
     }
 
-  } else if (var->mode() != Variable::CONST) {
-    // Assignment to var or initializing assignment to let.
+  } else if (!var->is_const_mode() || op == Token::INIT_CONST_HARMONY) {
+    // Assignment to var or initializing assignment to let/const
+    // in harmony mode.
     if (var->IsStackAllocated() || var->IsContextSlot()) {
       MemOperand location = VarOperand(var, rcx);
       if (FLAG_debug_code && op == Token::INIT_LET) {
@@ -1795,14 +2080,15 @@ void FullCodeGenerator::EmitVariableAssignment(Variable* var,
       __ movq(location, rax);
       if (var->IsContextSlot()) {
         __ movq(rdx, rax);
-        __ RecordWrite(rcx, Context::SlotOffset(var->index()), rdx, rbx);
+        __ RecordWriteContextSlot(
+            rcx, Context::SlotOffset(var->index()), rdx, rbx, kDontSaveFPRegs);
       }
     } else {
       ASSERT(var->IsLookupSlot());
       __ push(rax);  // Value.
       __ push(rsi);  // Context.
       __ Push(var->name());
-      __ Push(Smi::FromInt(strict_mode_flag()));
+      __ Push(Smi::FromInt(language_mode()));
       __ CallRuntime(Runtime::kStoreContextSlot, 4);
     }
   }
@@ -1834,10 +2120,10 @@ void FullCodeGenerator::EmitNamedPropertyAssignment(Assignment* expr) {
   } else {
     __ pop(rdx);
   }
-  Handle<Code> ic = is_strict_mode()
-      ? isolate()->builtins()->StoreIC_Initialize_Strict()
-      : isolate()->builtins()->StoreIC_Initialize();
-  __ call(ic, RelocInfo::CODE_TARGET, expr->id());
+  Handle<Code> ic = is_classic_mode()
+      ? isolate()->builtins()->StoreIC_Initialize()
+      : isolate()->builtins()->StoreIC_Initialize_Strict();
+  CallIC(ic, RelocInfo::CODE_TARGET, expr->id());
 
   // If the assignment ends an initialization block, revert to fast case.
   if (expr->ends_initialization_block()) {
@@ -1874,10 +2160,10 @@ void FullCodeGenerator::EmitKeyedPropertyAssignment(Assignment* expr) {
   }
   // Record source code position before IC call.
   SetSourcePosition(expr->position());
-  Handle<Code> ic = is_strict_mode()
-      ? isolate()->builtins()->KeyedStoreIC_Initialize_Strict()
-      : isolate()->builtins()->KeyedStoreIC_Initialize();
-  __ call(ic, RelocInfo::CODE_TARGET, expr->id());
+  Handle<Code> ic = is_classic_mode()
+      ? isolate()->builtins()->KeyedStoreIC_Initialize()
+      : isolate()->builtins()->KeyedStoreIC_Initialize_Strict();
+  CallIC(ic, RelocInfo::CODE_TARGET, expr->id());
 
   // If the assignment ends an initialization block, revert to fast case.
   if (expr->ends_initialization_block()) {
@@ -1911,6 +2197,14 @@ void FullCodeGenerator::VisitProperty(Property* expr) {
 }
 
 
+void FullCodeGenerator::CallIC(Handle<Code> code,
+                               RelocInfo::Mode rmode,
+                               unsigned ast_id) {
+  ic_total_count_++;
+  __ call(code, rmode, ast_id);
+}
+
+
 void FullCodeGenerator::EmitCallWithIC(Call* expr,
                                        Handle<Object> name,
                                        RelocInfo::Mode mode) {
@@ -1928,7 +2222,7 @@ void FullCodeGenerator::EmitCallWithIC(Call* expr,
   // Call the IC initialization code.
   Handle<Code> ic =
       isolate()->stub_cache()->ComputeCallInitialize(arg_count, mode);
-  __ call(ic, mode, expr->id());
+  CallIC(ic, mode, expr->id());
   RecordJSReturnSite(expr);
   // Restore context register.
   __ movq(rsi, Operand(rbp, StandardFrameConstants::kContextOffset));
@@ -1961,7 +2255,7 @@ void FullCodeGenerator::EmitKeyedCallWithIC(Call* expr,
   Handle<Code> ic =
       isolate()->stub_cache()->ComputeKeyedCallInitialize(arg_count);
   __ movq(rcx, Operand(rsp, (arg_count + 1) * kPointerSize));  // Key.
-  __ call(ic, RelocInfo::CODE_TARGET, expr->id());
+  CallIC(ic, RelocInfo::CODE_TARGET, expr->id());
   RecordJSReturnSite(expr);
   // Restore context register.
   __ movq(rsi, Operand(rbp, StandardFrameConstants::kContextOffset));
@@ -1980,8 +2274,21 @@ void FullCodeGenerator::EmitCallWithStub(Call* expr, CallFunctionFlags flags) {
   }
   // Record source position for debugger.
   SetSourcePosition(expr->position());
+
+  // Record call targets in unoptimized code, but not in the snapshot.
+  if (!Serializer::enabled()) {
+    flags = static_cast<CallFunctionFlags>(flags | RECORD_CALL_TARGET);
+    Handle<Object> uninitialized =
+        TypeFeedbackCells::UninitializedSentinel(isolate());
+    Handle<JSGlobalPropertyCell> cell =
+        isolate()->factory()->NewJSGlobalPropertyCell(uninitialized);
+    RecordTypeFeedbackCell(expr->id(), cell);
+    __ Move(rbx, cell);
+  }
+
   CallFunctionStub stub(arg_count, flags);
-  __ CallStub(&stub);
+  __ movq(rdi, Operand(rsp, (arg_count + 1) * kPointerSize));
+  __ CallStub(&stub, expr->id());
   RecordJSReturnSite(expr);
   // Restore context register.
   __ movq(rsi, Operand(rbp, StandardFrameConstants::kContextOffset));
@@ -1990,8 +2297,7 @@ void FullCodeGenerator::EmitCallWithStub(Call* expr, CallFunctionFlags flags) {
 }
 
 
-void FullCodeGenerator::EmitResolvePossiblyDirectEval(ResolveEvalFlag flag,
-                                                      int arg_count) {
+void FullCodeGenerator::EmitResolvePossiblyDirectEval(int arg_count) {
   // Push copy of the first argument or undefined if it doesn't exist.
   if (arg_count > 0) {
     __ push(Operand(rsp, arg_count * kPointerSize));
@@ -2002,17 +2308,14 @@ void FullCodeGenerator::EmitResolvePossiblyDirectEval(ResolveEvalFlag flag,
   // Push the receiver of the enclosing function and do runtime call.
   __ push(Operand(rbp, (2 + info_->scope()->num_parameters()) * kPointerSize));
 
-  // Push the strict mode flag. In harmony mode every eval call
-  // is a strict mode eval call.
-  StrictModeFlag strict_mode = strict_mode_flag();
-  if (FLAG_harmony_block_scoping) {
-    strict_mode = kStrictMode;
-  }
-  __ Push(Smi::FromInt(strict_mode));
+  // Push the language mode.
+  __ Push(Smi::FromInt(language_mode()));
 
-  __ CallRuntime(flag == SKIP_CONTEXT_LOOKUP
-                 ? Runtime::kResolvePossiblyDirectEvalNoLookup
-                 : Runtime::kResolvePossiblyDirectEval, 4);
+  // Push the start position of the scope the calls resides in.
+  __ Push(Smi::FromInt(scope()->start_position()));
+
+  // Do the runtime call.
+  __ CallRuntime(Runtime::kResolvePossiblyDirectEval, 5);
 }
 
 
@@ -2043,27 +2346,10 @@ void FullCodeGenerator::VisitCall(Call* expr) {
         VisitForStackValue(args->at(i));
       }
 
-      // If we know that eval can only be shadowed by eval-introduced
-      // variables we attempt to load the global eval function directly in
-      // generated code. If we succeed, there is no need to perform a
-      // context lookup in the runtime system.
-      Label done;
-      Variable* var = proxy->var();
-      if (!var->IsUnallocated() && var->mode() == Variable::DYNAMIC_GLOBAL) {
-        Label slow;
-        EmitLoadGlobalCheckExtensions(var, NOT_INSIDE_TYPEOF, &slow);
-        // Push the function and resolve eval.
-        __ push(rax);
-        EmitResolvePossiblyDirectEval(SKIP_CONTEXT_LOOKUP, arg_count);
-        __ jmp(&done);
-        __ bind(&slow);
-      }
-
       // Push a copy of the function (found below the arguments) and resolve
       // eval.
       __ push(Operand(rsp, (arg_count + 1) * kPointerSize));
-      EmitResolvePossiblyDirectEval(PERFORM_CONTEXT_LOOKUP, arg_count);
-      __ bind(&done);
+      EmitResolvePossiblyDirectEval(arg_count);
 
       // The runtime call returns a pair of values in rax (function) and
       // rdx (receiver). Touch up the stack with the right values.
@@ -2073,6 +2359,7 @@ void FullCodeGenerator::VisitCall(Call* expr) {
     // Record source position for debugger.
     SetSourcePosition(expr->position());
     CallFunctionStub stub(arg_count, RECEIVER_MIGHT_BE_IMPLICIT);
+    __ movq(rdi, Operand(rsp, (arg_count + 1) * kPointerSize));
     __ CallStub(&stub);
     RecordJSReturnSite(expr);
     // Restore context register.
@@ -2175,14 +2462,29 @@ void FullCodeGenerator::VisitCallNew(CallNew* expr) {
   __ Set(rax, arg_count);
   __ movq(rdi, Operand(rsp, arg_count * kPointerSize));
 
-  Handle<Code> construct_builtin =
-      isolate()->builtins()->JSConstructCall();
-  __ Call(construct_builtin, RelocInfo::CONSTRUCT_CALL);
+  // Record call targets in unoptimized code, but not in the snapshot.
+  CallFunctionFlags flags;
+  if (!Serializer::enabled()) {
+    flags = RECORD_CALL_TARGET;
+    Handle<Object> uninitialized =
+        TypeFeedbackCells::UninitializedSentinel(isolate());
+    Handle<JSGlobalPropertyCell> cell =
+        isolate()->factory()->NewJSGlobalPropertyCell(uninitialized);
+    RecordTypeFeedbackCell(expr->id(), cell);
+    __ Move(rbx, cell);
+  } else {
+    flags = NO_CALL_FUNCTION_FLAGS;
+  }
+
+  CallConstructStub stub(flags);
+  __ Call(stub.GetCode(), RelocInfo::CONSTRUCT_CALL);
+  PrepareForBailoutForId(expr->ReturnId(), TOS_REG);
   context()->Plug(rax);
 }
 
 
-void FullCodeGenerator::EmitIsSmi(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitIsSmi(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 1);
 
   VisitForAccumulatorValue(args->at(0));
@@ -2194,7 +2496,7 @@ void FullCodeGenerator::EmitIsSmi(ZoneList<Expression*>* args) {
   context()->PrepareTest(&materialize_true, &materialize_false,
                          &if_true, &if_false, &fall_through);
 
-  PrepareForBailoutBeforeSplit(TOS_REG, true, if_true, if_false);
+  PrepareForBailoutBeforeSplit(expr, true, if_true, if_false);
   __ JumpIfSmi(rax, if_true);
   __ jmp(if_false);
 
@@ -2202,7 +2504,8 @@ void FullCodeGenerator::EmitIsSmi(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitIsNonNegativeSmi(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitIsNonNegativeSmi(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 1);
 
   VisitForAccumulatorValue(args->at(0));
@@ -2214,7 +2517,7 @@ void FullCodeGenerator::EmitIsNonNegativeSmi(ZoneList<Expression*>* args) {
   context()->PrepareTest(&materialize_true, &materialize_false,
                          &if_true, &if_false, &fall_through);
 
-  PrepareForBailoutBeforeSplit(TOS_REG, true, if_true, if_false);
+  PrepareForBailoutBeforeSplit(expr, true, if_true, if_false);
   Condition non_negative_smi = masm()->CheckNonNegativeSmi(rax);
   Split(non_negative_smi, if_true, if_false, fall_through);
 
@@ -2222,7 +2525,8 @@ void FullCodeGenerator::EmitIsNonNegativeSmi(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitIsObject(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitIsObject(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 1);
 
   VisitForAccumulatorValue(args->at(0));
@@ -2246,14 +2550,15 @@ void FullCodeGenerator::EmitIsObject(ZoneList<Expression*>* args) {
   __ cmpq(rbx, Immediate(FIRST_NONCALLABLE_SPEC_OBJECT_TYPE));
   __ j(below, if_false);
   __ cmpq(rbx, Immediate(LAST_NONCALLABLE_SPEC_OBJECT_TYPE));
-  PrepareForBailoutBeforeSplit(TOS_REG, true, if_true, if_false);
+  PrepareForBailoutBeforeSplit(expr, true, if_true, if_false);
   Split(below_equal, if_true, if_false, fall_through);
 
   context()->Plug(if_true, if_false);
 }
 
 
-void FullCodeGenerator::EmitIsSpecObject(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitIsSpecObject(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 1);
 
   VisitForAccumulatorValue(args->at(0));
@@ -2267,14 +2572,15 @@ void FullCodeGenerator::EmitIsSpecObject(ZoneList<Expression*>* args) {
 
   __ JumpIfSmi(rax, if_false);
   __ CmpObjectType(rax, FIRST_SPEC_OBJECT_TYPE, rbx);
-  PrepareForBailoutBeforeSplit(TOS_REG, true, if_true, if_false);
+  PrepareForBailoutBeforeSplit(expr, true, if_true, if_false);
   Split(above_equal, if_true, if_false, fall_through);
 
   context()->Plug(if_true, if_false);
 }
 
 
-void FullCodeGenerator::EmitIsUndetectableObject(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitIsUndetectableObject(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 1);
 
   VisitForAccumulatorValue(args->at(0));
@@ -2290,7 +2596,7 @@ void FullCodeGenerator::EmitIsUndetectableObject(ZoneList<Expression*>* args) {
   __ movq(rbx, FieldOperand(rax, HeapObject::kMapOffset));
   __ testb(FieldOperand(rbx, Map::kBitFieldOffset),
            Immediate(1 << Map::kIsUndetectable));
-  PrepareForBailoutBeforeSplit(TOS_REG, true, if_true, if_false);
+  PrepareForBailoutBeforeSplit(expr, true, if_true, if_false);
   Split(not_zero, if_true, if_false, fall_through);
 
   context()->Plug(if_true, if_false);
@@ -2298,7 +2604,8 @@ void FullCodeGenerator::EmitIsUndetectableObject(ZoneList<Expression*>* args) {
 
 
 void FullCodeGenerator::EmitIsStringWrapperSafeForDefaultValueOf(
-    ZoneList<Expression*>* args) {
+    CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 1);
 
   VisitForAccumulatorValue(args->at(0));
@@ -2374,12 +2681,13 @@ void FullCodeGenerator::EmitIsStringWrapperSafeForDefaultValueOf(
          Immediate(1 << Map::kStringWrapperSafeForDefaultValueOf));
   __ jmp(if_true);
 
-  PrepareForBailoutBeforeSplit(TOS_REG, true, if_true, if_false);
+  PrepareForBailoutBeforeSplit(expr, true, if_true, if_false);
   context()->Plug(if_true, if_false);
 }
 
 
-void FullCodeGenerator::EmitIsFunction(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitIsFunction(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 1);
 
   VisitForAccumulatorValue(args->at(0));
@@ -2393,14 +2701,15 @@ void FullCodeGenerator::EmitIsFunction(ZoneList<Expression*>* args) {
 
   __ JumpIfSmi(rax, if_false);
   __ CmpObjectType(rax, JS_FUNCTION_TYPE, rbx);
-  PrepareForBailoutBeforeSplit(TOS_REG, true, if_true, if_false);
+  PrepareForBailoutBeforeSplit(expr, true, if_true, if_false);
   Split(equal, if_true, if_false, fall_through);
 
   context()->Plug(if_true, if_false);
 }
 
 
-void FullCodeGenerator::EmitIsArray(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitIsArray(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 1);
 
   VisitForAccumulatorValue(args->at(0));
@@ -2414,14 +2723,15 @@ void FullCodeGenerator::EmitIsArray(ZoneList<Expression*>* args) {
 
   __ JumpIfSmi(rax, if_false);
   __ CmpObjectType(rax, JS_ARRAY_TYPE, rbx);
-  PrepareForBailoutBeforeSplit(TOS_REG, true, if_true, if_false);
+  PrepareForBailoutBeforeSplit(expr, true, if_true, if_false);
   Split(equal, if_true, if_false, fall_through);
 
   context()->Plug(if_true, if_false);
 }
 
 
-void FullCodeGenerator::EmitIsRegExp(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitIsRegExp(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 1);
 
   VisitForAccumulatorValue(args->at(0));
@@ -2435,7 +2745,7 @@ void FullCodeGenerator::EmitIsRegExp(ZoneList<Expression*>* args) {
 
   __ JumpIfSmi(rax, if_false);
   __ CmpObjectType(rax, JS_REGEXP_TYPE, rbx);
-  PrepareForBailoutBeforeSplit(TOS_REG, true, if_true, if_false);
+  PrepareForBailoutBeforeSplit(expr, true, if_true, if_false);
   Split(equal, if_true, if_false, fall_through);
 
   context()->Plug(if_true, if_false);
@@ -2443,8 +2753,8 @@ void FullCodeGenerator::EmitIsRegExp(ZoneList<Expression*>* args) {
 
 
 
-void FullCodeGenerator::EmitIsConstructCall(ZoneList<Expression*>* args) {
-  ASSERT(args->length() == 0);
+void FullCodeGenerator::EmitIsConstructCall(CallRuntime* expr) {
+  ASSERT(expr->arguments()->length() == 0);
 
   Label materialize_true, materialize_false;
   Label* if_true = NULL;
@@ -2467,14 +2777,15 @@ void FullCodeGenerator::EmitIsConstructCall(ZoneList<Expression*>* args) {
   __ bind(&check_frame_marker);
   __ Cmp(Operand(rax, StandardFrameConstants::kMarkerOffset),
          Smi::FromInt(StackFrame::CONSTRUCT));
-  PrepareForBailoutBeforeSplit(TOS_REG, true, if_true, if_false);
+  PrepareForBailoutBeforeSplit(expr, true, if_true, if_false);
   Split(equal, if_true, if_false, fall_through);
 
   context()->Plug(if_true, if_false);
 }
 
 
-void FullCodeGenerator::EmitObjectEquals(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitObjectEquals(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 2);
 
   // Load the two objects into registers and perform the comparison.
@@ -2490,14 +2801,15 @@ void FullCodeGenerator::EmitObjectEquals(ZoneList<Expression*>* args) {
 
   __ pop(rbx);
   __ cmpq(rax, rbx);
-  PrepareForBailoutBeforeSplit(TOS_REG, true, if_true, if_false);
+  PrepareForBailoutBeforeSplit(expr, true, if_true, if_false);
   Split(equal, if_true, if_false, fall_through);
 
   context()->Plug(if_true, if_false);
 }
 
 
-void FullCodeGenerator::EmitArguments(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitArguments(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 1);
 
   // ArgumentsAccessStub expects the key in rdx and the formal
@@ -2511,8 +2823,8 @@ void FullCodeGenerator::EmitArguments(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitArgumentsLength(ZoneList<Expression*>* args) {
-  ASSERT(args->length() == 0);
+void FullCodeGenerator::EmitArgumentsLength(CallRuntime* expr) {
+  ASSERT(expr->arguments()->length() == 0);
 
   Label exit;
   // Get the number of formal parameters.
@@ -2534,7 +2846,8 @@ void FullCodeGenerator::EmitArgumentsLength(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitClassOf(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitClassOf(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 1);
   Label done, null, function, non_function_constructor;
 
@@ -2545,20 +2858,24 @@ void FullCodeGenerator::EmitClassOf(ZoneList<Expression*>* args) {
 
   // Check that the object is a JS object but take special care of JS
   // functions to make sure they have 'Function' as their class.
+  // Assume that there are only two callable types, and one of them is at
+  // either end of the type range for JS object types. Saves extra comparisons.
+  STATIC_ASSERT(NUM_OF_CALLABLE_SPEC_OBJECT_TYPES == 2);
   __ CmpObjectType(rax, FIRST_SPEC_OBJECT_TYPE, rax);
   // Map is now in rax.
   __ j(below, &null);
+  STATIC_ASSERT(FIRST_NONCALLABLE_SPEC_OBJECT_TYPE ==
+                FIRST_SPEC_OBJECT_TYPE + 1);
+  __ j(equal, &function);
 
-  // As long as LAST_CALLABLE_SPEC_OBJECT_TYPE is the last instance type, and
-  // FIRST_CALLABLE_SPEC_OBJECT_TYPE comes right after
-  // LAST_NONCALLABLE_SPEC_OBJECT_TYPE, we can avoid checking for the latter.
-  STATIC_ASSERT(LAST_TYPE == LAST_CALLABLE_SPEC_OBJECT_TYPE);
-  STATIC_ASSERT(FIRST_CALLABLE_SPEC_OBJECT_TYPE ==
-                LAST_NONCALLABLE_SPEC_OBJECT_TYPE + 1);
-  __ CmpInstanceType(rax, FIRST_CALLABLE_SPEC_OBJECT_TYPE);
-  __ j(above_equal, &function);
+  __ CmpInstanceType(rax, LAST_SPEC_OBJECT_TYPE);
+  STATIC_ASSERT(LAST_NONCALLABLE_SPEC_OBJECT_TYPE ==
+                LAST_SPEC_OBJECT_TYPE - 1);
+  __ j(equal, &function);
+  // Assume that there is no larger type.
+  STATIC_ASSERT(LAST_NONCALLABLE_SPEC_OBJECT_TYPE == LAST_TYPE - 1);
 
-  // Check if the constructor in the map is a function.
+  // Check if the constructor in the map is a JS function.
   __ movq(rax, FieldOperand(rax, Map::kConstructorOffset));
   __ CmpObjectType(rax, JS_FUNCTION_TYPE, rbx);
   __ j(not_equal, &non_function_constructor);
@@ -2590,7 +2907,7 @@ void FullCodeGenerator::EmitClassOf(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitLog(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitLog(CallRuntime* expr) {
   // Conditionally generate a log call.
   // Args:
   //   0 (literal string): The type of logging (corresponds to the flags).
@@ -2598,6 +2915,7 @@ void FullCodeGenerator::EmitLog(ZoneList<Expression*>* args) {
   //   1 (string): Format string.  Access the string at argument index 2
   //     with '%2s' (see Logger::LogRuntime for all the formats).
   //   2 (array): Arguments to the format string.
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT_EQ(args->length(), 3);
   if (CodeGenerator::ShouldGenerateLog(args->at(0))) {
     VisitForStackValue(args->at(1));
@@ -2610,8 +2928,8 @@ void FullCodeGenerator::EmitLog(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitRandomHeapNumber(ZoneList<Expression*>* args) {
-  ASSERT(args->length() == 0);
+void FullCodeGenerator::EmitRandomHeapNumber(CallRuntime* expr) {
+  ASSERT(expr->arguments()->length() == 0);
 
   Label slow_allocate_heapnumber;
   Label heapnumber_allocated;
@@ -2630,9 +2948,12 @@ void FullCodeGenerator::EmitRandomHeapNumber(ZoneList<Expression*>* args) {
   // The fresh HeapNumber is in rbx, which is callee-save on both x64 ABIs.
   __ PrepareCallCFunction(1);
 #ifdef _WIN64
-  __ LoadAddress(rcx, ExternalReference::isolate_address());
+  __ movq(rcx, ContextOperand(context_register(), Context::GLOBAL_INDEX));
+  __ movq(rcx, FieldOperand(rcx, GlobalObject::kGlobalContextOffset));
+
 #else
-  __ LoadAddress(rdi, ExternalReference::isolate_address());
+  __ movq(rdi, ContextOperand(context_register(), Context::GLOBAL_INDEX));
+  __ movq(rdi, FieldOperand(rdi, GlobalObject::kGlobalContextOffset));
 #endif
   __ CallCFunction(ExternalReference::random_uint32_function(isolate()), 1);
 
@@ -2652,9 +2973,10 @@ void FullCodeGenerator::EmitRandomHeapNumber(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitSubString(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitSubString(CallRuntime* expr) {
   // Load the arguments on the stack and call the stub.
   SubStringStub stub;
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 3);
   VisitForStackValue(args->at(0));
   VisitForStackValue(args->at(1));
@@ -2664,9 +2986,10 @@ void FullCodeGenerator::EmitSubString(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitRegExpExec(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitRegExpExec(CallRuntime* expr) {
   // Load the arguments on the stack and call the stub.
   RegExpExecStub stub;
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 4);
   VisitForStackValue(args->at(0));
   VisitForStackValue(args->at(1));
@@ -2677,7 +3000,8 @@ void FullCodeGenerator::EmitRegExpExec(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitValueOf(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitValueOf(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 1);
 
   VisitForAccumulatorValue(args->at(0));  // Load the object.
@@ -2695,18 +3019,68 @@ void FullCodeGenerator::EmitValueOf(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitMathPow(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitDateField(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
+  ASSERT(args->length() == 2);
+  ASSERT_NE(NULL, args->at(1)->AsLiteral());
+  Smi* index = Smi::cast(*(args->at(1)->AsLiteral()->handle()));
+
+  VisitForAccumulatorValue(args->at(0));  // Load the object.
+
+  Label runtime, done;
+  Register object = rax;
+  Register result = rax;
+  Register scratch = rcx;
+
+#ifdef DEBUG
+  __ AbortIfSmi(object);
+  __ CmpObjectType(object, JS_DATE_TYPE, scratch);
+  __ Assert(equal, "Trying to get date field from non-date.");
+#endif
+
+  if (index->value() == 0) {
+    __ movq(result, FieldOperand(object, JSDate::kValueOffset));
+  } else {
+    if (index->value() < JSDate::kFirstUncachedField) {
+      ExternalReference stamp = ExternalReference::date_cache_stamp(isolate());
+      __ movq(scratch, stamp);
+      __ cmpq(scratch, FieldOperand(object, JSDate::kCacheStampOffset));
+      __ j(not_equal, &runtime, Label::kNear);
+      __ movq(result, FieldOperand(object, JSDate::kValueOffset +
+                                           kPointerSize * index->value()));
+      __ jmp(&done);
+    }
+    __ bind(&runtime);
+    __ PrepareCallCFunction(2);
+#ifdef _WIN64
+  __ movq(rcx, object);
+  __ movq(rdx, index, RelocInfo::NONE);
+#else
+  __ movq(rdi, object);
+  __ movq(rsi, index, RelocInfo::NONE);
+#endif
+    __ CallCFunction(ExternalReference::get_date_field_function(isolate()), 2);
+    __ movq(rsi, Operand(rbp, StandardFrameConstants::kContextOffset));
+    __ bind(&done);
+  }
+  context()->Plug(rax);
+}
+
+
+void FullCodeGenerator::EmitMathPow(CallRuntime* expr) {
   // Load the arguments on the stack and call the runtime function.
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 2);
   VisitForStackValue(args->at(0));
   VisitForStackValue(args->at(1));
-  MathPowStub stub;
+  MathPowStub stub(MathPowStub::ON_STACK);
   __ CallStub(&stub);
   context()->Plug(rax);
 }
 
 
-void FullCodeGenerator::EmitSetValueOf(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitSetValueOf(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 2);
 
   VisitForStackValue(args->at(0));  // Load the object.
@@ -2726,14 +3100,15 @@ void FullCodeGenerator::EmitSetValueOf(ZoneList<Expression*>* args) {
   // Update the write barrier.  Save the value as it will be
   // overwritten by the write barrier code and is needed afterward.
   __ movq(rdx, rax);
-  __ RecordWrite(rbx, JSValue::kValueOffset, rdx, rcx);
+  __ RecordWriteField(rbx, JSValue::kValueOffset, rdx, rcx, kDontSaveFPRegs);
 
   __ bind(&done);
   context()->Plug(rax);
 }
 
 
-void FullCodeGenerator::EmitNumberToString(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitNumberToString(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT_EQ(args->length(), 1);
 
   // Load the argument on the stack and call the stub.
@@ -2745,7 +3120,8 @@ void FullCodeGenerator::EmitNumberToString(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitStringCharFromCode(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitStringCharFromCode(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 1);
 
   VisitForAccumulatorValue(args->at(0));
@@ -2763,7 +3139,8 @@ void FullCodeGenerator::EmitStringCharFromCode(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitStringCharCodeAt(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitStringCharCodeAt(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 2);
 
   VisitForStackValue(args->at(0));
@@ -2771,7 +3148,6 @@ void FullCodeGenerator::EmitStringCharCodeAt(ZoneList<Expression*>* args) {
 
   Register object = rbx;
   Register index = rax;
-  Register scratch = rcx;
   Register result = rdx;
 
   __ pop(object);
@@ -2781,7 +3157,6 @@ void FullCodeGenerator::EmitStringCharCodeAt(ZoneList<Expression*>* args) {
   Label done;
   StringCharCodeAtGenerator generator(object,
                                       index,
-                                      scratch,
                                       result,
                                       &need_conversion,
                                       &need_conversion,
@@ -2810,7 +3185,8 @@ void FullCodeGenerator::EmitStringCharCodeAt(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitStringCharAt(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitStringCharAt(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 2);
 
   VisitForStackValue(args->at(0));
@@ -2818,8 +3194,7 @@ void FullCodeGenerator::EmitStringCharAt(ZoneList<Expression*>* args) {
 
   Register object = rbx;
   Register index = rax;
-  Register scratch1 = rcx;
-  Register scratch2 = rdx;
+  Register scratch = rdx;
   Register result = rax;
 
   __ pop(object);
@@ -2829,8 +3204,7 @@ void FullCodeGenerator::EmitStringCharAt(ZoneList<Expression*>* args) {
   Label done;
   StringCharAtGenerator generator(object,
                                   index,
-                                  scratch1,
-                                  scratch2,
+                                  scratch,
                                   result,
                                   &need_conversion,
                                   &need_conversion,
@@ -2859,7 +3233,8 @@ void FullCodeGenerator::EmitStringCharAt(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitStringAdd(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitStringAdd(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT_EQ(2, args->length());
 
   VisitForStackValue(args->at(0));
@@ -2871,7 +3246,8 @@ void FullCodeGenerator::EmitStringAdd(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitStringCompare(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitStringCompare(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT_EQ(2, args->length());
 
   VisitForStackValue(args->at(0));
@@ -2883,10 +3259,11 @@ void FullCodeGenerator::EmitStringCompare(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitMathSin(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitMathSin(CallRuntime* expr) {
   // Load the argument on the stack and call the stub.
   TranscendentalCacheStub stub(TranscendentalCache::SIN,
                                TranscendentalCacheStub::TAGGED);
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 1);
   VisitForStackValue(args->at(0));
   __ CallStub(&stub);
@@ -2894,10 +3271,11 @@ void FullCodeGenerator::EmitMathSin(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitMathCos(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitMathCos(CallRuntime* expr) {
   // Load the argument on the stack and call the stub.
   TranscendentalCacheStub stub(TranscendentalCache::COS,
                                TranscendentalCacheStub::TAGGED);
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 1);
   VisitForStackValue(args->at(0));
   __ CallStub(&stub);
@@ -2905,10 +3283,23 @@ void FullCodeGenerator::EmitMathCos(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitMathLog(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitMathTan(CallRuntime* expr) {
+  // Load the argument on the stack and call the stub.
+  TranscendentalCacheStub stub(TranscendentalCache::TAN,
+                               TranscendentalCacheStub::TAGGED);
+  ZoneList<Expression*>* args = expr->arguments();
+  ASSERT(args->length() == 1);
+  VisitForStackValue(args->at(0));
+  __ CallStub(&stub);
+  context()->Plug(rax);
+}
+
+
+void FullCodeGenerator::EmitMathLog(CallRuntime* expr) {
   // Load the argument on the stack and call the stub.
   TranscendentalCacheStub stub(TranscendentalCache::LOG,
                                TranscendentalCacheStub::TAGGED);
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 1);
   VisitForStackValue(args->at(0));
   __ CallStub(&stub);
@@ -2916,8 +3307,9 @@ void FullCodeGenerator::EmitMathLog(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitMathSqrt(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitMathSqrt(CallRuntime* expr) {
   // Load the argument on the stack and call the runtime function.
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 1);
   VisitForStackValue(args->at(0));
   __ CallRuntime(Runtime::kMath_sqrt, 1);
@@ -2925,7 +3317,8 @@ void FullCodeGenerator::EmitMathSqrt(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitCallFunction(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitCallFunction(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() >= 2);
 
   int arg_count = args->length() - 2;  // 2 ~ receiver and function.
@@ -2934,18 +3327,31 @@ void FullCodeGenerator::EmitCallFunction(ZoneList<Expression*>* args) {
   }
   VisitForAccumulatorValue(args->last());  // Function.
 
+  // Check for proxy.
+  Label proxy, done;
+  __ CmpObjectType(rax, JS_FUNCTION_PROXY_TYPE, rbx);
+  __ j(equal, &proxy);
+
   // InvokeFunction requires the function in rdi. Move it in there.
   __ movq(rdi, result_register());
   ParameterCount count(arg_count);
   __ InvokeFunction(rdi, count, CALL_FUNCTION,
                     NullCallWrapper(), CALL_AS_METHOD);
   __ movq(rsi, Operand(rbp, StandardFrameConstants::kContextOffset));
+  __ jmp(&done);
+
+  __ bind(&proxy);
+  __ push(rax);
+  __ CallRuntime(Runtime::kCall, args->length());
+  __ bind(&done);
+
   context()->Plug(rax);
 }
 
 
-void FullCodeGenerator::EmitRegExpConstructResult(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitRegExpConstructResult(CallRuntime* expr) {
   RegExpConstructResultStub stub;
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 3);
   VisitForStackValue(args->at(0));
   VisitForStackValue(args->at(1));
@@ -2955,83 +3361,8 @@ void FullCodeGenerator::EmitRegExpConstructResult(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitSwapElements(ZoneList<Expression*>* args) {
-  ASSERT(args->length() == 3);
-  VisitForStackValue(args->at(0));
-  VisitForStackValue(args->at(1));
-  VisitForStackValue(args->at(2));
-  Label done;
-  Label slow_case;
-  Register object = rax;
-  Register index_1 = rbx;
-  Register index_2 = rcx;
-  Register elements = rdi;
-  Register temp = rdx;
-  __ movq(object, Operand(rsp, 2 * kPointerSize));
-  // Fetch the map and check if array is in fast case.
-  // Check that object doesn't require security checks and
-  // has no indexed interceptor.
-  __ CmpObjectType(object, JS_ARRAY_TYPE, temp);
-  __ j(not_equal, &slow_case);
-  __ testb(FieldOperand(temp, Map::kBitFieldOffset),
-           Immediate(KeyedLoadIC::kSlowCaseBitFieldMask));
-  __ j(not_zero, &slow_case);
-
-  // Check the object's elements are in fast case and writable.
-  __ movq(elements, FieldOperand(object, JSObject::kElementsOffset));
-  __ CompareRoot(FieldOperand(elements, HeapObject::kMapOffset),
-                 Heap::kFixedArrayMapRootIndex);
-  __ j(not_equal, &slow_case);
-
-  // Check that both indices are smis.
-  __ movq(index_1, Operand(rsp, 1 * kPointerSize));
-  __ movq(index_2, Operand(rsp, 0 * kPointerSize));
-  __ JumpIfNotBothSmi(index_1, index_2, &slow_case);
-
-  // Check that both indices are valid.
-  // The JSArray length field is a smi since the array is in fast case mode.
-  __ movq(temp, FieldOperand(object, JSArray::kLengthOffset));
-  __ SmiCompare(temp, index_1);
-  __ j(below_equal, &slow_case);
-  __ SmiCompare(temp, index_2);
-  __ j(below_equal, &slow_case);
-
-  __ SmiToInteger32(index_1, index_1);
-  __ SmiToInteger32(index_2, index_2);
-  // Bring addresses into index1 and index2.
-  __ lea(index_1, FieldOperand(elements, index_1, times_pointer_size,
-                               FixedArray::kHeaderSize));
-  __ lea(index_2, FieldOperand(elements, index_2, times_pointer_size,
-                               FixedArray::kHeaderSize));
-
-  // Swap elements.  Use object and temp as scratch registers.
-  __ movq(object, Operand(index_1, 0));
-  __ movq(temp,   Operand(index_2, 0));
-  __ movq(Operand(index_2, 0), object);
-  __ movq(Operand(index_1, 0), temp);
-
-  Label new_space;
-  __ InNewSpace(elements, temp, equal, &new_space);
-
-  __ movq(object, elements);
-  __ RecordWriteHelper(object, index_1, temp);
-  __ RecordWriteHelper(elements, index_2, temp);
-
-  __ bind(&new_space);
-  // We are done. Drop elements from the stack, and return undefined.
-  __ addq(rsp, Immediate(3 * kPointerSize));
-  __ LoadRoot(rax, Heap::kUndefinedValueRootIndex);
-  __ jmp(&done);
-
-  __ bind(&slow_case);
-  __ CallRuntime(Runtime::kSwapElements, 3);
-
-  __ bind(&done);
-  context()->Plug(rax);
-}
-
-
-void FullCodeGenerator::EmitGetFromCache(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitGetFromCache(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT_EQ(2, args->length());
 
   ASSERT_NE(NULL, args->at(0)->AsLiteral());
@@ -3087,7 +3418,8 @@ void FullCodeGenerator::EmitGetFromCache(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitIsRegExpEquivalent(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitIsRegExpEquivalent(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT_EQ(2, args->length());
 
   Register right = rax;
@@ -3125,7 +3457,8 @@ void FullCodeGenerator::EmitIsRegExpEquivalent(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitHasCachedArrayIndex(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitHasCachedArrayIndex(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 1);
 
   VisitForAccumulatorValue(args->at(0));
@@ -3139,7 +3472,7 @@ void FullCodeGenerator::EmitHasCachedArrayIndex(ZoneList<Expression*>* args) {
 
   __ testl(FieldOperand(rax, String::kHashFieldOffset),
            Immediate(String::kContainsCachedArrayIndexMask));
-  PrepareForBailoutBeforeSplit(TOS_REG, true, if_true, if_false);
+  PrepareForBailoutBeforeSplit(expr, true, if_true, if_false);
   __ j(zero, if_true);
   __ jmp(if_false);
 
@@ -3147,7 +3480,8 @@ void FullCodeGenerator::EmitHasCachedArrayIndex(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitGetCachedArrayIndex(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitGetCachedArrayIndex(CallRuntime* expr) {
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 1);
   VisitForAccumulatorValue(args->at(0));
 
@@ -3163,10 +3497,11 @@ void FullCodeGenerator::EmitGetCachedArrayIndex(ZoneList<Expression*>* args) {
 }
 
 
-void FullCodeGenerator::EmitFastAsciiArrayJoin(ZoneList<Expression*>* args) {
+void FullCodeGenerator::EmitFastAsciiArrayJoin(CallRuntime* expr) {
   Label bailout, return_result, done, one_char_separator, long_separator,
       non_trivial_array, not_size_one_array, loop,
       loop_1, loop_1_condition, loop_2, loop_2_entry, loop_3, loop_3_entry;
+  ZoneList<Expression*>* args = expr->arguments();
   ASSERT(args->length() == 2);
   // We will leave the separator on the stack until the end of the function.
   VisitForStackValue(args->at(1));
@@ -3352,7 +3687,7 @@ void FullCodeGenerator::EmitFastAsciiArrayJoin(ZoneList<Expression*>* args) {
 
   // One-character separator case
   __ bind(&one_char_separator);
-  // Get the separator ascii character value.
+  // Get the separator ASCII character value.
   // Register "string" holds the separator.
   __ movzxbl(scratch, FieldOperand(string, SeqAsciiString::kHeaderSize));
   __ Set(index, 0);
@@ -3476,7 +3811,7 @@ void FullCodeGenerator::VisitCallRuntime(CallRuntime* expr) {
     RelocInfo::Mode mode = RelocInfo::CODE_TARGET;
     Handle<Code> ic =
         isolate()->stub_cache()->ComputeCallInitialize(arg_count, mode);
-    __ call(ic, mode, expr->id());
+    CallIC(ic, mode, expr->id());
     // Restore context register.
     __ movq(rsi, Operand(rbp, StandardFrameConstants::kContextOffset));
   } else {
@@ -3496,14 +3831,16 @@ void FullCodeGenerator::VisitUnaryOperation(UnaryOperation* expr) {
       if (property != NULL) {
         VisitForStackValue(property->obj());
         VisitForStackValue(property->key());
-        __ Push(Smi::FromInt(strict_mode_flag()));
+        StrictModeFlag strict_mode_flag = (language_mode() == CLASSIC_MODE)
+            ? kNonStrictMode : kStrictMode;
+        __ Push(Smi::FromInt(strict_mode_flag));
         __ InvokeBuiltin(Builtins::DELETE, CALL_FUNCTION);
         context()->Plug(rax);
       } else if (proxy != NULL) {
         Variable* var = proxy->var();
         // Delete of an unqualified identifier is disallowed in strict mode
         // but "delete this" is allowed.
-        ASSERT(strict_mode_flag() == kNonStrictMode || var->is_this());
+        ASSERT(language_mode() == CLASSIC_MODE || var->is_this());
         if (var->IsUnallocated()) {
           __ push(GlobalObjectOperand());
           __ Push(var->name());
@@ -3545,17 +3882,41 @@ void FullCodeGenerator::VisitUnaryOperation(UnaryOperation* expr) {
         // Unary NOT has no side effects so it's only necessary to visit the
         // subexpression.  Match the optimizing compiler by not branching.
         VisitForEffect(expr->expression());
+      } else if (context()->IsTest()) {
+        const TestContext* test = TestContext::cast(context());
+        // The labels are swapped for the recursive call.
+        VisitForControl(expr->expression(),
+                        test->false_label(),
+                        test->true_label(),
+                        test->fall_through());
+        context()->Plug(test->true_label(), test->false_label());
       } else {
-        Label materialize_true, materialize_false;
-        Label* if_true = NULL;
-        Label* if_false = NULL;
-        Label* fall_through = NULL;
-        // Notice that the labels are swapped.
-        context()->PrepareTest(&materialize_true, &materialize_false,
-                               &if_false, &if_true, &fall_through);
-        if (context()->IsTest()) ForwardBailoutToChild(expr);
-        VisitForControl(expr->expression(), if_true, if_false, fall_through);
-        context()->Plug(if_false, if_true);  // Labels swapped.
+        // We handle value contexts explicitly rather than simply visiting
+        // for control and plugging the control flow into the context,
+        // because we need to prepare a pair of extra administrative AST ids
+        // for the optimizing compiler.
+        ASSERT(context()->IsAccumulatorValue() || context()->IsStackValue());
+        Label materialize_true, materialize_false, done;
+        VisitForControl(expr->expression(),
+                        &materialize_false,
+                        &materialize_true,
+                        &materialize_true);
+        __ bind(&materialize_true);
+        PrepareForBailoutForId(expr->MaterializeTrueId(), NO_REGISTERS);
+        if (context()->IsAccumulatorValue()) {
+          __ LoadRoot(rax, Heap::kTrueValueRootIndex);
+        } else {
+          __ PushRoot(Heap::kTrueValueRootIndex);
+        }
+        __ jmp(&done, Label::kNear);
+        __ bind(&materialize_false);
+        PrepareForBailoutForId(expr->MaterializeFalseId(), NO_REGISTERS);
+        if (context()->IsAccumulatorValue()) {
+          __ LoadRoot(rax, Heap::kFalseValueRootIndex);
+        } else {
+          __ PushRoot(Heap::kFalseValueRootIndex);
+        }
+        __ bind(&done);
       }
       break;
     }
@@ -3608,7 +3969,7 @@ void FullCodeGenerator::EmitUnaryOperation(UnaryOperation* expr,
   // accumulator register rax.
   VisitForAccumulatorValue(expr->expression());
   SetSourcePosition(expr->position());
-  __ call(stub.GetCode(), RelocInfo::CODE_TARGET, expr->id());
+  CallIC(stub.GetCode(), RelocInfo::CODE_TARGET, expr->id());
   context()->Plug(rax);
 }
 
@@ -3729,7 +4090,7 @@ void FullCodeGenerator::VisitCountOperation(CountOperation* expr) {
     __ movq(rdx, rax);
     __ Move(rax, Smi::FromInt(1));
   }
-  __ call(stub.GetCode(), RelocInfo::CODE_TARGET, expr->CountId());
+  CallIC(stub.GetCode(), RelocInfo::CODE_TARGET, expr->CountId());
   patch_site.EmitPatchInfo();
   __ bind(&done);
 
@@ -3760,10 +4121,10 @@ void FullCodeGenerator::VisitCountOperation(CountOperation* expr) {
     case NAMED_PROPERTY: {
       __ Move(rcx, prop->key()->AsLiteral()->handle());
       __ pop(rdx);
-      Handle<Code> ic = is_strict_mode()
-          ? isolate()->builtins()->StoreIC_Initialize_Strict()
-          : isolate()->builtins()->StoreIC_Initialize();
-      __ call(ic, RelocInfo::CODE_TARGET, expr->id());
+      Handle<Code> ic = is_classic_mode()
+          ? isolate()->builtins()->StoreIC_Initialize()
+          : isolate()->builtins()->StoreIC_Initialize_Strict();
+      CallIC(ic, RelocInfo::CODE_TARGET, expr->id());
       PrepareForBailoutForId(expr->AssignmentId(), TOS_REG);
       if (expr->is_postfix()) {
         if (!context()->IsEffect()) {
@@ -3777,10 +4138,10 @@ void FullCodeGenerator::VisitCountOperation(CountOperation* expr) {
     case KEYED_PROPERTY: {
       __ pop(rcx);
       __ pop(rdx);
-      Handle<Code> ic = is_strict_mode()
-          ? isolate()->builtins()->KeyedStoreIC_Initialize_Strict()
-          : isolate()->builtins()->KeyedStoreIC_Initialize();
-      __ call(ic, RelocInfo::CODE_TARGET, expr->id());
+      Handle<Code> ic = is_classic_mode()
+          ? isolate()->builtins()->KeyedStoreIC_Initialize()
+          : isolate()->builtins()->KeyedStoreIC_Initialize_Strict();
+      CallIC(ic, RelocInfo::CODE_TARGET, expr->id());
       PrepareForBailoutForId(expr->AssignmentId(), TOS_REG);
       if (expr->is_postfix()) {
         if (!context()->IsEffect()) {
@@ -3807,7 +4168,7 @@ void FullCodeGenerator::VisitForTypeofValue(Expression* expr) {
     Handle<Code> ic = isolate()->builtins()->LoadIC_Initialize();
     // Use a regular load, not a contextual load, to avoid a reference
     // error.
-    __ call(ic);
+    CallIC(ic);
     PrepareForBailout(expr, TOS_REG);
     context()->Plug(rax);
   } else if (proxy != NULL && proxy->var()->IsLookupSlot()) {
@@ -3827,20 +4188,25 @@ void FullCodeGenerator::VisitForTypeofValue(Expression* expr) {
     context()->Plug(rax);
   } else {
     // This expression cannot throw a reference error at the top level.
-    VisitInCurrentContext(expr);
+    VisitInDuplicateContext(expr);
   }
 }
 
 
 void FullCodeGenerator::EmitLiteralCompareTypeof(Expression* expr,
-                                                 Handle<String> check,
-                                                 Label* if_true,
-                                                 Label* if_false,
-                                                 Label* fall_through) {
+                                                 Expression* sub_expr,
+                                                 Handle<String> check) {
+  Label materialize_true, materialize_false;
+  Label* if_true = NULL;
+  Label* if_false = NULL;
+  Label* fall_through = NULL;
+  context()->PrepareTest(&materialize_true, &materialize_false,
+                         &if_true, &if_false, &fall_through);
+
   { AccumulatorValueContext context(this);
-    VisitForTypeofValue(expr);
+    VisitForTypeofValue(sub_expr);
   }
-  PrepareForBailoutBeforeSplit(TOS_REG, true, if_true, if_false);
+  PrepareForBailoutBeforeSplit(expr, true, if_true, if_false);
 
   if (check->Equals(isolate()->heap()->number_symbol())) {
     __ JumpIfSmi(rax, if_true);
@@ -3875,9 +4241,11 @@ void FullCodeGenerator::EmitLiteralCompareTypeof(Expression* expr,
     Split(not_zero, if_true, if_false, fall_through);
   } else if (check->Equals(isolate()->heap()->function_symbol())) {
     __ JumpIfSmi(rax, if_false);
-    STATIC_ASSERT(LAST_CALLABLE_SPEC_OBJECT_TYPE == LAST_TYPE);
-    __ CmpObjectType(rax, FIRST_CALLABLE_SPEC_OBJECT_TYPE, rdx);
-    Split(above_equal, if_true, if_false, fall_through);
+    STATIC_ASSERT(NUM_OF_CALLABLE_SPEC_OBJECT_TYPES == 2);
+    __ CmpObjectType(rax, JS_FUNCTION_TYPE, rdx);
+    __ j(equal, if_true);
+    __ CmpInstanceType(rdx, JS_FUNCTION_PROXY_TYPE);
+    Split(equal, if_true, if_false, fall_through);
   } else if (check->Equals(isolate()->heap()->object_symbol())) {
     __ JumpIfSmi(rax, if_false);
     if (!FLAG_harmony_typeof) {
@@ -3895,24 +4263,17 @@ void FullCodeGenerator::EmitLiteralCompareTypeof(Expression* expr,
   } else {
     if (if_false != fall_through) __ jmp(if_false);
   }
-}
-
-
-void FullCodeGenerator::EmitLiteralCompareUndefined(Expression* expr,
-                                                    Label* if_true,
-                                                    Label* if_false,
-                                                    Label* fall_through) {
-  VisitForAccumulatorValue(expr);
-  PrepareForBailoutBeforeSplit(TOS_REG, true, if_true, if_false);
-
-  __ CompareRoot(rax, Heap::kUndefinedValueRootIndex);
-  Split(equal, if_true, if_false, fall_through);
+  context()->Plug(if_true, if_false);
 }
 
 
 void FullCodeGenerator::VisitCompareOperation(CompareOperation* expr) {
   Comment cmnt(masm_, "[ CompareOperation");
   SetSourcePosition(expr->position());
+
+  // First we try a fast inlined version of the compare when one of
+  // the operands is a literal.
+  if (TryLiteralCompare(expr)) return;
 
   // Always perform the comparison for its control flow.  Pack the result
   // into the expression's context after the comparison is performed.
@@ -3923,20 +4284,13 @@ void FullCodeGenerator::VisitCompareOperation(CompareOperation* expr) {
   context()->PrepareTest(&materialize_true, &materialize_false,
                          &if_true, &if_false, &fall_through);
 
-  // First we try a fast inlined version of the compare when one of
-  // the operands is a literal.
-  if (TryLiteralCompare(expr, if_true, if_false, fall_through)) {
-    context()->Plug(if_true, if_false);
-    return;
-  }
-
   Token::Value op = expr->op();
   VisitForStackValue(expr->left());
   switch (op) {
     case Token::IN:
       VisitForStackValue(expr->right());
       __ InvokeBuiltin(Builtins::IN, CALL_FUNCTION);
-      PrepareForBailoutBeforeSplit(TOS_REG, false, NULL, NULL);
+      PrepareForBailoutBeforeSplit(expr, false, NULL, NULL);
       __ CompareRoot(rax, Heap::kTrueValueRootIndex);
       Split(equal, if_true, if_false, fall_through);
       break;
@@ -3945,7 +4299,7 @@ void FullCodeGenerator::VisitCompareOperation(CompareOperation* expr) {
       VisitForStackValue(expr->right());
       InstanceofStub stub(InstanceofStub::kNoFlags);
       __ CallStub(&stub);
-      PrepareForBailoutBeforeSplit(TOS_REG, true, if_true, if_false);
+      PrepareForBailoutBeforeSplit(expr, true, if_true, if_false);
       __ testq(rax, rax);
        // The stub returns 0 for true.
       Split(zero, if_true, if_false, fall_through);
@@ -3959,33 +4313,25 @@ void FullCodeGenerator::VisitCompareOperation(CompareOperation* expr) {
         case Token::EQ_STRICT:
         case Token::EQ:
           cc = equal;
-          __ pop(rdx);
           break;
         case Token::LT:
           cc = less;
-          __ pop(rdx);
           break;
         case Token::GT:
-          // Reverse left and right sizes to obtain ECMA-262 conversion order.
-          cc = less;
-          __ movq(rdx, result_register());
-          __ pop(rax);
+          cc = greater;
          break;
         case Token::LTE:
-          // Reverse left and right sizes to obtain ECMA-262 conversion order.
-          cc = greater_equal;
-          __ movq(rdx, result_register());
-          __ pop(rax);
+          cc = less_equal;
           break;
         case Token::GTE:
           cc = greater_equal;
-          __ pop(rdx);
           break;
         case Token::IN:
         case Token::INSTANCEOF:
         default:
           UNREACHABLE();
       }
+      __ pop(rdx);
 
       bool inline_smi_code = ShouldInlineSmiCase(op);
       JumpPatchSite patch_site(masm_);
@@ -4002,10 +4348,10 @@ void FullCodeGenerator::VisitCompareOperation(CompareOperation* expr) {
       // Record position and call the compare IC.
       SetSourcePosition(expr->position());
       Handle<Code> ic = CompareIC::GetUninitialized(op);
-      __ call(ic, RelocInfo::CODE_TARGET, expr->id());
+      CallIC(ic, RelocInfo::CODE_TARGET, expr->id());
       patch_site.EmitPatchInfo();
 
-      PrepareForBailoutBeforeSplit(TOS_REG, true, if_true, if_false);
+      PrepareForBailoutBeforeSplit(expr, true, if_true, if_false);
       __ testq(rax, rax);
       Split(cc, if_true, if_false, fall_through);
     }
@@ -4017,8 +4363,9 @@ void FullCodeGenerator::VisitCompareOperation(CompareOperation* expr) {
 }
 
 
-void FullCodeGenerator::VisitCompareToNull(CompareToNull* expr) {
-  Comment cmnt(masm_, "[ CompareToNull");
+void FullCodeGenerator::EmitLiteralCompareNil(CompareOperation* expr,
+                                              Expression* sub_expr,
+                                              NilValue nil) {
   Label materialize_true, materialize_false;
   Label* if_true = NULL;
   Label* if_false = NULL;
@@ -4026,14 +4373,20 @@ void FullCodeGenerator::VisitCompareToNull(CompareToNull* expr) {
   context()->PrepareTest(&materialize_true, &materialize_false,
                          &if_true, &if_false, &fall_through);
 
-  VisitForAccumulatorValue(expr->expression());
-  PrepareForBailoutBeforeSplit(TOS_REG, true, if_true, if_false);
-  __ CompareRoot(rax, Heap::kNullValueRootIndex);
-  if (expr->is_strict()) {
+  VisitForAccumulatorValue(sub_expr);
+  PrepareForBailoutBeforeSplit(expr, true, if_true, if_false);
+  Heap::RootListIndex nil_value = nil == kNullValue ?
+      Heap::kNullValueRootIndex :
+      Heap::kUndefinedValueRootIndex;
+  __ CompareRoot(rax, nil_value);
+  if (expr->op() == Token::EQ_STRICT) {
     Split(equal, if_true, if_false, fall_through);
   } else {
+    Heap::RootListIndex other_nil_value = nil == kNullValue ?
+        Heap::kUndefinedValueRootIndex :
+        Heap::kNullValueRootIndex;
     __ j(equal, if_true);
-    __ CompareRoot(rax, Heap::kUndefinedValueRootIndex);
+    __ CompareRoot(rax, other_nil_value);
     __ j(equal, if_true);
     __ JumpIfSmi(rax, if_false);
     // It can be an undetectable object.
@@ -4075,7 +4428,8 @@ void FullCodeGenerator::LoadContextField(Register dst, int context_index) {
 
 void FullCodeGenerator::PushFunctionArgumentForContextAllocation() {
   Scope* declaration_scope = scope()->DeclarationScope();
-  if (declaration_scope->is_global_scope()) {
+  if (declaration_scope->is_global_scope() ||
+      declaration_scope->is_module_scope()) {
     // Contexts nested in the global context have a canonical empty function
     // as their closure, not the anonymous closure containing the global
     // code.  Pass a smi sentinel and let the runtime look up the empty
@@ -4106,15 +4460,50 @@ void FullCodeGenerator::EnterFinallyBlock() {
   __ subq(rdx, rcx);
   __ Integer32ToSmi(rdx, rdx);
   __ push(rdx);
+
   // Store result register while executing finally block.
   __ push(result_register());
+
+  // Store pending message while executing finally block.
+  ExternalReference pending_message_obj =
+      ExternalReference::address_of_pending_message_obj(isolate());
+  __ Load(rdx, pending_message_obj);
+  __ push(rdx);
+
+  ExternalReference has_pending_message =
+      ExternalReference::address_of_has_pending_message(isolate());
+  __ Load(rdx, has_pending_message);
+  __ push(rdx);
+
+  ExternalReference pending_message_script =
+      ExternalReference::address_of_pending_message_script(isolate());
+  __ Load(rdx, pending_message_script);
+  __ push(rdx);
 }
 
 
 void FullCodeGenerator::ExitFinallyBlock() {
   ASSERT(!result_register().is(rdx));
   ASSERT(!result_register().is(rcx));
+  // Restore pending message from stack.
+  __ pop(rdx);
+  ExternalReference pending_message_script =
+      ExternalReference::address_of_pending_message_script(isolate());
+  __ Store(pending_message_script, rdx);
+
+  __ pop(rdx);
+  ExternalReference has_pending_message =
+      ExternalReference::address_of_has_pending_message(isolate());
+  __ Store(has_pending_message, rdx);
+
+  __ pop(rdx);
+  ExternalReference pending_message_obj =
+      ExternalReference::address_of_pending_message_obj(isolate());
+  __ Store(pending_message_obj, rdx);
+
+  // Restore result register from stack.
   __ pop(result_register());
+
   // Uncook return address.
   __ pop(rdx);
   __ SmiToInteger32(rdx, rdx);

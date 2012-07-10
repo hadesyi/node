@@ -232,7 +232,7 @@ TEST(Unknown) {
     context.Check("const x; x",
                   1,  // access
                   2,  // declaration + initialization
-                  2,  // declaration + initialization
+                  1,  // declaration
                   EXPECT_RESULT, Undefined());
   }
 
@@ -240,7 +240,7 @@ TEST(Unknown) {
     context.Check("const x = 0; x",
                   1,  // access
                   2,  // declaration + initialization
-                  2,  // declaration + initialization
+                  1,  // declaration
                   EXPECT_RESULT, Undefined());  // SB 0 - BUG 1213579
   }
 }
@@ -285,18 +285,18 @@ TEST(Present) {
 
   { PresentPropertyContext context;
     context.Check("const x; x",
-                  0,
-                  0,
+                  1,  // access
+                  1,  // initialization
                   1,  // (re-)declaration
-                  EXPECT_EXCEPTION);  // x has already been declared!
+                  EXPECT_RESULT, Undefined());
   }
 
   { PresentPropertyContext context;
     context.Check("const x = 0; x",
-                  0,
-                  0,
+                  1,  // access
+                  1,  // initialization
                   1,  // (re-)declaration
-                  EXPECT_EXCEPTION);  // x has already been declared!
+                  EXPECT_RESULT, Number::New(0));
   }
 }
 
@@ -341,7 +341,7 @@ TEST(Absent) {
     context.Check("const x; x",
                   1,  // access
                   2,  // declaration + initialization
-                  2,  // declaration + initializetion
+                  1,  // declaration
                   EXPECT_RESULT, Undefined());
   }
 
@@ -349,7 +349,7 @@ TEST(Absent) {
     context.Check("const x = 0; x",
                   1,  // access
                   2,  // declaration + initialization
-                  2,  // declaration + initialization
+                  1,  // declaration
                   EXPECT_RESULT, Undefined());  // SB 0 - BUG 1213579
   }
 
@@ -429,18 +429,20 @@ TEST(Appearing) {
 
   { AppearingPropertyContext context;
     context.Check("const x; x",
-                  0,
-                  1,  // declaration
+                  1,  // access
                   2,  // declaration + initialization
-                  EXPECT_EXCEPTION);  // x has already been declared!
+                  1,  // declaration
+                  EXPECT_RESULT, Undefined());
   }
 
   { AppearingPropertyContext context;
     context.Check("const x = 0; x",
-                  0,
-                  1,  // declaration
+                  1,  // access
                   2,  // declaration + initialization
-                  EXPECT_EXCEPTION);  //  x has already been declared!
+                  1,  // declaration
+                  EXPECT_RESULT, Undefined());
+                  // Result is undefined because declaration succeeded but
+                  // initialization to 0 failed (due to context behavior).
   }
 }
 
@@ -496,9 +498,9 @@ TEST(Reappearing) {
   { ReappearingPropertyContext context;
     context.Check("const x; var x = 0",
                   0,
-                  2,  // var declaration + const initialization
-                  4,  // 2 x declaration + 2 x initialization
-                  EXPECT_EXCEPTION);  // x has already been declared!
+                  3,  // const declaration+initialization, var initialization
+                  3,  // 2 x declaration + var initialization
+                  EXPECT_RESULT, Undefined());
   }
 }
 
@@ -519,6 +521,7 @@ class ExistsInPrototypeContext: public DeclarationContext {
 
 
 TEST(ExistsInPrototype) {
+  i::FLAG_es52_globals = true;
   HandleScope scope;
 
   // Sanity check to make sure that the holder of the interceptor
@@ -533,17 +536,17 @@ TEST(ExistsInPrototype) {
 
   { ExistsInPrototypeContext context;
     context.Check("var x; x",
-                  1,  // get
+                  0,  // get
                   0,
-                  1,  // declaration
-                  EXPECT_EXCEPTION);
+                  0,  // declaration
+                  EXPECT_RESULT, Undefined());
   }
 
   { ExistsInPrototypeContext context;
     context.Check("var x = 0; x",
                   0,
                   0,
-                  1,  // declaration
+                  0,  // declaration
                   EXPECT_RESULT, Number::New(0));
   }
 
@@ -551,7 +554,7 @@ TEST(ExistsInPrototype) {
     context.Check("const x; x",
                   0,
                   0,
-                  1,  // declaration
+                  0,  // declaration
                   EXPECT_RESULT, Undefined());
   }
 
@@ -559,7 +562,7 @@ TEST(ExistsInPrototype) {
     context.Check("const x = 0; x",
                   0,
                   0,
-                  1,  // declaration
+                  0,  // declaration
                   EXPECT_RESULT, Number::New(0));
   }
 }
@@ -581,13 +584,14 @@ class AbsentInPrototypeContext: public DeclarationContext {
 
 
 TEST(AbsentInPrototype) {
+  i::FLAG_es52_globals = true;
   HandleScope scope;
 
   { AbsentInPrototypeContext context;
     context.Check("if (false) { var x = 0; }; x",
                   0,
                   0,
-                  1,  // declaration
+                  0,  // declaration
                   EXPECT_RESULT, Undefined());
   }
 }

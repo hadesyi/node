@@ -38,11 +38,18 @@ fs.writeSync = function() {
   throw new Error('BAM');
 };
 
+fs.fstatSync = function() {
+  throw new Error('BAM');
+};
+
 ensureThrows(function() {
   fs.readFileSync('dummy');
 });
 ensureThrows(function() {
   fs.writeFileSync('dummy', 'xxx');
+});
+ensureThrows(function() {
+  fs.appendFileSync('dummy', 'xxx');
 });
 
 var close_called = 0;

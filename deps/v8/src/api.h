@@ -1,4 +1,4 @@
-// Copyright 2011 the V8 project authors. All rights reserved.
+// Copyright 2012 the V8 project authors. All rights reserved.
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -28,10 +28,14 @@
 #ifndef V8_API_H_
 #define V8_API_H_
 
-#include "apiutils.h"
-#include "factory.h"
+#include "v8.h"
 
 #include "../include/v8-testing.h"
+#include "apiutils.h"
+#include "contexts.h"
+#include "factory.h"
+#include "isolate.h"
+#include "list-inl.h"
 
 namespace v8 {
 
@@ -101,26 +105,27 @@ NeanderArray::NeanderArray(v8::internal::Handle<v8::internal::Object> obj)
 
 
 v8::internal::Object* NeanderObject::get(int offset) {
-  ASSERT(value()->HasFastElements());
+  ASSERT(value()->HasFastObjectElements());
   return v8::internal::FixedArray::cast(value()->elements())->get(offset);
 }
 
 
 void NeanderObject::set(int offset, v8::internal::Object* value) {
-  ASSERT(value_->HasFastElements());
+  ASSERT(value_->HasFastObjectElements());
   v8::internal::FixedArray::cast(value_->elements())->set(offset, value);
 }
 
 
-template <typename T> static inline T ToCData(v8::internal::Object* obj) {
+template <typename T> inline T ToCData(v8::internal::Object* obj) {
   STATIC_ASSERT(sizeof(T) == sizeof(v8::internal::Address));
   return reinterpret_cast<T>(
-      reinterpret_cast<intptr_t>(v8::internal::Foreign::cast(obj)->address()));
+      reinterpret_cast<intptr_t>(
+          v8::internal::Foreign::cast(obj)->foreign_address()));
 }
 
 
 template <typename T>
-static inline v8::internal::Handle<v8::internal::Object> FromCData(T obj) {
+inline v8::internal::Handle<v8::internal::Object> FromCData(T obj) {
   STATIC_ASSERT(sizeof(T) == sizeof(v8::internal::Address));
   return FACTORY->NewForeign(
       reinterpret_cast<v8::internal::Address>(reinterpret_cast<intptr_t>(obj)));
@@ -136,26 +141,20 @@ class ApiFunction {
 };
 
 
-enum ExtensionTraversalState {
-  UNVISITED, VISITED, INSTALLED
-};
-
 
 class RegisteredExtension {
  public:
   explicit RegisteredExtension(Extension* extension);
   static void Register(RegisteredExtension* that);
+  static void UnregisterAll();
   Extension* extension() { return extension_; }
   RegisteredExtension* next() { return next_; }
   RegisteredExtension* next_auto() { return next_auto_; }
-  ExtensionTraversalState state() { return state_; }
-  void set_state(ExtensionTraversalState value) { state_ = value; }
   static RegisteredExtension* first_extension() { return first_extension_; }
  private:
   Extension* extension_;
   RegisteredExtension* next_;
   RegisteredExtension* next_auto_;
-  ExtensionTraversalState state_;
   static RegisteredExtension* first_extension_;
 };
 
@@ -201,6 +200,8 @@ class Utils {
       v8::internal::Handle<v8::internal::ObjectTemplateInfo> obj);
   static inline Local<Signature> ToLocal(
       v8::internal::Handle<v8::internal::SignatureInfo> obj);
+  static inline Local<AccessorSignature> AccessorSignatureToLocal(
+      v8::internal::Handle<v8::internal::FunctionTemplateInfo> obj);
   static inline Local<TypeSwitch> ToLocal(
       v8::internal::Handle<v8::internal::TypeSwitchInfo> obj);
 
@@ -234,6 +235,8 @@ class Utils {
       OpenHandle(const v8::Context* context);
   static inline v8::internal::Handle<v8::internal::SignatureInfo>
       OpenHandle(const v8::Signature* sig);
+  static inline v8::internal::Handle<v8::internal::FunctionTemplateInfo>
+      OpenHandle(const v8::AccessorSignature* sig);
   static inline v8::internal::Handle<v8::internal::TypeSwitchInfo>
       OpenHandle(const v8::TypeSwitch* that);
   static inline v8::internal::Handle<v8::internal::Foreign>
@@ -242,7 +245,7 @@ class Utils {
 
 
 template <class T>
-static inline T* ToApi(v8::internal::Handle<v8::internal::Object> obj) {
+inline T* ToApi(v8::internal::Handle<v8::internal::Object> obj) {
   return reinterpret_cast<T*>(obj.location());
 }
 
@@ -277,6 +280,7 @@ MAKE_TO_LOCAL(ToLocal, Foreign, External)
 MAKE_TO_LOCAL(ToLocal, FunctionTemplateInfo, FunctionTemplate)
 MAKE_TO_LOCAL(ToLocal, ObjectTemplateInfo, ObjectTemplate)
 MAKE_TO_LOCAL(ToLocal, SignatureInfo, Signature)
+MAKE_TO_LOCAL(AccessorSignatureToLocal, FunctionTemplateInfo, AccessorSignature)
 MAKE_TO_LOCAL(ToLocal, TypeSwitchInfo, TypeSwitch)
 MAKE_TO_LOCAL(MessageToLocal, Object, Message)
 MAKE_TO_LOCAL(StackTraceToLocal, JSArray, StackTrace)
@@ -301,6 +305,7 @@ MAKE_OPEN_HANDLE(Template, TemplateInfo)
 MAKE_OPEN_HANDLE(FunctionTemplate, FunctionTemplateInfo)
 MAKE_OPEN_HANDLE(ObjectTemplate, ObjectTemplateInfo)
 MAKE_OPEN_HANDLE(Signature, SignatureInfo)
+MAKE_OPEN_HANDLE(AccessorSignature, FunctionTemplateInfo)
 MAKE_OPEN_HANDLE(TypeSwitch, TypeSwitchInfo)
 MAKE_OPEN_HANDLE(Data, Object)
 MAKE_OPEN_HANDLE(RegExp, JSRegExp)
@@ -483,7 +488,7 @@ class HandleScopeImplementer {
 };
 
 
-static const int kHandleBlockSize = v8::internal::KB - 2;  // fit in one page
+const int kHandleBlockSize = v8::internal::KB - 2;  // fit in one page
 
 
 void HandleScopeImplementer::SaveContext(Context* context) {

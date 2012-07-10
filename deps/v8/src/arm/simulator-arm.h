@@ -1,4 +1,4 @@
-// Copyright 2011 the V8 project authors. All rights reserved.
+// Copyright 2012 the V8 project authors. All rights reserved.
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -49,16 +49,16 @@ namespace internal {
   (entry(p0, p1, p2, p3, p4))
 
 typedef int (*arm_regexp_matcher)(String*, int, const byte*, const byte*,
-                                  void*, int*, Address, int, Isolate*);
+                                  void*, int*, int, Address, int, Isolate*);
 
 
 // Call the generated regexp code directly. The code at the entry address
 // should act as a function matching the type arm_regexp_matcher.
 // The fifth argument is a dummy that reserves the space used for
 // the return address added by the ExitFrame in native calls.
-#define CALL_GENERATED_REGEXP_CODE(entry, p0, p1, p2, p3, p4, p5, p6, p7) \
+#define CALL_GENERATED_REGEXP_CODE(entry, p0, p1, p2, p3, p4, p5, p6, p7, p8) \
   (FUNCTION_CAST<arm_regexp_matcher>(entry)(                              \
-      p0, p1, p2, p3, NULL, p4, p5, p6, p7))
+      p0, p1, p2, p3, NULL, p4, p5, p6, p7, p8))
 
 #define TRY_CATCH_FROM_ADDRESS(try_catch_address) \
   reinterpret_cast<TryCatch*>(try_catch_address)
@@ -193,6 +193,10 @@ class Simulator {
 
   // Pop an address from the JS stack.
   uintptr_t PopAddress();
+
+  // Debugger input.
+  void set_last_debugger_input(char* input);
+  char* last_debugger_input() { return last_debugger_input_; }
 
   // ICache checking.
   static void FlushICache(v8::internal::HashMap* i_cache, void* start,
@@ -360,6 +364,9 @@ class Simulator {
   bool pc_modified_;
   int icount_;
 
+  // Debugger input.
+  char* last_debugger_input_;
+
   // Icache simulation
   v8::internal::HashMap* i_cache_;
 
@@ -394,9 +401,9 @@ class Simulator {
   reinterpret_cast<Object*>(Simulator::current(Isolate::Current())->Call( \
       FUNCTION_ADDR(entry), 5, p0, p1, p2, p3, p4))
 
-#define CALL_GENERATED_REGEXP_CODE(entry, p0, p1, p2, p3, p4, p5, p6, p7) \
+#define CALL_GENERATED_REGEXP_CODE(entry, p0, p1, p2, p3, p4, p5, p6, p7, p8) \
   Simulator::current(Isolate::Current())->Call( \
-      entry, 9, p0, p1, p2, p3, NULL, p4, p5, p6, p7)
+      entry, 10, p0, p1, p2, p3, NULL, p4, p5, p6, p7, p8)
 
 #define TRY_CATCH_FROM_ADDRESS(try_catch_address)                              \
   try_catch_address == NULL ?                                                  \

@@ -1,4 +1,4 @@
-// Copyright 2011 the V8 project authors. All rights reserved.
+// Copyright 2012 the V8 project authors. All rights reserved.
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -80,5 +80,29 @@ enum TypeofState { INSIDE_TYPEOF, NOT_INSIDE_TYPEOF };
 #else
 #error Unsupported target architecture.
 #endif
+
+namespace v8 {
+namespace internal {
+
+// Results of the library implementation of transcendental functions may differ
+// from the one we use in our generated code.  Therefore we use the same
+// generated code both in runtime and compiled code.
+typedef double (*UnaryMathFunction)(double x);
+
+UnaryMathFunction CreateTranscendentalFunction(TranscendentalCache::Type type);
+UnaryMathFunction CreateSqrtFunction();
+
+
+class ElementsTransitionGenerator : public AllStatic {
+ public:
+  static void GenerateMapChangeElementsTransition(MacroAssembler* masm);
+  static void GenerateSmiToDouble(MacroAssembler* masm, Label* fail);
+  static void GenerateDoubleToObject(MacroAssembler* masm, Label* fail);
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(ElementsTransitionGenerator);
+};
+
+} }  // namespace v8::internal
 
 #endif  // V8_CODEGEN_H_

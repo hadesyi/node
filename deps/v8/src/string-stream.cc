@@ -1,4 +1,4 @@
-// Copyright 2011 the V8 project authors. All rights reserved.
+// Copyright 2012 the V8 project authors. All rights reserved.
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -291,7 +291,7 @@ void StringStream::ClearMentionedObjectCache() {
   isolate->set_string_stream_current_security_token(NULL);
   if (isolate->string_stream_debug_object_cache() == NULL) {
     isolate->set_string_stream_debug_object_cache(
-        new List<HeapObject*, PreallocatedStorage>(0));
+        new List<HeapObject*, PreallocatedStorageAllocationPolicy>(0));
   }
   isolate->string_stream_debug_object_cache()->Clear();
 }
@@ -350,29 +350,24 @@ void StringStream::PrintUsingMap(JSObject* js_object) {
   }
   DescriptorArray* descs = map->instance_descriptors();
   for (int i = 0; i < descs->number_of_descriptors(); i++) {
-    switch (descs->GetType(i)) {
-      case FIELD: {
-        Object* key = descs->GetKey(i);
-        if (key->IsString() || key->IsNumber()) {
-          int len = 3;
-          if (key->IsString()) {
-            len = String::cast(key)->length();
-          }
-          for (; len < 18; len++)
-            Put(' ');
-          if (key->IsString()) {
-            Put(String::cast(key));
-          } else {
-            key->ShortPrint();
-          }
-          Add(": ");
-          Object* value = js_object->FastPropertyAt(descs->GetFieldIndex(i));
-          Add("%o\n", value);
+    if (descs->GetType(i) == FIELD) {
+      Object* key = descs->GetKey(i);
+      if (key->IsString() || key->IsNumber()) {
+        int len = 3;
+        if (key->IsString()) {
+          len = String::cast(key)->length();
         }
+        for (; len < 18; len++)
+          Put(' ');
+        if (key->IsString()) {
+          Put(String::cast(key));
+        } else {
+          key->ShortPrint();
+        }
+        Add(": ");
+        Object* value = js_object->FastPropertyAt(descs->GetFieldIndex(i));
+        Add("%o\n", value);
       }
-      break;
-      default:
-      break;
     }
   }
 }
@@ -432,7 +427,7 @@ void StringStream::PrintMentionedObjectCache() {
       PrintUsingMap(JSObject::cast(printee));
       if (printee->IsJSArray()) {
         JSArray* array = JSArray::cast(printee);
-        if (array->HasFastElements()) {
+        if (array->HasFastObjectElements()) {
           unsigned int limit = FixedArray::cast(array->elements())->length();
           unsigned int length =
             static_cast<uint32_t>(JSArray::cast(array)->length()->Number());

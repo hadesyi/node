@@ -69,10 +69,10 @@ bool DisassembleAndCompare(byte* pc, const char* compare_string) {
 }
 
 
-// Setup V8 to a state where we can at least run the assembler and
+// Set up V8 to a state where we can at least run the assembler and
 // disassembler. Declare the variables and allocate the data structures used
 // in the rest of the macros.
-#define SETUP()                                           \
+#define SET_UP()                                           \
   InitializeVM();                                         \
   v8::HandleScope scope;                                  \
   byte *buffer = reinterpret_cast<byte*>(malloc(4*1024)); \
@@ -92,6 +92,10 @@ bool DisassembleAndCompare(byte* pc, const char* compare_string) {
     if (!DisassembleAndCompare(progcounter, compare_string)) failure = true; \
   }
 
+// Force emission of any pending literals into a pool.
+#define EMIT_PENDING_LITERALS() \
+  assm.CheckConstPool(true, false)
+
 
 // Verify that all invocations of the COMPARE macro passed successfully.
 // Exit with a failure if at least one of the tests failed.
@@ -102,7 +106,7 @@ if (failure) { \
 
 
 TEST(Type0) {
-  SETUP();
+  SET_UP();
 
   COMPARE(and_(r0, r1, Operand(r2)),
           "e0010002       and r0, r1, r2");
@@ -280,6 +284,10 @@ TEST(Type0) {
     // is pretty strange anyway.
     COMPARE(mov(r5, Operand(0x01234), SetCC, ne),
             "159fc000       ldrne ip, [pc, #+0]");
+    // Emit a literal pool now, otherwise this could be dumped later, in the
+    // middle of a different test.
+    EMIT_PENDING_LITERALS();
+
     // We only disassemble one instruction so the eor instruction is not here.
     // The eor does the setcc so we get a movw here.
     COMPARE(eor(r5, r4, Operand(0x1234), SetCC, ne),
@@ -329,7 +337,7 @@ TEST(Type0) {
 
 
 TEST(Type1) {
-  SETUP();
+  SET_UP();
 
   COMPARE(and_(r0, r1, Operand(0x00000000)),
           "e2010000       and r0, r1, #0");
@@ -358,7 +366,7 @@ TEST(Type1) {
 
 
 TEST(Type3) {
-  SETUP();
+  SET_UP();
 
   if (CpuFeatures::IsSupported(ARMv7)) {
     COMPARE(ubfx(r0, r1, 5, 10),
@@ -413,7 +421,7 @@ TEST(Type3) {
 
 
 TEST(Vfp) {
-  SETUP();
+  SET_UP();
 
   if (CpuFeatures::IsSupported(VFP3)) {
     CpuFeatures::Scope scope(VFP3);
@@ -546,7 +554,7 @@ TEST(Vfp) {
 
 
 TEST(LoadStore) {
-  SETUP();
+  SET_UP();
 
   COMPARE(ldrb(r0, MemOperand(r1)),
           "e5d10000       ldrb r0, [r1, #+0]");

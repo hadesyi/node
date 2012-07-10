@@ -19,6 +19,7 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+var common = require('../common');
 var assert = require('assert');
 var util = require('util');
 
@@ -29,7 +30,7 @@ function ArrayStream() {
   this.run = function(data) {
     var self = this;
     data.forEach(function(line) {
-      self.emit('data', line);
+      self.emit('data', line + '\n');
     });
   }
 }
@@ -187,5 +188,23 @@ putIn.run([
   'var str = "test";'
 ]);
 testMe.complete('str.len', function(error, data) {
-  assert.deepEqual(data, [ [ 'str.length' ], 'str.len' ]);
+  assert.deepEqual(data, [['str.length'], 'str.len']);
+});
+
+putIn.run(['.clear']);
+
+// tab completion should not break on spaces
+var spaceTimeout = setTimeout(function() {
+  throw new Error('timeout');
+}, 1000);
+
+testMe.complete(' ', function(error, data) {
+  assert.deepEqual(data, [[],undefined]);
+  clearTimeout(spaceTimeout);
+});
+
+// tab completion should pick up the global "toString" object, and
+// any other properties up the "global" object's prototype chain
+testMe.complete('toSt', function(error, data) {
+  assert.deepEqual(data, [['toString'], 'toSt']);
 });

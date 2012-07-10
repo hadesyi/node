@@ -19,8 +19,8 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#include <node.h>
-#include <node_script.h>
+#include "node.h"
+#include "node_script.h"
 #include <assert.h>
 
 namespace node {
@@ -257,9 +257,14 @@ Handle<Value> WrappedScript::CreateContext(const Arguments& args) {
   Local<Object> context = WrappedContext::NewInstance();
 
   if (args.Length() > 0) {
-    Local<Object> sandbox = args[0]->ToObject();
+    if (args[0]->IsObject()) {
+      Local<Object> sandbox = args[0].As<Object>();
 
-    CloneObject(args.This(), sandbox, context);
+      CloneObject(args.This(), sandbox, context);
+    } else {
+      return ThrowException(Exception::TypeError(String::New(
+          "createContext() accept only object as first argument.")));
+    }
   }
 
 
@@ -363,7 +368,6 @@ Handle<Value> WrappedScript::EvalMachine(const Arguments& args) {
 
   } else if (context_flag == userContext) {
     // Use the passed in context
-    Local<Object> contextArg = args[sandbox_index]->ToObject();
     WrappedContext *nContext = ObjectWrap::Unwrap<WrappedContext>(sandbox);
     context = nContext->GetV8Context();
   }

@@ -1,4 +1,4 @@
-// Copyright 2007-2008 the V8 project authors. All rights reserved.
+// Copyright 2011 the V8 project authors. All rights reserved.
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -34,6 +34,16 @@
 using namespace v8::internal;
 
 
+// Also used in test-heap.cc test cases.
+void SimulateFullSpace(PagedSpace* space) {
+  int old_linear_size = static_cast<int>(space->limit() - space->top());
+  space->Free(space->top(), old_linear_size);
+  space->SetTop(space->limit(), space->limit());
+  space->ResetFreeList();
+  space->ClearStats();
+}
+
+
 static MaybeObject* AllocateAfterFailures() {
   static int attempts = 0;
   if (++attempts < 3) return Failure::RetryAfterGC();
@@ -65,28 +75,29 @@ static MaybeObject* AllocateAfterFailures() {
   CHECK(!heap->CopyJSObject(JSObject::cast(object))->IsFailure());
 
   // Old data space.
-  OldSpace* old_data_space = heap->old_data_space();
-  static const int kOldDataSpaceFillerSize = ByteArray::SizeFor(0);
-  while (old_data_space->Available() > kOldDataSpaceFillerSize) {
-    CHECK(!heap->AllocateByteArray(0, TENURED)->IsFailure());
-  }
+  SimulateFullSpace(heap->old_data_space());
   CHECK(!heap->AllocateRawAsciiString(100, TENURED)->IsFailure());
 
-  // Large object space.
-  while (!heap->OldGenerationAllocationLimitReached()) {
-    CHECK(!heap->AllocateFixedArray(10000, TENURED)->IsFailure());
-  }
+  // Old pointer space.
+  SimulateFullSpace(heap->old_pointer_space());
   CHECK(!heap->AllocateFixedArray(10000, TENURED)->IsFailure());
 
-  // Map space.
-  MapSpace* map_space = heap->map_space();
-  static const int kMapSpaceFillerSize = Map::kSize;
-  InstanceType instance_type = JS_OBJECT_TYPE;
-  int instance_size = JSObject::kHeaderSize;
-  while (map_space->Available() > kMapSpaceFillerSize) {
-    CHECK(!heap->AllocateMap(instance_type, instance_size)->IsFailure());
+  // Large object space.
+  static const int kLargeObjectSpaceFillerLength = 300000;
+  static const int kLargeObjectSpaceFillerSize = FixedArray::SizeFor(
+      kLargeObjectSpaceFillerLength);
+  ASSERT(kLargeObjectSpaceFillerSize > heap->old_pointer_space()->AreaSize());
+  while (heap->OldGenerationSpaceAvailable() > kLargeObjectSpaceFillerSize) {
+    CHECK(!heap->AllocateFixedArray(kLargeObjectSpaceFillerLength, TENURED)->
+          IsFailure());
   }
-  CHECK(!heap->AllocateMap(instance_type, instance_size)->IsFailure());
+  CHECK(!heap->AllocateFixedArray(kLargeObjectSpaceFillerLength, TENURED)->
+        IsFailure());
+
+  // Map space.
+  SimulateFullSpace(heap->map_space());
+  int instance_size = JSObject::kHeaderSize;
+  CHECK(!heap->AllocateMap(JS_OBJECT_TYPE, instance_size)->IsFailure());
 
   // Test that we can allocate in old pointer space and code space.
   CHECK(!heap->AllocateFixedArray(100, TENURED)->IsFailure());
@@ -175,20 +186,20 @@ unsigned int Pseudorandom() {
 // Plain old data class.  Represents a block of allocated memory.
 class Block {
  public:
-  Block(void* base_arg, int size_arg)
+  Block(Address base_arg, int size_arg)
       : base(base_arg), size(size_arg) {}
 
-  void *base;
+  Address base;
   int size;
 };
 
 
 TEST(CodeRange) {
-  const int code_range_size = 16*MB;
-  OS::Setup();
+  const int code_range_size = 32*MB;
+  OS::SetUp();
   Isolate::Current()->InitializeLoggingAndCounters();
   CodeRange* code_range = new CodeRange(Isolate::Current());
-  code_range->Setup(code_range_size);
+  code_range->SetUp(code_range_size);
   int current_allocated = 0;
   int total_allocated = 0;
   List<Block> blocks(1000);
@@ -196,11 +207,15 @@ TEST(CodeRange) {
   while (total_allocated < 5 * code_range_size) {
     if (current_allocated < code_range_size / 10) {
       // Allocate a block.
-      // Geometrically distributed sizes, greater than Page::kPageSize.
-      size_t requested = (Page::kPageSize << (Pseudorandom() % 6)) +
-           Pseudorandom() % 5000 + 1;
+      // Geometrically distributed sizes, greater than
+      // Page::kMaxNonCodeHeapObjectSize (which is greater than code page area).
+      // TODO(gc): instead of using 3 use some contant based on code_range_size
+      // kMaxHeapObjectSize.
+      size_t requested =
+          (Page::kMaxNonCodeHeapObjectSize << (Pseudorandom() % 3)) +
+          Pseudorandom() % 5000 + 1;
       size_t allocated = 0;
-      void* base = code_range->AllocateRawMemory(requested, &allocated);
+      Address base = code_range->AllocateRawMemory(requested, &allocated);
       CHECK(base != NULL);
       blocks.Add(Block(base, static_cast<int>(allocated)));
       current_allocated += static_cast<int>(allocated);

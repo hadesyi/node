@@ -19,10 +19,10 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#include <node_io_watcher.h>
+#include "node_io_watcher.h"
 
-#include <node.h>
-#include <v8.h>
+#include "node.h"
+#include "v8.h"
 
 #include <assert.h>
 
@@ -65,17 +65,11 @@ void IOWatcher::Callback(EV_P_ ev_io *w, int revents) {
 
   Local<Function> callback = Local<Function>::Cast(callback_v);
 
-  TryCatch try_catch;
-
   Local<Value> argv[2];
   argv[0] = Local<Value>::New(revents & EV_READ ? True() : False());
   argv[1] = Local<Value>::New(revents & EV_WRITE ? True() : False());
 
-  callback->Call(io->handle_, 2, argv);
-
-  if (try_catch.HasCaught()) {
-    FatalException(try_catch);
-  }
+  MakeCallback(io->handle_, callback, ARRAY_SIZE(argv), argv);
 }
 
 
@@ -88,6 +82,10 @@ void IOWatcher::Callback(EV_P_ ev_io *w, int revents) {
 Handle<Value> IOWatcher::New(const Arguments& args) {
   if (!args.IsConstructCall()) {
     return FromConstructorTemplate(constructor_template, args);
+  }
+
+  if (!no_deprecation) {
+    fprintf(stderr, "WARNING: don't use IOWatcher, it'll be removed in v0.9\n");
   }
 
   HandleScope scope;

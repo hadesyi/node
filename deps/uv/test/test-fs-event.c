@@ -25,6 +25,12 @@
 #include <string.h>
 #include <fcntl.h>
 
+#ifndef HAVE_KQUEUE
+# if __APPLE__ || __FreeBSD__ || __OpenBSD__ || __NetBSD__
+#  define HAVE_KQUEUE 1
+# endif
+#endif
+
 static uv_fs_event_t fs_event;
 static uv_timer_t timer;
 static int timer_cb_called = 0;
@@ -99,14 +105,34 @@ static void fs_event_cb_file(uv_fs_event_t* handle, const char* filename,
   uv_close((uv_handle_t*)handle, close_cb);
 }
 
+static void timber_cb_close_handle(uv_timer_t* timer, int status) {
+  uv_handle_t* handle;
+
+  ASSERT(timer != NULL);
+  ASSERT(status == 0);
+  handle = timer->data;
+
+  uv_close((uv_handle_t*)timer, NULL);
+  uv_close((uv_handle_t*)handle, close_cb);
+}
+
 static void fs_event_cb_file_current_dir(uv_fs_event_t* handle,
   const char* filename, int events, int status) {
+  ASSERT(fs_event_cb_called == 0);
   ++fs_event_cb_called;
+
   ASSERT(handle == &fs_event);
   ASSERT(status == 0);
   ASSERT(events == UV_CHANGE);
   ASSERT(filename == NULL || strcmp(filename, "watch_file") == 0);
-  uv_close((uv_handle_t*)handle, close_cb);
+
+  /* Regression test for SunOS: touch should generate just one event. */
+  {
+    static uv_timer_t timer;
+    uv_timer_init(handle->loop, &timer);
+    timer.data = handle;
+    uv_timer_start(&timer, timber_cb_close_handle, 250, 0);
+  }
 }
 
 static void timer_cb_dir(uv_timer_t* handle, int status) {
@@ -341,6 +367,18 @@ TEST_IMPL(fs_event_close_with_pending_event) {
   return 0;
 }
 
+#if HAVE_KQUEUE
+
+/* kqueue doesn't register fs events if you don't have an active watcher.
+ * The file descriptor needs to be part of the kqueue set of interest and
+ * that's not the case until we actually enter the event loop.
+ */
+TEST_IMPL(fs_event_close_in_callback) {
+  fprintf(stderr, "Skipping test, doesn't work with kqueue.\n");
+  return 0;
+}
+
+#else /* !HAVE_KQUEUE */
 
 static void fs_event_cb_close(uv_fs_event_t* handle, const char* filename,
     int events, int status) {
@@ -400,3 +438,5 @@ TEST_IMPL(fs_event_close_in_callback) {
 
   return 0;
 }
+
+#endif /* HAVE_KQUEUE */

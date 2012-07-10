@@ -78,6 +78,7 @@ uv_err_code uv_translate_sys_error(int sys_errno) {
     case EMSGSIZE: return UV_EMSGSIZE;
     case ENAMETOOLONG: return UV_ENAMETOOLONG;
     case EINVAL: return UV_EINVAL;
+    case ENETUNREACH: return UV_ENETUNREACH;
     case ECONNABORTED: return UV_ECONNABORTED;
     case ELOOP: return UV_ELOOP;
     case ECONNREFUSED: return UV_ECONNREFUSED;
@@ -85,6 +86,7 @@ uv_err_code uv_translate_sys_error(int sys_errno) {
     case EADDRNOTAVAIL: return UV_EADDRNOTAVAIL;
     case ENOTDIR: return UV_ENOTDIR;
     case EISDIR: return UV_EISDIR;
+    case ENODEV: return UV_ENODEV;
     case ENOTCONN: return UV_ENOTCONN;
     case EEXIST: return UV_EEXIST;
     case EHOSTUNREACH: return UV_EHOSTUNREACH;
@@ -99,7 +101,5 @@ uv_err_code uv_translate_sys_error(int sys_errno) {
     case ENOMEM: return UV_ENOMEM;
     default: return UV_UNKNOWN;
   }
-
-  assert(0 && "unreachable");
-  return -1;
+  UNREACHABLE();
 }

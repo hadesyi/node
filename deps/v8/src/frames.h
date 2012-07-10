@@ -1,4 +1,4 @@
-// Copyright 2011 the V8 project authors. All rights reserved.
+// Copyright 2012 the V8 project authors. All rights reserved.
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -40,6 +40,8 @@ typedef uint32_t RegList;
 // Get the number of registers in a given register list.
 int NumRegs(RegList list);
 
+void SetUpJSCallerSavedCodeData();
+
 // Return the code of the n-th saved register available to JavaScript.
 int JSCallerSavedCode(int n);
 
@@ -49,46 +51,53 @@ class StackFrameIterator;
 class ThreadLocalTop;
 class Isolate;
 
-class PcToCodeCache {
+class InnerPointerToCodeCache {
  public:
-  struct PcToCodeCacheEntry {
-    Address pc;
+  struct InnerPointerToCodeCacheEntry {
+    Address inner_pointer;
     Code* code;
     SafepointEntry safepoint_entry;
   };
 
-  explicit PcToCodeCache(Isolate* isolate) : isolate_(isolate) {
+  explicit InnerPointerToCodeCache(Isolate* isolate) : isolate_(isolate) {
     Flush();
   }
 
-  Code* GcSafeFindCodeForPc(Address pc);
-  Code* GcSafeCastToCode(HeapObject* object, Address pc);
+  Code* GcSafeFindCodeForInnerPointer(Address inner_pointer);
+  Code* GcSafeCastToCode(HeapObject* object, Address inner_pointer);
 
   void Flush() {
     memset(&cache_[0], 0, sizeof(cache_));
   }
 
-  PcToCodeCacheEntry* GetCacheEntry(Address pc);
+  InnerPointerToCodeCacheEntry* GetCacheEntry(Address inner_pointer);
 
  private:
-  PcToCodeCacheEntry* cache(int index) { return &cache_[index]; }
+  InnerPointerToCodeCacheEntry* cache(int index) { return &cache_[index]; }
 
   Isolate* isolate_;
 
-  static const int kPcToCodeCacheSize = 1024;
-  PcToCodeCacheEntry cache_[kPcToCodeCacheSize];
+  static const int kInnerPointerToCodeCacheSize = 1024;
+  InnerPointerToCodeCacheEntry cache_[kInnerPointerToCodeCacheSize];
 
-  DISALLOW_COPY_AND_ASSIGN(PcToCodeCache);
+  DISALLOW_COPY_AND_ASSIGN(InnerPointerToCodeCache);
 };
 
 
 class StackHandler BASE_EMBEDDED {
  public:
-  enum State {
-    ENTRY,
-    TRY_CATCH,
-    TRY_FINALLY
+  enum Kind {
+    JS_ENTRY,
+    CATCH,
+    FINALLY,
+    LAST_KIND = FINALLY
   };
+
+  static const int kKindWidth = 2;
+  STATIC_ASSERT(LAST_KIND < (1 << kKindWidth));
+  static const int kIndexWidth = 32 - kKindWidth;
+  class KindField: public BitField<StackHandler::Kind, 0, kKindWidth> {};
+  class IndexField: public BitField<unsigned, kKindWidth, kIndexWidth> {};
 
   // Get the address of this stack handler.
   inline Address address() const;
@@ -106,16 +115,16 @@ class StackHandler BASE_EMBEDDED {
   static inline StackHandler* FromAddress(Address address);
 
   // Testers
-  bool is_entry() { return state() == ENTRY; }
-  bool is_try_catch() { return state() == TRY_CATCH; }
-  bool is_try_finally() { return state() == TRY_FINALLY; }
+  inline bool is_js_entry() const;
+  inline bool is_catch() const;
+  inline bool is_finally() const;
 
  private:
   // Accessors.
-  inline State state() const;
+  inline Kind kind() const;
 
   inline Object** context_address() const;
-  inline Address* pc_address() const;
+  inline Object** code_address() const;
 
   DISALLOW_IMPLICIT_CONSTRUCTORS(StackHandler);
 };
@@ -139,7 +148,10 @@ class StackFrame BASE_EMBEDDED {
   enum Type {
     NONE = 0,
     STACK_FRAME_TYPE_LIST(DECLARE_TYPE)
-    NUMBER_OF_TYPES
+    NUMBER_OF_TYPES,
+    // Used by FrameScope to indicate that the stack frame is constructed
+    // manually and the FrameScope does not need to emit code.
+    MANUAL
   };
 #undef DECLARE_TYPE
 
@@ -194,10 +206,18 @@ class StackFrame BASE_EMBEDDED {
   Address fp() const { return state_.fp; }
   Address caller_sp() const { return GetCallerStackPointer(); }
 
+  // If this frame is optimized and was dynamically aligned return its old
+  // unaligned frame pointer.  When the frame is deoptimized its FP will shift
+  // up one word and become unaligned.
+  Address UnpaddedFP() const;
+
   Address pc() const { return *pc_address(); }
   void set_pc(Address pc) { *pc_address() = pc; }
 
   virtual void SetCallerFp(Address caller_fp) = 0;
+
+  // Manually changes value of fp in this object.
+  void UpdateFp(Address fp) { state_.fp = fp; }
 
   Address* pc_address() const { return state_.pc_address; }
 
@@ -215,9 +235,7 @@ class StackFrame BASE_EMBEDDED {
   virtual Code* unchecked_code() const = 0;
 
   // Get the code associated with this frame.
-  Code* LookupCode() const {
-    return GetContainingCode(isolate(), pc());
-  }
+  inline Code* LookupCode() const;
 
   // Get the code object that contains the given pc.
   static inline Code* GetContainingCode(Isolate* isolate, Address pc);
@@ -233,6 +251,11 @@ class StackFrame BASE_EMBEDDED {
   virtual void Iterate(ObjectVisitor* v) const = 0;
   static void IteratePc(ObjectVisitor* v, Address* pc_address, Code* holder);
 
+  // Sets a callback function for return-address rewriting profilers
+  // to resolve the location of a return address to the location of the
+  // profiler's stashed return address.
+  static void SetReturnAddressLocationResolver(
+      ReturnAddressLocationResolver resolver);
 
   // Printing support.
   enum PrintMode { OVERVIEW, DETAILS };
@@ -299,7 +322,7 @@ class EntryFrame: public StackFrame {
   virtual void SetCallerFp(Address caller_fp);
 
  protected:
-  explicit EntryFrame(StackFrameIterator* iterator) : StackFrame(iterator) { }
+  inline explicit EntryFrame(StackFrameIterator* iterator);
 
   // The caller stack pointer for entry frames is always zero. The
   // real information about the caller frame is available through the
@@ -326,8 +349,7 @@ class EntryConstructFrame: public EntryFrame {
   }
 
  protected:
-  explicit EntryConstructFrame(StackFrameIterator* iterator)
-      : EntryFrame(iterator) { }
+  inline explicit EntryConstructFrame(StackFrameIterator* iterator);
 
  private:
   friend class StackFrameIterator;
@@ -361,7 +383,7 @@ class ExitFrame: public StackFrame {
   static void FillState(Address fp, Address sp, State* state);
 
  protected:
-  explicit ExitFrame(StackFrameIterator* iterator) : StackFrame(iterator) { }
+  inline explicit ExitFrame(StackFrameIterator* iterator);
 
   virtual Address GetCallerStackPointer() const;
 
@@ -394,8 +416,7 @@ class StandardFrame: public StackFrame {
   }
 
  protected:
-  explicit StandardFrame(StackFrameIterator* iterator)
-      : StackFrame(iterator) { }
+  inline explicit StandardFrame(StackFrameIterator* iterator);
 
   virtual void ComputeCallerState(State* state) const;
 
@@ -513,9 +534,10 @@ class JavaScriptFrame: public StandardFrame {
     return static_cast<JavaScriptFrame*>(frame);
   }
 
+  static void PrintTop(FILE* file, bool print_args, bool print_line_number);
+
  protected:
-  explicit JavaScriptFrame(StackFrameIterator* iterator)
-      : StandardFrame(iterator) { }
+  inline explicit JavaScriptFrame(StackFrameIterator* iterator);
 
   virtual Address GetCallerStackPointer() const;
 
@@ -552,8 +574,7 @@ class OptimizedFrame : public JavaScriptFrame {
   DeoptimizationInputData* GetDeoptimizationData(int* deopt_index);
 
  protected:
-  explicit OptimizedFrame(StackFrameIterator* iterator)
-      : JavaScriptFrame(iterator) { }
+  inline explicit OptimizedFrame(StackFrameIterator* iterator);
 
  private:
   friend class StackFrameIterator;
@@ -581,12 +602,9 @@ class ArgumentsAdaptorFrame: public JavaScriptFrame {
                      int index) const;
 
  protected:
-  explicit ArgumentsAdaptorFrame(StackFrameIterator* iterator)
-      : JavaScriptFrame(iterator) { }
+  inline explicit ArgumentsAdaptorFrame(StackFrameIterator* iterator);
 
-  virtual int GetNumberOfIncomingArguments() const {
-    return Smi::cast(GetExpression(0))->value();
-  }
+  virtual int GetNumberOfIncomingArguments() const;
 
   virtual Address GetCallerStackPointer() const;
 
@@ -611,8 +629,7 @@ class InternalFrame: public StandardFrame {
   }
 
  protected:
-  explicit InternalFrame(StackFrameIterator* iterator)
-      : StandardFrame(iterator) { }
+  inline explicit InternalFrame(StackFrameIterator* iterator);
 
   virtual Address GetCallerStackPointer() const;
 
@@ -633,8 +650,7 @@ class ConstructFrame: public InternalFrame {
   }
 
  protected:
-  explicit ConstructFrame(StackFrameIterator* iterator)
-      : InternalFrame(iterator) { }
+  inline explicit ConstructFrame(StackFrameIterator* iterator);
 
  private:
   friend class StackFrameIterator;
@@ -717,15 +733,19 @@ class JavaScriptFrameIteratorTemp BASE_EMBEDDED {
 
   inline JavaScriptFrameIteratorTemp(Isolate* isolate, StackFrame::Id id);
 
-  JavaScriptFrameIteratorTemp(Address fp, Address sp,
-                              Address low_bound, Address high_bound) :
+  JavaScriptFrameIteratorTemp(Address fp,
+                              Address sp,
+                              Address low_bound,
+                              Address high_bound) :
       iterator_(fp, sp, low_bound, high_bound) {
     if (!done()) Advance();
   }
 
   JavaScriptFrameIteratorTemp(Isolate* isolate,
-                              Address fp, Address sp,
-                              Address low_bound, Address high_bound) :
+                              Address fp,
+                              Address sp,
+                              Address low_bound,
+                              Address high_bound) :
       iterator_(isolate, fp, sp, low_bound, high_bound) {
     if (!done()) Advance();
   }
@@ -873,7 +893,7 @@ class StackFrameLocator BASE_EMBEDDED {
 
 // Reads all frames on the current stack and copies them into the current
 // zone memory.
-Vector<StackFrame*> CreateStackMap();
+Vector<StackFrame*> CreateStackMap(Zone* zone);
 
 } }  // namespace v8::internal
 

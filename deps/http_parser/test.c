@@ -680,56 +680,6 @@ const struct message requests[] =
   ,.body= ""
   }
 
-/* see https://github.com/ry/http-parser/issues/47 */
-#define EAT_TRAILING_CRLF_NO_CONNECTION_CLOSE 28
-, {.name = "eat CRLF between requests, no \"Connection: close\" header"
-  ,.raw= "POST / HTTP/1.1\r\n"
-         "Host: www.example.com\r\n"
-         "Content-Type: application/x-www-form-urlencoded\r\n"
-         "Content-Length: 4\r\n"
-         "\r\n"
-         "q=42\r\n" /* note the trailing CRLF */
-  ,.should_keep_alive= TRUE
-  ,.message_complete_on_eof= FALSE
-  ,.http_major= 1
-  ,.http_minor= 1
-  ,.method= HTTP_POST
-  ,.request_url= "/"
-  ,.num_headers= 3
-  ,.upgrade= 0
-  ,.headers= { { "Host", "www.example.com" }
-             , { "Content-Type", "application/x-www-form-urlencoded" }
-             , { "Content-Length", "4" }
-             }
-  ,.body= "q=42"
-  }
-
-/* see https://github.com/ry/http-parser/issues/47 */
-#define EAT_TRAILING_CRLF_WITH_CONNECTION_CLOSE 29
-, {.name = "eat CRLF between requests even if \"Connection: close\" is set"
-  ,.raw= "POST / HTTP/1.1\r\n"
-         "Host: www.example.com\r\n"
-         "Content-Type: application/x-www-form-urlencoded\r\n"
-         "Content-Length: 4\r\n"
-         "Connection: close\r\n"
-         "\r\n"
-         "q=42\r\n" /* note the trailing CRLF */
-  ,.should_keep_alive= FALSE
-  ,.message_complete_on_eof= FALSE /* input buffer isn't empty when on_message_complete is called */
-  ,.http_major= 1
-  ,.http_minor= 1
-  ,.method= HTTP_POST
-  ,.request_url= "/"
-  ,.num_headers= 4
-  ,.upgrade= 0
-  ,.headers= { { "Host", "www.example.com" }
-             , { "Content-Type", "application/x-www-form-urlencoded" }
-             , { "Content-Length", "4" }
-             , { "Connection", "close" }
-             }
-  ,.body= "q=42"
-  }
-
 , {.name= NULL } /* sentinel */
 };
 
@@ -830,8 +780,8 @@ const struct message responses[] =
 , {.name= "404 no headers no body"
   ,.type= HTTP_RESPONSE
   ,.raw= "HTTP/1.1 404 Not Found\r\n\r\n"
-  ,.should_keep_alive= FALSE
-  ,.message_complete_on_eof= TRUE
+  ,.should_keep_alive= TRUE
+  ,.message_complete_on_eof= FALSE
   ,.http_major= 1
   ,.http_minor= 1
   ,.status_code= 404
@@ -845,8 +795,8 @@ const struct message responses[] =
 , {.name= "301 no response phrase"
   ,.type= HTTP_RESPONSE
   ,.raw= "HTTP/1.1 301\r\n\r\n"
-  ,.should_keep_alive = FALSE
-  ,.message_complete_on_eof= TRUE
+  ,.should_keep_alive = TRUE
+  ,.message_complete_on_eof= FALSE
   ,.http_major= 1
   ,.http_minor= 1
   ,.status_code= 301
@@ -1107,46 +1057,8 @@ const struct message responses[] =
     {}
   ,.body= ""
   }
-
-#define NO_CONTENT_LENGTH_NO_TRANSFER_ENCODING_RESPONSE 13
-/* The client should wait for the server's EOF. That is, when neither
- * content-length nor transfer-encoding is specified, the end of body
- * is specified by the EOF.
- */
-, {.name= "neither content-length nor transfer-encoding response"
-  ,.type= HTTP_RESPONSE
-  ,.raw= "HTTP/1.1 200 OK\r\n"
-         "Content-Type: text/plain\r\n"
-         "\r\n"
-         "hello world"
-  ,.should_keep_alive= FALSE
-  ,.message_complete_on_eof= TRUE
-  ,.http_major= 1
-  ,.http_minor= 1
-  ,.status_code= 200
-  ,.num_headers= 1
-  ,.headers=
-    { { "Content-Type", "text/plain" }
-    }
-  ,.body= "hello world"
-  }
-
-#define NO_HEADERS_NO_BODY_204 14
-, {.name= "204 no headers no body"
-  ,.type= HTTP_RESPONSE
-  ,.raw= "HTTP/1.1 204 No Content\r\n\r\n"
-  ,.should_keep_alive= TRUE
-  ,.message_complete_on_eof= FALSE
-  ,.http_major= 1
-  ,.http_minor= 1
-  ,.status_code= 204
-  ,.num_headers= 0
-  ,.headers= {}
-  ,.body_size= 0
-  ,.body= ""
-  }
-
 , {.name= NULL } /* sentinel */
+
 };
 
 int
@@ -1976,7 +1888,7 @@ main (void)
 
   printf("response scan 1/2      ");
   test_scan( &responses[TRAILING_SPACE_ON_CHUNKED_BODY]
-           , &responses[NO_HEADERS_NO_BODY_204]
+           , &responses[NO_HEADERS_NO_BODY_404]
            , &responses[NO_REASON_PHRASE]
            );
 

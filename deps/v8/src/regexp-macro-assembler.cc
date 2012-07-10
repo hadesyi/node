@@ -1,4 +1,4 @@
-// Copyright 2008 the V8 project authors. All rights reserved.
+// Copyright 2012 the V8 project authors. All rights reserved.
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -35,7 +35,10 @@
 namespace v8 {
 namespace internal {
 
-RegExpMacroAssembler::RegExpMacroAssembler() : slow_safe_compiler_(false) {
+RegExpMacroAssembler::RegExpMacroAssembler(Zone* zone)
+  : slow_safe_compiler_(false),
+    global_mode_(NOT_GLOBAL),
+    zone_(zone) {
 }
 
 
@@ -54,8 +57,8 @@ bool RegExpMacroAssembler::CanReadUnaligned() {
 
 #ifndef V8_INTERPRETED_REGEXP  // Avoid unused code, e.g., on ARM.
 
-NativeRegExpMacroAssembler::NativeRegExpMacroAssembler()
-    : RegExpMacroAssembler() {
+NativeRegExpMacroAssembler::NativeRegExpMacroAssembler(Zone* zone)
+    : RegExpMacroAssembler(zone) {
 }
 
 
@@ -81,7 +84,7 @@ const byte* NativeRegExpMacroAssembler::StringCharacterPosition(
   if (subject->IsAsciiRepresentation()) {
     const byte* address;
     if (StringShape(subject).IsExternal()) {
-      const char* data = ExternalAsciiString::cast(subject)->resource()->data();
+      const char* data = ExternalAsciiString::cast(subject)->GetChars();
       address = reinterpret_cast<const byte*>(data);
     } else {
       ASSERT(subject->IsSeqAsciiString());
@@ -92,7 +95,7 @@ const byte* NativeRegExpMacroAssembler::StringCharacterPosition(
   }
   const uc16* data;
   if (StringShape(subject).IsExternal()) {
-    data = ExternalTwoByteString::cast(subject)->resource()->data();
+    data = ExternalTwoByteString::cast(subject)->GetChars();
   } else {
     ASSERT(subject->IsSeqTwoByteString());
     data = SeqTwoByteString::cast(subject)->GetChars();
@@ -133,7 +136,7 @@ NativeRegExpMacroAssembler::Result NativeRegExpMacroAssembler::Match(
     subject_ptr = slice->parent();
     slice_offset = slice->offset();
   }
-  // Ensure that an underlying string has the same ascii-ness.
+  // Ensure that an underlying string has the same ASCII-ness.
   bool is_ascii = subject_ptr->IsAsciiRepresentation();
   ASSERT(subject_ptr->IsExternalString() || subject_ptr->IsSeqString());
   // String is now either Sequential or External
@@ -149,6 +152,7 @@ NativeRegExpMacroAssembler::Result NativeRegExpMacroAssembler::Match(
                        input_start,
                        input_end,
                        offsets_vector,
+                       offsets_vector_length,
                        isolate);
   return res;
 }
@@ -161,6 +165,7 @@ NativeRegExpMacroAssembler::Result NativeRegExpMacroAssembler::Execute(
     const byte* input_start,
     const byte* input_end,
     int* output,
+    int output_size,
     Isolate* isolate) {
   ASSERT(isolate == Isolate::Current());
   // Ensure that the minimum stack has been allocated.
@@ -174,10 +179,10 @@ NativeRegExpMacroAssembler::Result NativeRegExpMacroAssembler::Execute(
                                           input_start,
                                           input_end,
                                           output,
+                                          output_size,
                                           stack_base,
                                           direct_call,
                                           isolate);
-  ASSERT(result <= SUCCESS);
   ASSERT(result >= RETRY);
 
   if (result == EXCEPTION && !isolate->has_pending_exception()) {

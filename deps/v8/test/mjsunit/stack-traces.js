@@ -111,6 +111,18 @@ function testStrippedCustomError() {
   throw new CustomError("hep-hey", CustomError);
 }
 
+MyObj = function() { FAIL; }
+
+MyObjCreator = function() {}
+
+MyObjCreator.prototype.Create = function() {
+  return new MyObj();
+}
+
+function testClassNames() {
+  (new MyObjCreator).Create();
+}
+
 // Utility function for testing that the expected strings occur
 // in the stack trace produced when running the given function.
 function testTrace(name, fun, expected, unexpected) {
@@ -194,6 +206,46 @@ function testErrorsDuringFormatting() {
 }
 
 
+// Poisonous object that throws a reference error if attempted converted to
+// a primitive values.
+var thrower = { valueOf: function() { FAIL; },
+                toString: function() { FAIL; } };
+
+// Tests that a native constructor function is included in the
+// stack trace.
+function testTraceNativeConstructor(nativeFunc) {
+  var nativeFuncName = nativeFunc.name;
+  try {
+    new nativeFunc(thrower);
+    assertUnreachable(nativeFuncName);
+  } catch (e) {
+    assertTrue(e.stack.indexOf(nativeFuncName) >= 0, nativeFuncName);
+  }
+}
+
+// Tests that a native conversion function is included in the
+// stack trace.
+function testTraceNativeConversion(nativeFunc) {
+  var nativeFuncName = nativeFunc.name;
+  try {
+    nativeFunc(thrower);
+    assertUnreachable(nativeFuncName);
+  } catch (e) {
+    assertTrue(e.stack.indexOf(nativeFuncName) >= 0, nativeFuncName);
+  }
+}
+
+
+function testOmittedBuiltin(throwing, omitted) {
+  try {
+    throwing();
+    assertUnreachable(omitted);
+  } catch (e) {
+    assertTrue(e.stack.indexOf(omitted) < 0, omitted);
+  }
+}
+
+
 testTrace("testArrayNative", testArrayNative, ["Array.map (native)"]);
 testTrace("testNested", testNested, ["at one", "at two", "at three"]);
 testTrace("testMethodNameInference", testMethodNameInference, ["at Foo.bar"]);
@@ -214,6 +266,26 @@ testTrace("testDefaultCustomError", testDefaultCustomError,
     ["collectStackTrace"]);
 testTrace("testStrippedCustomError", testStrippedCustomError, ["hep-hey"],
     ["new CustomError", "collectStackTrace"]);
+testTrace("testClassNames", testClassNames,
+          ["new MyObj", "MyObjCreator.Create"], ["as Create"]);
 testCallerCensorship();
 testUnintendedCallerCensorship();
 testErrorsDuringFormatting();
+
+testTraceNativeConversion(String);  // Does ToString on argument.
+testTraceNativeConversion(Number);  // Does ToNumber on argument.
+testTraceNativeConversion(RegExp);  // Does ToString on argument.
+
+testTraceNativeConstructor(String);  // Does ToString on argument.
+testTraceNativeConstructor(Number);  // Does ToNumber on argument.
+testTraceNativeConstructor(RegExp);  // Does ToString on argument.
+testTraceNativeConstructor(Date);    // Does ToNumber on argument.
+
+// Omitted because QuickSort has builtins object as receiver, and is non-native
+// builtin.
+testOmittedBuiltin(function(){ [thrower, 2].sort(function (a,b) {
+                                                     (b < a) - (a < b); });
+                   }, "QuickSort");
+
+// Omitted because ADD from runtime.js is non-native builtin.
+testOmittedBuiltin(function(){ thrower + 2; }, "ADD");

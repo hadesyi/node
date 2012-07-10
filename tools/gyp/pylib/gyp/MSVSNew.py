@@ -1,12 +1,9 @@
-#!/usr/bin/python2.4
-
-# Copyright (c) 2009 Google Inc. All rights reserved.
+# Copyright (c) 2012 Google Inc. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
 """New implementation of Visual Studio project generation for SCons."""
 
-import common
 import os
 import random
 
@@ -62,7 +59,7 @@ def MakeGuid(name, seed='msvs_new'):
 #------------------------------------------------------------------------------
 
 
-class MSVSFolder:
+class MSVSFolder(object):
   """Folder in a Visual Studio project or solution."""
 
   def __init__(self, path, name = None, entries = None,
@@ -103,7 +100,7 @@ class MSVSFolder:
 #------------------------------------------------------------------------------
 
 
-class MSVSProject:
+class MSVSProject(object):
   """Visual Studio project."""
 
   def __init__(self, path, name = None, dependencies = None, guid = None,
@@ -141,10 +138,11 @@ class MSVSProject:
     else:
       self.config_platform_overrides = {}
     self.fixpath_prefix = fixpath_prefix
+    self.msbuild_toolset = None
 
   def set_dependencies(self, dependencies):
     self.dependencies = list(dependencies or [])
-  
+
   def get_guid(self):
     if self.guid is None:
       # Set GUID from path
@@ -161,6 +159,9 @@ class MSVSProject:
       #    GUID from the files.
       self.guid = MakeGuid(self.name)
     return self.guid
+
+  def set_msbuild_toolset(self, msbuild_toolset):
+    self.msbuild_toolset = msbuild_toolset
 
 #------------------------------------------------------------------------------
 
@@ -206,7 +207,7 @@ class MSVSSolution:
     self.Write()
 
 
-  def Write(self, writer=common.WriteOnDiff):
+  def Write(self, writer=gyp.common.WriteOnDiff):
     """Writes the solution file to disk.
 
     Raises:
