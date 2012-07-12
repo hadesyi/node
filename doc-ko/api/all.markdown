@@ -8,6 +8,7 @@
 @include process
 @include util
 @include events
+@include domain
 @include buffer
 @include stream
 @include crypto
@@ -22,6 +23,7 @@
 @include https
 @include url
 @include querystring
+@include punycode
 @include readline
 @include repl
 @include vm

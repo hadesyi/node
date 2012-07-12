@@ -21,7 +21,7 @@ Node 모듈에서 `var something`는 해당 모듈의 지역 범위가 된다.
 
 * {Object}
 
-process 객체. [process object](process.html#process)부분을 봐라.
+process 객체. [process object][]부분을 봐라.
 
 ## console
 
@@ -29,15 +29,15 @@ process 객체. [process object](process.html#process)부분을 봐라.
 
 * {Object}
 
-stdout와 stderr에 출력하는 데 사용한다. [stdio](stdio.html)부분을 봐라.
+stdout와 stderr에 출력하는 데 사용한다. [stdio][]부분을 봐라.
 
-## Buffer
+## Class: Buffer
 
 <!-- type=global -->
 
-* {Object}
+* {Function}
 
-바이너리 데이터를 다루는데 사용한다. [buffer section](buffer.html)를 봐라.
+바이너리 데이터를 다루는데 사용한다. [buffer section][]을 봐라.
 
 ## require()
 
@@ -45,9 +45,8 @@ stdout와 stderr에 출력하는 데 사용한다. [stdio](stdio.html)부분을 
 
 * {Function}
 
-모듈을 require한다. [Modules](modules.html#modules) 부분을 봐라.
+모듈을 require한다. [Modules][]부분을 봐라.
 `require`는 실제로 전역이 아니라 각 모듈의 지역범위다.
-
 
 ### require.resolve()
 
@@ -60,6 +59,24 @@ stdout와 stderr에 출력하는 데 사용한다. [stdio](stdio.html)부분을 
 
 모듈을 require했을 때 모듈은 이 객체에 캐시된다. 이 객체에서 키 값을 삭제하면 다음 번
 `require`에서 해당 모듈을 다시 로드할 것이다.
+
+### require.extensions
+
+* {Array}
+
+특정 파일 확장자를 어떻게 다룰지를 `require`에 지시한다.
+
+`.sjs` 확장자의 파일을 `.js`처럼 처리한다.
+
+    require.extensions['.sjs'] = require.extensions['.js'];
+
+자신만의 확장자 핸들러를 작성한다.
+
+    require.extensions['.sjs'] = function(module, filename) {
+      var content = fs.readFileSync(filename, 'utf8');
+      // 파일 내용을 파싱해서 module.exports에 전달한다
+      module.exports = content;
+    };
 
 ## __filename
 
@@ -101,27 +118,58 @@ stdout와 stderr에 출력하는 데 사용한다. [stdio](stdio.html)부분을 
 * {Object}
 
 현재 모듈에 대한 참조이다. 특히 `module.exports`는 `exports` 객체와 같다.
-더 자세한 내용은 `src/node.js`를 봐라.
 `module`는 실제로 전역이 아니라 각 모듈의 지역범위이다.
 
+더 자세한 내용은 [module system documentation][]를 봐라.
 
 ## exports
 
 <!-- type=var -->
 
 현재 모듈과 `require()`로 접근가능하게 된 모듈의 모든 인스턴스 사이에서 공유되는 객체다.
-`exports`는 `module.exports`객체와 동일하다. 더 자세한 내용은 `src/node.js`를 봐라.
+`exports`는 `module.exports`객체와 동일하다. 
 `exports`는 실제로 전역이 아니라 각 모듈의 지역범위이다. 
 
-더 자세한 내용은 [module system documentation](modules.html)를 봐라.
+더 자세한 내용은 [module system documentation][]를 봐라.
 
-더 자세한 내용은 [module section](modules.html)를 봐라.
+더 자세한 내용은 [module section][]를 봐라.
 
 ## setTimeout(cb, ms)
+
+*최소* `ms` 밀리초 후에 콜백 `cb`를 실행한다. 실제 지연시간은 OS 타이머의 크기와 시스템 
+부하같은 외부 요소에 달려있다.
+
+타임아웃은 1-2,147,483,647의 범위여야 한다. 값이 이 범위 밖이면 타임아웃은 1 밀리초로 
+바뀐다. 대략적으로 말해서 타이머는 24.8일이상이 될 수 없다.
+
+타이머를 나타내는 불투명한 값을 반환한다.
+
 ## clearTimeout(t)
+
+이전에 `setTimeout()`로 생성된 타이머를 멈춘다. 콜백은 실행하지 않을 것이다.
+
 ## setInterval(cb, ms)
+
+`ms` 밀리초마다 반복적으로 콜백 `cb`를 실행한다. 실제 간격은 OS 타이머의 크기나 시스템 
+부하같은 외부 요소에 따라 다양하다. 시간간격은 `ms`보다 작을 수 없다.
+
+간격은 1-2,147,483,647의 범위여야 한다. 값이 이 범위 밖이면 1밀리초로 바뀐다. 대력적으로 
+말해서 타이머는 24.8일 이상이 될 수 없다.
+
+타이머를 나타내는 불투명한 값을 반환한다.
+
 ## clearInterval(t)
+
+이전에 `setInterval()`로 생성된 타이머를 멈춘다. 콜백은 실행하지 않을 것이다.
 
 <!--type=global-->
 
-timer 함수는 전역 변수이다. [timers](timers.html)부분을 봐라.
+timer 함수는 전역 변수이다. [timers][]부분을 봐라.
+
+[buffer section]: buffer.html
+[module section]: modules.html
+[module system documentation]: modules.html
+[Modules]: modules.html#modules_modules
+[process object]: process.html#process_process
+[stdio]: stdio.html
+[timers]: timers.html
