@@ -4,7 +4,7 @@
 
 스프림은 Node에서 여러 가지 객체로 구현되는 추상 인터페이스다. 예를 들어 HTTP 서버에 대한
 요청은 stout과 같은 스트림이다. 스트림은 읽을수 있거나 쓸 수 있고 때로는 둘 다 가능하다.
-모든 스트림은 `EventEmitter`의 인스턴스다.
+모든 스트림은 [EventEmitter][]의 인스턴스다.
 
 `require('stream')`을 사용해서 기반 Stream 클래스를 로드할 수 있다.
 
@@ -42,22 +42,26 @@ __데이터를 잃어버릴 것이다.__
 
 `function () { }`
 
-기반이 되는 파일 디스크립터가 닫혔을 때 발생한다. 모든 스트림이 이 이벤트를 발생시키는 것은
-아니다. (예를 들어 들어오는 HTTP 요청은 `'close'` 이벤트를 발생시키지 않을 것이다.)
+의존하는 리소스(예를 들면 파일 디스크립터)가 닫혔을 때 발생한다. 모든 스트림이 
+이 이벤트를 발생키시는 것은 아니다.
 
 ### stream.readable
 
 `true`가 기본값인 불리언이지만 `'error'`가 발생하거나 스트림이 `'end'`가 되거나 
 `destroy()`이 호출된 뒤에 `false`로 바뀐다.
 
-### stream.setEncoding(encoding)
+### stream.setEncoding([encoding])
 
-data 이벤트가 `Buffer` 대신 문자열을 발생시키도록 한다. `encoding`은 `'utf8'`, 
-`'ascii'`, `'base64'`가 될 수 있다.
+`'data'` 이벤트가 `Buffer` 대신 문자열을 발생시키도록 한다. `encoding`은 `'utf8'`, 
+`'utf16le'` (`'ucs2'`), `'ascii'`, `'hex'`가 될 수 있다. 기본값은 `'utf8'`이다.
 
 ### stream.pause()
 
-들어오는 `'data'` 이벤트를 멈춘다.
+의존하는 통신계층에 `resume()`을 호출할 때까지 더이상 데이터를 보내지 않도록 요청하는 
+신호를 발생시킨다. 
+
+이런한 특성 때문에 특정 스크림은 즉시 멈추지 않고 `pause()`를 호출한 후에도 
+불확실한 기간동안 `'data'` 이벤트는 발생할 것이다. 
 
 ### stream.resume()
 
@@ -65,7 +69,11 @@ data 이벤트가 `Buffer` 대신 문자열을 발생시키도록 한다. `encod
 
 ### stream.destroy()
 
-기반이 되는 파일 디스크립터를 닫는다. 스트림은 더이상 어떤 이벤트로 발생키시지 않을 것이다.
+기반이 되는 파일 디스크립터를 닫는다. 스트림은 더 이상 `writable`도 아니고 
+`readable`도 아니다. 스트림은 더는 'data'나 'end' 이벤트를 발생시키지 않는다. 
+큐에 있는 어떤 작성데이터도 보내지 않을 것이다. 스트림은 관련된 리소스를 처리하는 
+'close' 이벤트를 실행해야 한다.
+
 
 ### stream.pipe(destination, [options])
 
@@ -79,8 +87,7 @@ data 이벤트가 `Buffer` 대신 문자열을 발생시키도록 한다. `encod
 
 Unix의 `cat` 명령어를 에뮬레이팅한다.:
 
-    process.stdin.resume();
-    process.stdin.pipe(process.stdout);
+    process.stdin.resume(); process.stdin.pipe(process.stdout);
 
 
 출처 스트림이 `end`를 발생하면 기본적으로 목적지 스트림도 `end()`를 호출하므로 
@@ -94,8 +101,7 @@ Unix의 `cat` 명령어를 에뮬레이팅한다.:
     process.stdin.pipe(process.stdout, { end: false });
 
     process.stdin.on("end", function() {
-      process.stdout.write("Goodbye\n");
-    });
+    process.stdout.write("Goodbye\n"); });
 
 
 ## Writable Stream
@@ -166,10 +172,14 @@ EOF나 FIN로 스트림을 종료시킨다.
 
 ### stream.destroy()
 
-기반이 되는 파일 디스크립터를 닫는다. 스트림은 더이상 어떤 이벤트를 발생시키지 않을 것이다.
-큐에 있는 어떤 데이터도 보내지 않을 것이다.
+기반이 되는 파일 디스크립터를 닫는다. 스트림은 더이상 `writable`도 아니고 
+`readable`도 아니다. 스트림은 더는 'data'나 'end' 이벤트를 발생시키지 않는다. 
+큐에 있는 어떤 작성데이터도 보내지 않을 것이다. 스트림은 관련된 리소스를 처리하는 
+'close' 이벤트를 실행해야 한다.
 
 ### stream.destroySoon()
 
 작성 큐를 소모한 후에 파일 디스크립터를 닫는다. 작성 큐에 남아있는 데이터가 없다면
 `destroySoon()`는 즉시 파일 디스크립터를 닫을 수 있다.
+
+[EventEmitter]: events.html#events_class_events_eventemitter
