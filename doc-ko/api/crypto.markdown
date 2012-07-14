@@ -148,53 +148,21 @@ Note: `cipher` 객체는 `final()` 메서드를 호출한 후에는 사용할 �
 
 ## crypto.createDecipher(algorithm, password)
 
-<!--english start-->
-
-Creates and returns a decipher object, with the given algorithm and key.
-This is the mirror of the [createCipher()](#crypto.createCipher) above.
-
-<!--english end-->
-
 전달한 algorithm와 key로 decipher 객체를 생성하고 반환한다.
 이 함수는 위의 [createCipher()](#crypto.createCipher)의 반영이다.
 
 ## crypto.createDecipheriv(algorithm, key, iv)
-
-<!--english start-->
-
-Creates and returns a decipher object, with the given algorithm, key and iv.
-This is the mirror of the [createCipheriv()](#crypto.createCipheriv) above.
-
-<!--english end-->
 
 전달한 algorithm, key, iv로 decipher 객체를 생성하고 반환한다.
 이 함수는 위의 [createCipheriv()](#crypto.createCipheriv)의 반영이다.
 
 ## Class: Decipher
 
-<!--english start-->
-
-Class for decrypting data.
-
-Returned by `crypto.createDecipher` and `crypto.createDecipheriv`.
-
-<!--english end-->
-
 데이터를 복호화하는 클래스다.
 
 `crypto.createDecipher`와 `crypto.createDecipheriv`가 반환하는 클래스다.
 
 ### decipher.update(data, [input_encoding], [output_encoding])
-
-<!--english start-->
-
-Updates the decipher with `data`, which is encoded in `'binary'`, `'base64'`
-or `'hex'`. Defaults to `'binary'`.
-
-The `output_decoding` specifies in what format to return the deciphered
-plaintext: `'binary'`, `'ascii'` or `'utf8'`. Defaults to `'binary'`.
-
-<!--english end-->
 
 'binary'`, `'base64'`, `'hex'`로 인코딩된 `data`로 decipher를 갱신한다.
 기본값은 `'binary'`이다.
