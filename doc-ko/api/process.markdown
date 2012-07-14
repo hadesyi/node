@@ -3,7 +3,7 @@
 <!-- type=global -->
 
 `process` 객체는 전역객체이고 어디서나 접근할 수 있다.
-이 객체는 `EventEmitter` 인스턴스이다.
+이 객체는 [EventEmitter][] 인스턴스이다.
 
 
 ## Event: 'exit'
@@ -139,6 +139,10 @@ stdin에 대한 `Readable Stream`이다. stdin 스트림은 기본적으로 멈�
     /usr/local/bin/node
 
 
+## process.abort()
+
+이는 node가 abort를 발생시키게 한다. 즉 node가 종료되고 코어파일을 생성한다.
+
 ## process.chdir(directory)
 
 프로세스의 현재 워킹디렉토리를 바꾸거나 바꾸는데 실패할 경우 예외를 던진다.
@@ -180,49 +184,65 @@ node를 실행한 쉘은 1을 종료코드로 간주할 것이다.
 
 ## process.getgid()
 
+Note: 이 함수는 POSIX 플랫폼에서만 사용할 수 있다.(예를 들어 Windows에서는 안된다.)
+
 프로세스의 그룹식별자를 얻는다.(getgid(2)를 봐라.)
 이는 그룹 이름이 아니라 숫자로 된 그룹 id 이다.
 
-    console.log('Current gid: ' + process.getgid());
+    if (process.getgid) {
+      console.log('Current gid: ' + process.getgid());
+    }
 
 
 ## process.setgid(id)
+
+Note: 이 함수는 POSIX 플랫폼에서만 사용할 수 있다.(예를 들어 Windows에서는 안된다.)
 
 프로세스의 그룹 식별자를 설정한다.(setgid(2)를 봐라.) 이 함수는 숫자로 된 ID나 문자열로 된
 그룹명을 모두 받아들인다. 그룹명을 지정하면 이 메서드가 그룹명을 숫자로된 ID로 처리할 때까지
 블락킹한다.
 
-    console.log('Current gid: ' + process.getgid());
-    try {
-      process.setgid(501);
-      console.log('New gid: ' + process.getgid());
-    }
-    catch (err) {
-      console.log('Failed to set gid: ' + err);
+    if (process.getgid && process.setgid) {
+      console.log('Current gid: ' + process.getgid());
+      try {
+        process.setgid(501);
+        console.log('New gid: ' + process.getgid());
+      }
+      catch (err) {
+        console.log('Failed to set gid: ' + err);
+      }
     }
 
 
 ## process.getuid()
 
+Note: 이 함수는 POSIX 플랫폼에서만 사용할 수 있다.(예를 들어 Windows에서는 안된다.)
+
 프로세스의 사용자 식별자를 얻는다.(getuid(2)를 봐라.)
 이는 사용자명이 아니라 숫자로된 userid이다.
 
-    console.log('Current uid: ' + process.getuid());
+    if (process.getuid) {
+      console.log('Current uid: ' + process.getuid());
+    }
 
 
 ## process.setuid(id)
+
+Note: 이 함수는 POSIX 플랫폼에서만 사용할 수 있다.(예를 들어 Windows에서는 안된다.)
 
 프로세스의 사용자 식별자를 설정한다. (setuid(2)를 봐라.) 이는 숫자로된 ID와 문자열로 된
 사용자명을 모두 받아들인다. 사용자명을 지정하면 이 메서드가 사용자명을 숫자로 된 ID로 
 처리할 때까지 블락킹한다.
 
-    console.log('Current uid: ' + process.getuid());
-    try {
-      process.setuid(501);
-      console.log('New uid: ' + process.getuid());
-    }
-    catch (err) {
-      console.log('Failed to set uid: ' + err);
+    if (process.getuid && process.setuid) {
+      console.log('Current uid: ' + process.getuid());
+      try {
+        process.setuid(501);
+        console.log('New uid: ' + process.getuid());
+      }
+      catch (err) {
+        console.log('Failed to set uid: ' + err);
+      }
     }
 
 
@@ -246,13 +266,32 @@ node와 의존성에 대한 버전 문자열을 노출하는 프로퍼티이다.
       ev: '4.4',
       openssl: '1.0.0e-fips' }
 
+## process.config
 
-## process.installPrefix
+현재 실행되는 노드를 컴파일하는데 사용한 설정 옵션의 자바스크립트 표현을 담고 있는 객체다. 
+이는 `./configure` 스크립트를 실행했을 때 생성되는 "config.gypi" 파일과 같다. 
 
-`NODE_PREFIX`으로 노출된 컴파일된 프로퍼티이다.
+출력은 다음 예제와 같다.
 
-    console.log('Prefix: ' + process.installPrefix);
-
+    { target_defaults:
+       { cflags: [],
+         default_configuration: 'Release',
+         defines: [],
+         include_dirs: [],
+         libraries: [] },
+      variables:
+       { host_arch: 'x64',
+         node_install_npm: 'true',
+         node_install_waf: 'true',
+         node_prefix: '',
+         node_shared_v8: 'false',
+         node_shared_zlib: 'false',
+         node_use_dtrace: 'false',
+         node_use_openssl: 'true',
+         node_shared_openssl: 'false',
+         strict_aliasing: 'true',
+         target_arch: 'x64',
+         v8_use_snapshot: 'true' } }
 
 ## process.kill(pid, [signal])
 
@@ -297,7 +336,8 @@ node와 의존성에 대한 버전 문자열을 노출하는 프로퍼티이다.
 
 ## process.platform
 
-어떤 플랫폼에서 실행되고 있는지 보여준다. `'linux2'`, `'darwin'`, 등
+어떤 플랫폼에서 실행되고 있는지 보여준다.
+`'darwin'`, `'freebsd'`, `'linux'`, `'solaris'`, `'win32'`
 
     console.log('This platform is ' + process.platform);
 
@@ -345,3 +385,27 @@ Node 프로세스의 메모리 사용량을 바이트로 나타내서 보여주�
 ## process.uptime()
 
 Node가 실행되고 있는 시간을 초단위로 나타낸다.
+
+
+## process.hrtime()
+
+`[seconds, nanoseconds]` 튜플 배열 형식으로 현재의 고해상도(high-resolution) 
+실제 시간을 반환한다. 이는 과거 임의의 시간과 관계가 있고 시각과는 관련이 없으므로 
+클럭 드리프트(clock drift)를 따르지 않는다. 어떤 구간사이의 성능을 측정하는 것이 
+주요 사용처이다.
+
+어떤 구간을 벤치마킹을 위해 시간 간격을 얻기 위해 `process.hrtime()`에 이전 호출의 결과를 
+전달한다.
+
+    var t = process.hrtime();
+    // [ 1800216, 927643717 ]
+
+    setTimeout(function () {
+      t = process.hrtime(t);
+      // [ 1, 6962306 ]
+
+      console.log('benchmark took %d seconds and %d nanoseconds', t[0], t[1]);
+      // benchmark took 1 seconds and 6962306 nanoseconds
+    }, 1000);
+
+[EventEmitter]: events.html#events_class_events_eventemitter
