@@ -20,10 +20,13 @@
   이 인코딩은 null 문자(`'\0'`나 `'\u0000'`)를 `0x20` (공백의 문자코드)로 변환한다.
   null 문자를 `0x00`로 변환하려면 `'utf8'`를 사용해야 한다.
 
-* `'utf8'` - 멀티 바이트로 인코딩된 유니코드 문자다. 다수의 웹페이지와 문서 형식을 UTF-8을 사용한다.
+* `'utf8'` - 멀티바이트로 인코딩된 유니코드 문자다. 다수의 웹페이지와 문서 형식을 
+  UTF-8을 사용한다.
 
-* `'ucs2'` - 2 바이트, 리들 엔디언(little endian)으로 인코딩된 유니코드 문자이다. 
-  BMP(Basic Multilingual Plane, U+0000 - U+FFFF)만 인코딩할 수 있다.
+* `'utf16le'` - 2 바이트나 4바이트의 리들 엔디언(little endian)으로 인코딩된 
+  유니코드 문자이다. 대리쌍(surrogate pairs)을 지원한다.(U+10000 ~ U+10FFFF)
+
+* `'ucs2'` - `'utf16le'`의 별칭이다.
 
 * `'base64'` - Base64 문자열 인코딩.
 
@@ -139,6 +142,23 @@ Buffer 클래스는 바이너리 데이터를 직접 다루는 글로벌 타입�
 
     // ½ + ¼ = ¾: 9 characters, 12 bytes
 
+### Class Method: Buffer.concat(list, [totalLength])
+
+* `list` {배열} 연결할 Buffer 객체의 리스트
+* `totalLength` {숫자} 연결된 버퍼의 전체 길이
+
+list의 모든 버퍼를 연결한 버퍼를 반환한다.
+
+list에 아이템이 없거나 totalLength가 0이면 길이가 0인 버퍼를 반환한다.
+
+list에 딱 하나의 아이템만 있으면 list의 첫 아이템을 반환한다.
+
+list에 하나 이상의 아이템에 있으면 새로운 Buffer가 생성된다.
+
+totalLength를 전달하지 않으면 list의 버퍼들에서 읽어들인다.
+하지만 이는 함수에 추가적인 루프가 생기므로 명시적으로 길이를 전달하는 것이 
+더 빠르다.
+
 ### buf.length
 
 * 숫자
@@ -150,7 +170,7 @@ Buffer 클래스는 바이너리 데이터를 직접 다루는 글로벌 타입�
     buf = new Buffer(1234);
 
     console.log(buf.length);
-    buf.write("some string", "ascii", 0);
+    buf.write("some string", 0, "ascii");
     console.log(buf.length);
 
     // 1234
