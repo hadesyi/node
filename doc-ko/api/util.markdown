@@ -6,7 +6,7 @@
 한다.
 
 
-## util.format()
+## util.format(format, [...])
 
 `printf`같은 형식으로 첫 아규먼트를 사용해서 포매팅된 문자열을 반환한다.
 
@@ -41,6 +41,19 @@
 
     require('util').debug('message on stderr');
 
+## util.error([...])
+
+즉시 모든 아규먼트를 `stderr`에 출력한다는 점을 제외하면 `util.debug()`와 같다.
+
+## util.puts([...])
+
+동기적인 출력함수. 프로세스를 블락할 것이고 각 아규먼트마다 새로운 라인으로 `stdout`에 
+모든 아규먼트를 출력할 것이다.
+
+## util.print([...])
+
+동기적인 출력함수. 프로세스를 블락할 것이고 각 아규먼트를 문자열로 변환해서 `stdout`에 
+출력한다. 아규먼트마다 새로운 라인을 넣지 않는다.
 
 ## util.log(string)
 
