@@ -17,9 +17,10 @@ OpenSSL의 hash, hmac, cipher, decipher, sign, verify 메서드의 랩퍼(wrappe
 
 * `pfx` : PFX나 PKCS12로 암호화된 개인키, 인증서, CA 증명서를 담고 있는 문자열이나 버퍼
 * `key` : PEM으로 암호화된 개인키를 담고 있는 문자열
-* `cert` : PEM으로 암호화된 증명서를 담고 있는 문자열
 * `passphrase` : 개인키나 pfx에 대한 암호문(passphrase) 문자열
+* `cert` : PEM으로 암호화된 증명서를 담고 있는 문자열
 * `ca` : PEM으로 암호화된 믿을 수 있는 CA 증명서의 문자열이나 리스트 
+* `crl` : PEM으로 암호화된 CRL(Certificate Revocation List)의 문자열 혹은 문자열의 리스트
 * `ciphers`: 사용하거나 제외할 암호(cipher)를 설명하는 문자열. 자세한 형식은 
   <http://www.openssl.org/docs/apps/ciphers.html#CIPHER_LIST_FORMAT>를 참조해라.
 
@@ -110,16 +111,19 @@ Note: `hmac` 객체는 `digest()` 메서드가 호출한 후에는 사용할 수
 `algorithm`는 OpenSSL에 의존적이다. `'aes192'` 등이 있다.
 OpenSSL 최근 릴리즈에서는 `openssl list-cipher-algorithms`로 사용할 수 있는
 암호화 알고리즘을 볼 수 있다.
-`password`는 key와 IV를 얻는데 사용하고 반드시 `'binary'`로 인코딩된 문자열이어야
-한다.(더 자세한 내용은 [Buffer section](buffer.html)를 봐라.)
+`password`는 key와 IV를 얻는데 사용하고 반드시 `'binary'`로 인코딩된 문자열이나 
+[buffer](buffer.html)이어야 한다.
 
 ## crypto.createCipheriv(algorithm, key, iv)
 
 전달한 algorithm, key, iv로 암호화된 암호화 객체를 생성하고 반환한다.
 
-`algorithm`은 createCipher()`와 같다. `key`는 algorithm에서 사용하는 로우 키(raw key)
-이다. `iv`는 초기화 벡터(Initialization vector)이고 `iv`는 반드시 `'binary'`로 인코딩된
-문자열이어야 한다. (더 자세한 내용은 [Buffer section](buffer.html)를 봐라.)
+`algorithm`은 createCipher()`의 `algorithm`와 같다. `key`는 algorithm에서 사용하는 로우 키(raw key)
+이다. `iv`는 [초기화 
+벡터(Initialization vector)](http://en.wikipedia.org/wiki/Initialization_vector)이다.
+
+`key`와 `iv`는 반드시 `'binary'`로 인코딩된
+문자열이나 [buffers](buffer.html)여야 한다.
 
 ## Class: Cipher
 
@@ -145,16 +149,21 @@ OpenSSL 최근 릴리즈에서는 `openssl list-cipher-algorithms`로 사용할 
 
 Note: `cipher` 객체는 `final()` 메서드를 호출한 후에는 사용할 수 없다.
 
+### cipher.setAutoPadding(auto_padding=true)
+
+입력데이터의 자동 패딩을 사용하지 않고 블럭 크기를 사용한다. `auto_padding`가 false이면 전체 입력데이터의 길이는 cipher의 블럭 크기의 배수가 되어야 하고 그렇지 않으면 `final`는 실패할 것이다.
+표준이 아닌 패딩은 유용한데 예를 들어 PKCS 패딩 대신 `0x0`를 사용할 수 있다. 이 함수는 반드시 `cipher.final` 이전에 호출해야 한다.
+
 
 ## crypto.createDecipher(algorithm, password)
 
 전달한 algorithm와 key로 decipher 객체를 생성하고 반환한다.
-이 함수는 위의 [createCipher()](#crypto.createCipher)의 반영이다.
+이 함수는 위의 [createCipher()][]의 반영이다.
 
 ## crypto.createDecipheriv(algorithm, key, iv)
 
 전달한 algorithm, key, iv로 decipher 객체를 생성하고 반환한다.
-이 함수는 위의 [createCipheriv()](#crypto.createCipheriv)의 반영이다.
+이 함수는 위의 [createCipheriv()][]의 반영이다.
 
 ## Class: Decipher
 
@@ -176,6 +185,11 @@ Note: `cipher` 객체는 `final()` 메서드를 호출한 후에는 사용할 �
 모든 복호화된 평문을 반환한다. 기본값은 `'binary'`이다.
 
 Note: `decipher` 객체는 `final()` 메서드가 호출된 후에는 사용할 수 없다.
+
+### decipher.setAutoPadding(auto_padding=true)
+
+표준 블럭 패팅없이 암호화된 데이터를 `decipher.final`가 확인하고 제거하지 않도록 자동 패딩을 사용하지 않을 수 있다. 입력데이터의 길이가 cipher 블락 크기의 배수일 때만 동작한다. 
+이 함수는 반드시 데이터를 `decipher.update`로 스트리밍하기 전에 호출해야 한다.
 
 
 ## crypto.createSign(algorithm)
@@ -293,12 +307,39 @@ Diffie-Hellman 공개키를 설정한다. 키 인코딩은 `'binary'`, `'hex'`, 
 Diffie-Hellman 개인키를 설정한다. 키 인코딩은 `'binary'`, `'hex'`, `'base64'`가 
 될 수 있다. 기본값은 `'binary'`이다.
 
+## crypto.getDiffieHellman(group_name)
+
+미리 정의된 Diffie-Hellman 키 교환 객체를 생성한다.
+지원하는 그룹은 `'modp1'`, `'modp2'`, `'modp5'`
+([RFC 2412][]에 정의되어 있다.)
+와 `'modp14'`, `'modp15'`, `'modp16'`, `'modp17'`, `'modp18'`
+([RFC 3526][]에 정의되어 있다.)이다.
+반환된 객체는 위의 [crypto.createDiffieHellman()][]가 생성한 객체의 
+인터페이스와 비슷하지만 키를 변경할 수 없다.(예를 들면 
+[diffieHellman.setPublicKey()][]를 사용해서)
+이 루틴을 사용했을 때의 이점은 관련자들이 미리 그룹 규칙을 생성하지 않고 
+교환하지도 않아서 프로세서와 통신 시간을 모두 아낄 수 있다.
+
+공유된 비밀키를 얻는 예제:
+
+    var crypto = require('crypto');
+    var alice = crypto.getDiffieHellman('modp5');
+    var bob = crypto.getDiffieHellman('modp5');
+
+    alice.generateKeys();
+    bob.generateKeys();
+
+    var alice_secret = alice.computeSecret(bob.getPublicKey(), 'binary', 'hex');
+    var bob_secret = bob.computeSecret(alice.getPublicKey(), 'binary', 'hex');
+
+    /* alice_secret와 bob_secret는 같아야 한다. */
+    console.log(alice_secret == bob_secret);
+
 ## crypto.pbkdf2(password, salt, iterations, keylen, callback)
 
 비동기적인 PBKDF2가 전달한 password, salt, iterations에서 전달한 길이의 키를 얻기 위해 
 의사난수의(pseudorandom) 함수 HMAC-SHA1를 적용한다. 
 callback은 2개의 아규먼트 `(err, derivedKey)`를 받는다.
-
 
 ## crypto.randomBytes(size, [callback])
 
@@ -317,3 +358,10 @@ callback은 2개의 아규먼트 `(err, derivedKey)`를 받는다.
     } catch (ex) {
       // handle error
     }
+
+[createCipher()]: #crypto_crypto_createcipher_algorithm_password
+[createCipheriv()]: #crypto_crypto_createcipheriv_algorithm_key_iv
+[crypto.createDiffieHellman()]: #crypto_crypto_creatediffiehellman_prime_encoding
+[diffieHellman.setPublicKey()]: #crypto_diffiehellman_setpublickey_public_key_encoding
+[RFC 2412]: http://www.rfc-editor.org/rfc/rfc2412.txt
+[RFC 3526]: http://www.rfc-editor.org/rfc/rfc3526.txt
