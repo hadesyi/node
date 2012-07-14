@@ -55,32 +55,29 @@ Node는 실행가능하도록 모든 의존성을 정적으로 컴파일한다. 
 
 `module_name`은 최종 바이너리의 파일명과 일치시켜야 한다.(.node 접미사는 제외하고)
 
-소스코드는 바이너리 애드온인 `hello.node`로 내장해야 한다. 이를 위해서 다음과 같은
-파이썬 코드인 `wscript` 파일을 생성한다.
+소스코드는 바이너리 애드온인 `hello.node`로 빌드되어야 한다. 이를 위해서 
+JSON과 유사한 형식으로 모듈의 빌드 설정을 나타내는 `binding.gyp`파일을 생성해야 한다.
+이 파일은 [node-gyp](https://github.com/TooTallNate/node-gyp)가 컴파일한다.
 
-    srcdir = '.'
-    blddir = 'build'
-    VERSION = '0.0.1'
+    {
+      "targets": [
+        {
+          "target_name": "hello",
+          "sources": [ "hello.cc" ]
+        }
+      ]
+    }
 
-    def set_options(opt):
-      opt.tool_options('compiler_cxx')
+다음 과정은 현재 플랫폼에 적절한 프로젝트 빌드 파일을 생성하는 것이다.
+빌드파일을 생성하기 위해서 `node-gyp configure`를 사용해라.
 
-    def configure(conf):
-      conf.check_tool('compiler_cxx')
-      conf.check_tool('node_addon')
+이제 `build/` 디렉토리에 `Makefile`(Unix 플랫폼)과 `vcxproj`(Windows 플랫폼)가 
+있을 것이다. 그 다음 `node-gyp build`명령어를 실행한다.
 
-    def build(bld):
-      obj = bld.new_task_gen('cxx', 'shlib', 'node_addon')
-      obj.target = 'hello'
-      obj.source = 'hello.cc'
+컴파일된 `.node` 바인딩 파일을 얻었다! 컴파일된 파인딩 파일들은 `build/Release/`에 있다.
 
-`node-waf configure build`를 실행하면 애드온 파일인
-`build/default/hello.node` 파일을 생성할 것이다.
-
-`node-waf`는 단순히 파이썬 기반의 빌드시스템인 [WAF](http://code.google.com/p/waf)이다. 사용자의 편의성을 위해서 `node-waf`를 제공한다.
-
-최근에 빌드한 모듈을 `require`함으로써 Node 프로젝트 `hello.js`에서 바이너리 애드온을 사용할 
-수 있다.
+최근에 빌드한 `hello.node` 모듈을 `require`함으로써 Node 프로젝트 `hello.js`에서 바이너리 
+애드온을 사용할 수 있다.
 
     var addon = require('./build/Release/hello');
 
@@ -97,29 +94,25 @@ Node는 실행가능하도록 모든 의존성을 정적으로 컴파일한다. 
 등과 같이 사용된 여러가지 개념에 대한 설명은 v8의 
 [Embedder's Guide](http://code.google.com/apis/v8/embed.html)를 참고해라.
 
-이러한 예제들을 컴파일하려면 다음의 `wscript`파일을 생성하고 
-`node-waf configure build`를 실행해라:
+이 예제를 사용하려면 `node-gyp`를 사용해서 컴파일해야 한다.
+다음과 같은 `binding.gyp` 파일을 생성해라.
 
-    srcdir = '.'
-    blddir = 'build'
-    VERSION = '0.0.1'
+    {
+      "targets": [
+        {
+          "target_name": "addon",
+          "sources": [ "addon.cc" ]
+        }
+      ]
+    }
 
-    def set_options(opt):
-      opt.tool_options('compiler_cxx')
+하나 이상의 `.cc` 파일이 있는 경우에 `sources` 배열에 파일명을 다음과 같이 추가해라.
 
-    def configure(conf):
-      conf.check_tool('compiler_cxx')
-      conf.check_tool('node_addon')
+    "sources": ["addon.cc", "myexample.cc"]
 
-    def build(bld):
-      obj = bld.new_task_gen('cxx', 'shlib', 'node_addon')
-      obj.target = 'addon'
-      obj.source = ['addon.cc']
+`binding.gyp` 파일을 준비했으면 애드온을 설정하고 빌드할 수 있다.
 
-하나 이상의 `.cc`파일이 있는 경우에는 `obj.source` 배열에 파일이름을 
-추가하면 된다. 예를 들어:
-
-    obj.source = ['addon.cc', 'myexample.cc']
+    $ node-gyp configure build
 
 
 ### Function arguments
