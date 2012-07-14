@@ -101,7 +101,10 @@ Node 모듈 중에서는 바이너리로 컴파일해야 하는 모듈이 있다
 
 모듈을 상대 경로로 찾으려면 모듈 이름이 `'./'`로 시작하면 된다. 즉, `foo.js`라는 파일에서 `require('./circle')`라고 호출하면 같은 디렉토리에 있는 `circle.js`를 로드한다.
 
-'/'이나 './'로 시작하지 않으면 그냥 파일이 아니라 코어 모듈이나 `node_modules` 폴더에 있는 모듈을 찾는다.
+'/'이나 './'로 시작하지 않으면 그냥 파일이 아니라 "코어 모듈"이나 `node_modules` 폴더에 있는 모듈을 찾는다.
+
+주어진 경로가 존재하지 않으면 `require()`는 `code` 프로퍼티를 
+`'MODULE_NOT_FOUND'`로 설정해서 Error를 던질 것이다.
 
 ## Loading from `node_modules` Folders
 
@@ -319,7 +322,7 @@ Node는 모듈을 못 찾으면 환경변수 `NODE_PATH`에 등록된 경로에�
 * 2: `$HOME/.node_libraries`
 * 3: `$PREFIX/lib/node`
 
-`$HOME`은 사용자의 홈 디렉토리이고 `$PREFIX`는 노드가 설치된 디렉토리를 말한다.
+`$HOME`은 사용자의 홈 디렉토리이고 `$PREFIX`는 노드에 설정된 `node_prefix`를 말한다.
 
 왜 그런지 말하자면 길다. 무엇보다 `node_modules` 폴더를 이용해 모듈을 로컬에 설치하는 것이 좋다. 이 방법이 속도도 더 빠르고 더 안전하다.
 
