@@ -60,11 +60,11 @@ _강력히 추천한다_. 동기방식은 모든 연결을 멈추고 작업이 �
 파일명에 상대경로를 사용할 수 있지만 이 상대 경로는 `process.cwd()`이 대한 
 상대경로가 될 것이다.
 
-## fs.rename(path1, path2, [callback])
+## fs.rename(oldPath, newPath, [callback])
 
 비동기 rename(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
-## fs.renameSync(path1, path2)
+## fs.renameSync(oldPath, newPath)
 
 동기 rename(2).
 
@@ -120,6 +120,8 @@ _강력히 추천한다_. 동기방식은 모든 연결을 멈추고 작업이 �
 
 비동기 lchmod(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
+Mac OS X에서만 사용할 수 있다.
+
 ## fs.lchmodSync(path, mode)
 
 동기 lchmod(2).
@@ -162,13 +164,15 @@ _강력히 추천한다_. 동기방식은 모든 연결을 멈추고 작업이 �
 
 동기 link(2).
 
-## fs.symlink(linkdata, path, [type], [callback])
+## fs.symlink(destination, path, [type], [callback])
 
 비동기 symlink(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
-`type` 아규먼트는 `'dir'`이나 `'file'`가 가능하다.(기본값은 `'file'`이다) 이 옵션은 
+`type` 아규먼트는 `'dir'`이나 `'file'`, `'junction'`이 가능하다.(기본값은 `'file'`이다) 이 옵션은 
 윈도우에서만 사용된다.(다른 플랫폼에서는 무시한다.)
+Windows의 junction에서는 목적지경로가 절대경로여야 한다. `'junction'`을 사용하면 `destination` 
+아규먼트를 절대경로로 자동으로 정규화한다.
 
-## fs.symlinkSync(linkdata, path, [type])
+## fs.symlinkSync(destination, path, [type])
 
 동기 symlink(2).
 
@@ -180,12 +184,22 @@ _강력히 추천한다_. 동기방식은 모든 연결을 멈추고 작업이 �
 
 동기 readlink(2). 심볼릭 링크의 문자열 값을 반환한다.
 
-## fs.realpath(path, [callback])
+## fs.realpath(path, [cache], callback)
 
-비동기 realpath(2). 콜백은 두 아규먼트 `(err, resolvedPath)`를 받는다.
-상대경로를 처리하려면 `process.cwd`를 사용해야 할 것이다.
+비동기 realpath(2). `callback`은 두 개의 아규먼트 `(err, resolvedPath)`를 받는다.
+상대경로를 처리하려면 `process.cwd`를 사용해야 할 것이다. `cache`는 실제 경로를 알기 
+위해 지정한 경로 처리를 강제하거나 추가적인 `fs.stat` 호출을 피하기 위해 사용할 수 있는 
+매핑된 경로의 객체리터럴이다.
 
-## fs.realpathSync(path)
+예제:
+
+    var cache = {'/etc':'/private/etc'};
+    fs.realpath('/etc/passwd', cache, function (err, resolvedPath) {
+      if (err) throw err;
+      console.log(resolvedPath);
+    });
+
+## fs.realpathSync(path, [cache])
 
 동기 realpath(2). 처리된 경로를 반환한다.
 
@@ -242,8 +256,23 @@ _강력히 추천한다_. 동기방식은 모든 연결을 멈추고 작업이 �
 * `'r+'` - 읽기와 쓰기모드로 파일을 연다.
 (파일이 존재하지 않으면) 파일을 생성하거나 (파일이 존재하면) 새로 쓴다.
 
+* `'rs'` - 동기방식으로 읽는 파일을 연다. 운영체제가 로컬 파일시스템 캐시를 우회하도록 
+  한다.
+
+  오래됐을 수도 있는 로컬 캐시를 무시하고 NFS 마운트에서 파일을 열 때 주고 유용하다.
+  이 모드는 I/O 성능에 실제로 큰 영향을 주기 때문에 필요한 경우가 아니면 사용하지 말아야 
+  한다.
+
+  이 모드는 `fs.open()`를 동기적인 블락킹 호출로 바꾸지 않는다.
+  동기적인 블락킹 호출이 필요하다면 `fs.openSync()`를 사용해야 한다.
+
+* `'rs+'` - 운영체제가 동기방식으로 일기와 쓰기모드로 파일을 열도록 한다. 이 모드를 
+  사용할 때의 주의점은 `'rs'`를 봐라.
+
 * `'w'` - 쓰기모드로 파일을 연다.
 (파일이 존재하지 않으면) 파일을 생성하거나 (파일이 존재하면) 새로 쓴다.
+
+* `'wx'` - `'w'`와 비슷하지만 독점 모드로 파일을 연다.
 
 * `'w+'` - 읽기와 쓰기모드로 파일을 연다.
 (파일이 존재하지 않으면) 파일을 생성하거나 (파일이 존재하면) 새로 쓴다.
@@ -251,10 +280,18 @@ _강력히 추천한다_. 동기방식은 모든 연결을 멈추고 작업이 �
 * `'a'` - 추가모드로 파일을 연다.
 파일이 존재하지 않으면 예외가 발생한다.
 
+* `'ax'` - `'a'`와 비슷하지만 독점 모드로 파일을 연다.
+
 * `'a+'` - 읽기와 추가모드로 파일을 연다.
 파일이 존재하지 않으면 예외가 발생한다.
 
+* `'ax+'` - `'a+'`와 비슷하지만 독점 모드로 파일을 연다.
+
 `mode`와 기본값은 `0666`이다. 콜백은 두 아규먼트 `(err, fd)`를 받는다.
+
+독점 모드(`O_EXCL`)는 새로 `path`를 생성한다는 것을 보장한다. 해당 파일명이 이미 
+존재하는 경우 `fs.open()`는 실패한다. POSIX 시스템에서 심볼릭링크는 포함되지 않는다.
+네트워크 파일 시스템에서 독점 모드는 동작할 수도 있고 동작하지 않을 수도 있다.
 
 ## fs.openSync(path, flags, [mode])
 
@@ -296,12 +333,7 @@ pwrite(2)를 봐라.
 
 ## fs.writeSync(fd, buffer, offset, length, position)
 
-버퍼기반 `fs.write()`의 동기 버전. 작성한 바이트 수를 반환한다.
-
-## fs.writeSync(fd, str, position, [encoding])
-
-문자열기반 `fs.write()`의 동기 버전. `encoding`의 기본값은 `'utf8'`이다. 
-작성한 _바이트_ 수를 반환한다.
+`fs.write()`의 동기 버전. 작성한 바이트 수를 반환한다.
 
 ## fs.read(fd, buffer, offset, length, position, [callback])
 
@@ -320,11 +352,7 @@ pwrite(2)를 봐라.
 
 ## fs.readSync(fd, buffer, offset, length, position)
 
-버퍼기반 `fs.read`의 동기 버전이다. `bytesRead`의 수를 반환한다.
-
-## fs.readSync(fd, length, position, encoding)
-
-문자열기반 `fs.read`의 동기버전이다. `bytesRead`의 수를 반환한다.
+`fs.read`의 동기 버전이다. `bytesRead`의 수를 반환한다.
 
 ## fs.readFile(filename, [encoding], [callback])
 
@@ -365,6 +393,22 @@ pwrite(2)를 봐라.
 
 `fs.writeFile`의 동기버전이다.
 
+## fs.appendFile(filename, data, encoding='utf8', [callback])
+
+비동기로 파일에 데이터를 추가하고 파일이 존재하지 않는 경우 파일을 생성한다.
+`data`는 문자열이거나 버퍼다. `data`가 버퍼인 경우 `encoding` 아규먼트는 무시한다.
+
+예제:
+
+    fs.appendFile('message.txt', 'data to append', function (err) {
+      if (err) throw err;
+      console.log('The "data to append" was appended to file!');
+    });
+
+## fs.appendFileSync(filename, data, encoding='utf8')
+
+`fs.appendFile`의 동기버전이다.
+
 ## fs.watchFile(filename, [options], listener)
 
     Stability: 2 - Unstable.  가능하다면 대신 fs.watch를 사용해라.
@@ -375,8 +419,8 @@ pwrite(2)를 봐라.
 두번째 아규먼트는 선택사항이다. `options`을 전달하는 경우 `options`은 두 불리언값의 
 멤버변수 `persistent`와 `interval`을 담고 있는 객체가 될 것이다. `persistent`는 
 파일을 감사하는 동안 계속해서 프로세스가 실행되어야 하는지를 나타낸다. `interval`은 
-얼마나 자주 대상을 확인해야 하는지를 밀리초로 나타낸다. (inotify를 사용하는 Linux 
-시스템에서 `interval`는 무시한다.) 기본값은 `{ persistent: true, interval: 0 }`이다.
+얼마나 자주 대상을 확인해야 하는지를 밀리초로 나타낸다. 
+기본값은 `{ persistent: true, interval: 5007 }`이다.
 
 `listener`는 두 아규먼트 현재의 stat 객체와 이전의 stat 객체를 받는다.
 
@@ -397,7 +441,7 @@ pwrite(2)를 봐라.
 
 `filename`의 변경사항을 감시하는 것을 멈춘다.
 
-## fs.watch(filename, [options], listener)
+## fs.watch(filename, [options], [listener])
 
     Stability: 2 - Unstable.  모든 플랫폼에서 사용할 수 있는 것은 아니다.
 
@@ -450,6 +494,20 @@ null 일 경우를 위한 대체(fallback) 로직을 가지고 있어야 한다.
         console.log('filename not provided');
       }
     });
+
+## fs.exists(path, [callback])
+
+파일시스템을 확인해서 전달한 경로가 존재하는지 검사한다.
+존재여부fmf true나 false로 `callback`을 호출한다. 예제:
+
+    fs.exists('/etc/passwd', function (exists) {
+      util.debug(exists ? "it's there" : "no passwd!");
+    });
+
+
+## fs.existsSync(path)
+
+`fs.exists`의 동기버전이다.
 
 ## Class: fs.Stats
 
@@ -506,7 +564,8 @@ null 일 경우를 위한 대체(fallback) 로직을 가지고 있어야 한다.
     }
 
 `options`는 전체 파일대신 읽어드릴 파일의 범위인 `start`와 `end`를 포함할 수 있다.
-`start`와 `end` 둘 다 포함하고 0 부터 시작한다.
+`start`와 `end` 둘 다 포함하고 0 부터 시작한다. `encoding`은 `'utf8'`, 
+`'ascii'`, `'base64'`가 될 수 있다.
 
 100 바이트 길이인 파일의 마지막 10 바이트를 읽는 예제.
 
@@ -519,7 +578,7 @@ null 일 경우를 위한 대체(fallback) 로직을 가지고 있어야 한다.
 
 ### Event: 'open'
 
-* ReadStream는 `fd` {Integer} 파일 디스크립터를 사용한다.
+* `fd` {Integer} ReadStream이 사용하는 파일 디스크립터.
 
 ReadStream의 파일이 열렸을 때 발생한다.
 
@@ -544,7 +603,7 @@ ReadStream의 파일이 열렸을 때 발생한다.
 
 ### Event: 'open'
 
-* `fd` {Integer} ReadStream이 사용하는 파일 디스크립터.
+* `fd` {Integer} WriteStream이 사용하는 파일 디스크립터.
 
 WriteStream의 파일이 열렸을 때 발생한다.
 
