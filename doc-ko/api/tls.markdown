@@ -46,7 +46,7 @@ TLS 프로토콜는 클라이언트가 TLS 세션의 어떤 관점을 재협상�
 DoS(denial-of-service) 공격의 잠재적인 요소인 서버측 리소스의 양의 불균형을 야기시킨다.
 
 이를 완화시키려면 재현상을 10분내에 3번으로 제한해야 한다. 이 한계를 넘어서면 
-[CleartextStream](#tls.CleartextStream) 인스턴스에서 오류가 발생한다. 이 제한은 
+[CleartextStream][] 인스턴스에서 오류가 발생한다. 이 제한은 
 설정할 수 있다.
 
   - `tls.CLIENT_RENEG_LIMIT`: 재협상 제한, 기본값은 3이다.
@@ -73,8 +73,8 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
 
 ## tls.createServer(options, [secureConnectionListener])
 
-새로운 [tls.Server](#tls.Server)를 생성한다.
-`connectionListener` 아규먼트는 자동적으로 [secureConnection](#event_secureConnection_) 
+새로운 [tls.Server][]를 생성한다.
+`connectionListener` 아규먼트는 자동적으로 [secureConnection][] 
 이벤트의 리스너로 설정된다. 
 `options` 객체는 다음과 같은 선택사항이 있다.
 
@@ -91,9 +91,25 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
     각각 VeriSign처럼 잘 알려진 "루트" CA를 사용할 것이다. 연결에 권한을 부여하는 데
     이것들을 사용한다.
 
+  - `crl` : PEM으로 인코딩된 CRL(Certificate Revocation List)의 문자열이나 문자열의 
+    리스트
+
   - `ciphers`: 사용하거나 제외할 암호(cipher)를 설명하는 문자열이다. 자세한 형식은 
     <http://www.openssl.org/docs/apps/ciphers.html#CIPHER_LIST_FORMAT>를
     참고해라.
+    [BEAST attacks]
+    (http://blog.ivanristic.com/2011/10/mitigating-the-beast-attack-on-tls.html)을 
+    완화시키려면 CBC가 아닌 암호문인 RC4 알고리즘을 우선시하도록 아래에서 설명할 
+    `honorCipherOrder`을 이 옵션과 함께 사용하기를 권장한다. 추천하는 암호문 리스트는 
+    다음과 같다.
+    `ECDHE-RSA-AES256-SHA:AES256-SHA:RC4-SHA:RC4:HIGH:!MD5:!aNULL:!EDH:!AESGCM`
+
+  - `honorCipherOrder` :
+  암호문을 선택할 때 클라이언트의 설정대신에 서버의 설정을 사용해라.
+  SSLv2을 사용함다면 서버는 클라이언트로 설정리스트를 보낼 것이고 클라이언트가 암호문을 
+  선택한다.
+  이 옵션은 기본적으로는 사용안함으로 되어 있지만 BEAST공격을 완화하려면 `ciphers` 옵션과 
+  함께 이 옵션을 사용하기를 *권장한다*.
 
   - `requestCert`: `true`로 지정하면 연결할 때 서버가 클라이언트한테 인증서를 요청하고
     인증서를 검증하는 데 사용할 것이다. 기본값: `false`.
@@ -172,10 +188,19 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
     openssl s_client -connect 127.0.0.1:8000
 
 
+## tls.connect(options, [secureConnectListener])
 ## tls.connect(port, [host], [options], [secureConnectListener])
 
-전달한 `port`와 `host`로 새로운 클라이언트 연결을 생성한다. (`host`를 지정하지 않으면
+전달한 `port`와 `host`로(과거 API) 혹은 `options.port`와 `options.host`로 
+새로운 클라이언트 연결을 생성한다. (`host`를 지정하지 않으면
 기본값은 `localhost`이다.) `options`는 지정된 객체여야 한다.
+
+  - `host`: 클라이언트가 접속할 호스트
+
+  - `port`: 클라이언트가 접속할 포트
+
+  - `socket`: 새로운 소켓을 생성하는 대신 전달한 소켓으로 안전한 연결을 만든다.
+    이 옵션을 지정하면 `host`와 `port`은 무시한다.
 
   - `pfx`: PFX나 PKCS12 형식으로 개인키, 인증서 서버의 CA 인증서를 담고 있는 문자열이나
    `Buffer`다.
@@ -190,21 +215,19 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
     각각 VeriSign처럼 잘 알려진 "루트" CA를 사용할 것이다. 연결에 권한을 부여하는 데
     이것들을 사용한다.
 
+  - `rejectUnauthorized`: 이 값이 `true`이면 서버 인증서를 제공한 CA 리스트로 검증한다.
+    검증에 실패하면 `'error'` 이벤트가 발생한다. 기본값: `false`.
+
   - `NPNProtocols`: 지원하는 NPN 프로토콜의 배열이나 `Buffer`다. `Buffer`는 다음의 
     형식이어야 한다. `0x05hello0x05world`, 첫 바이트는 next protocol name의 
     길이이다.(배열을 전달하는 것이 보통 훨씬 간단할 것이다: `['hello', 'world']`)
 
   - `servername`: SNI (Server Name Indication) TLS 확장에 대한 Servername이다.
 
-  - `socket`: 새로운 소켓을 생성하는 대신 전달한 소켓으로 안전한 연결을 만든다.
-    이 옵션을 지정하면 `host`와 `port`는 무시한다. 이 옵션은 *내부적으로 사용하기
-    위해서* 만들어진 것이다. Node에서 문서화되지 않은 모든 API와 같이 사용하지 말아야
-    한다.
-
-`secureConnectListener` 파라미터는 ['secureConnect'](#event_secureConnect_) 
+`secureConnectListener` 파라미터는 ['secureConnect'][] 
 이벤트의 리스너로 추가할 것이다.
 
-`tls.connect()`는 [CleartextStream](#tls.CleartextStream) 객체를 반환한다.
+`tls.connect()`는 [CleartextStream][] 객체를 반환한다.
 
 앞에서 설명한 에코 서버의 클라이언트 예제다.
 
@@ -274,8 +297,8 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
  - `rejectUnauthorized`: 서버가 유효하지 않은 인증서를 가진 클라이언트를 자동으로 거절할 
    것인지 나타내는 불리언 값이다. `requestCert`를 사용하는 서버에만 적용된다.
 
-`tls.createSecurePair()`는 [cleartext](#tls.CleartextStream)와 `encrypted` 스트림 
-프로퍼티로 SecurePair 객체를 반환한다.
+`tls.createSecurePair()`는 [cleartext][]와 `encrypted` 스트림 프로퍼티로 
+SecurePair 객체를 반환한다.
 
 ## Class: SecurePair
 
@@ -286,7 +309,7 @@ tls.createSecurePair가 반환하는 클래스다.
 쌍이 성공적으로 안전한 연결을 수립했을 때 SecurePair가 발생시키는 이벤트이다.
 
 서버의 'secureConnection' 이벤트를 확인하는 것과 비슷하게 pair.cleartext.authorized는 
-사용된 인증서가 제대로 권한을 부여받았는 지 승인하려기 위해 확인되어야 한다.
+사용된 인증서가 제대로 권한을 부여받았는지 승인하기 위해 확인되어야 한다.
 
 ## Class: tls.Server
 
@@ -336,8 +359,8 @@ IPv4 주소(`INADDR_ANY`)에서 직접 연결을 받아들일 것이다.
 
 ### server.address()
 
-운영체제에서 보고된 서버가 바인딩된 주소와 포트를 반환한다.
-더 자세한 내용은 [net.Server.address()](net.html#server.address)를 봐라.
+운영체제에서 보고된 서버가 바인딩된 주소와 주소 패밀리이름과 포트를 반환한다.
+더 자세한 내용은 [net.Server.address()][]를 봐라.
 
 ### server.addContext(hostname, credentials)
 
@@ -380,7 +403,7 @@ ClearTextStream는 SecurePair 객체의 `clear` 멤버이다.
 
 ### cleartextStream.authorizationError
 
-왜 피어(peer)의 인증서가 검증되지 못했는 지에 대한 내용이다. 이 프로퍼티는 
+왜 피어(peer)의 인증서가 검증되지 못했는지에 대한 내용이다. 이 프로퍼티는 
 `cleartextStream.authorized === false`인 경우에만 사용할 수 있다.
 
 ### cleartextStream.getPeerCertificate()
@@ -410,10 +433,22 @@ ClearTextStream는 SecurePair 객체의 `clear` 멤버이다.
 
 피어(peer)가 인증서를 제공하지 않는다면 `null`이나 비어있는 객체를 반환한다.
 
+### cleartextStream.getCipher()
+현재 연결의 암호문 이름과 SSL/TLS 프로토콜 버전을 나타내는 객체를 
+반환한다.
+
+예제:
+{ name: 'AES256-SHA', version: 'TLSv1/SSLv3' }
+
+자세한 내용은 
+http://www.openssl.org/docs/ssl/ssl.html#DEALING_WITH_CIPHERS 에서
+SSL_CIPHER_get_name()와 SSL_CIPHER_get_version()를 봐라.
+
 ### cleartextStream.address()
 
-운영체제가 보고했듯이 기반하는 소켓의 바인딩된 주소와 포트를 반환한다. 다음과 같이 두 가지 
-프로퍼티를 가진 객체를 반환한다. `{"address":"192.168.57.1", "port":62053}`
+운영체제가 보고했듯이 기반하는 소켓의 바인딩된 주소와 주소 패밀리 이름과 포트를 반환한다. 
+다음과 같이 세 가지 프로퍼티를 가진 객체를 반환한다. 
+`{ port: 12346, family: 'IPv4', address: '127.0.0.1' }`
 
 ### cleartextStream.remoteAddress
 
@@ -423,3 +458,10 @@ ClearTextStream는 SecurePair 객체의 `clear` 멤버이다.
 ### cleartextStream.remotePort
 
 원격 포트르르 나태내는 숫자다. 예를 들면 `443`.
+
+[CleartextStream]: #tls_class_tls_cleartextstream
+[net.Server.address()]: net.html#net_server_address
+['secureConnect']: #tls_event_secureconnect
+[secureConnection]: #tls_event_secureconnection
+[Stream]: stream.html#stream_stream
+[tls.Server]: #tls_class_tls_server
