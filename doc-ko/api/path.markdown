@@ -5,9 +5,6 @@
 이 모듈에는 파일 경로를 다루고 변경하는 유틸리티가 포함되어 있다. 이 모듈 대부분의 
 메서드들은 문자열 변경만 수행한다. 경로가 유효한지 확인하는데 파일 시스템이 관여하지 않는다.
 
-`path.exists`와 `path.existsSync`는 예외다. 이 두 메서드는 파일시스템에 접근하듯이 
-fs 모듈에서 논리적으로 찾을 수 있어야 한다.
-
 이 모듈을 사용하려면 `require('path')`를 사용해라. 다음의 메서드들이 제공된다.
 
 ## path.normalize(p)
@@ -137,16 +134,18 @@ windows에서는 역슬래시를 사용한다.
     // returns
     ''
 
-## path.exists(p, [callback])
+## path.sep
 
-파일 시스템으로 확인해서 주어진 경로가 존재하는 지 여부를 검사한다.
-그 다음 true나 false 아규먼트로 `callback`을 호출한다. 예제:
+플랫폼의 파일 구분자. `'\\'`나 `'/'`이다.
 
-    path.exists('/etc/passwd', function (exists) {
-      util.debug(exists ? "it's there" : "no passwd!");
-    });
+리눅스의 예제:
 
+    'foo/bar/baz'.split(path.sep)
+    // returns
+    ['foo', 'bar', 'baz']
 
-## path.existsSync(p)
+윈도우즈의 예제:
 
-`path.exists`의 동기 버전.
+    'foo\\bar\\baz'.split(path.sep)
+    // returns
+    ['foo', 'bar', 'baz']
