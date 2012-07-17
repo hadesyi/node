@@ -137,7 +137,7 @@ UDP 서버가 41234 포트에서 받는 예제:
 ### dgram.address()
 
 소켓에 대한 주소 정보를 담고 있는 객체를 반환한다. UDP 소켓에서 이 객체는 
-`address`와 `port`를 담고 있을 것이다.
+`address`와 `family`와 `port`를 담고 있을 것이다.
 
 ### dgram.setBroadcast(flag)
 
@@ -166,7 +166,7 @@ UDP 서버가 41234 포트에서 받는 예제:
 각 라우터나 게이트웨이는 TTL을 감소시킨다. TTL이 라우터에 의해서 0까지 줄어들면 더이상 전송되지 
 않을 것이다.
 
-`setMulticastTTL()`의 아규먼트는 0부터 255사이의 홉 수이다. 대부분의 시스템에서 기본값은 64이다.
+`setMulticastTTL()`의 아규먼트는 0부터 255사이의 홉(hop) 수이다. 대부분의 시스템에서 기본값은 1이다.
 
 ### dgram.setMulticastLoopback(flag)
 
