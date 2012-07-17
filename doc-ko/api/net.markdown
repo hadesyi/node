@@ -8,7 +8,7 @@
 ## net.createServer([options], [connectionListener])
 
 새로운 TCP 서버를 생성한다. `connectionListener` 아규먼트는 자동적으로 
-['connection'](#event_connection_) 이벤트의 리스너로 설정한다. 
+['connection'][] 이벤트의 리스너로 설정한다. 
 
 `options`은 다음 객체가 기본값이다.
 
@@ -17,7 +17,7 @@
 
 `allowHalfOpen`가 `true`이면 소켓은 반대쪽 소켓이 FIN 패킷을 보냈을 때 자동으로 
 FIN 패킷을 보내지 않는다. 소켓은 읽을 수 없는 상태가 되지만 여전히 쓰기는 가능하다.
-명시적으로 `end()` 메서드를 호출해야 한다. 더 자세한 내용은 ['end'](#event_end_) 
+명시적으로 `end()` 메서드를 호출해야 한다. 더 자세한 내용은 ['end'][] 
 이벤트를 봐라.
 
 다음은 8124 포트에 대한 연결을 받는 에코 서버의 예제다.
@@ -48,32 +48,39 @@ UNIX 도메인 소켓서버에 접속하려면 `nc`를 사용해라.
 
     nc -U /tmp/echo.sock
 
-## net.connect(arguments...)
-## net.createConnection(arguments...)
+## net.connect(options, [connectionListener])
+## net.createConnection(options, [connectionListener])
 
 새로운 소켓 객체를 생성하고 전달한 위치로 소켓을 연다. 소켓 구성이 완료되었을 때 
-['connect'](#event_connect_) 이벤트가 발생할 것이다.
+['connect'][] 이벤트가 발생할 것이다.
 
-이 메서드들의 아규먼트들은 연결의 타입을 변경한다.
+TCP 소켓에서 `options` 아규먼트는 다음을 지정하는 객체여야 한다.
 
-* `net.connect(port, [host], [connectListener])`
-* `net.createConnection(port, [host], [connectListener])`
+  - `port`: 클라이언트가 접속할 포트 (필수).
 
-  `host`의 `port`로 TCP 연결을 생성한다. `host`를 생략하면 
-  `'localhost'`를 사용할 것이다.
+  - `host`: 클라이언트가 접속할 호스트. 기본값은 `'localhost'`다.
 
-* `net.connect(path, [connectListener])`
-* `net.createConnection(path, [connectListener])`
+  - `localAddress`: 네트워크 연결에 바인딩할 로컬 인터페이스.
 
-  `path`로의 유닉스 소켓연결을 생성한다.
+For UNIX domain sockets, `options` argument should be an object which specifies:
+UNIX계열 소켓에서는 `options` 아규먼트는 다음을 지정하는 객체여야 한다.
 
-`connectListener` 파라미터는 ['connect'](#event_connect_) 이벤트의 
+  - `path`: 클라이언트가 접속할 경로. (필수)
+
+공통 옵션은 다음과 같다.
+
+  - `allowHalfOpen`: 이 값이 `true`이면 소켓의 반대쪽에서 FIN 패킷을 
+    보냈을 때 자동으로 FIN 패킷을 보내지 않는다. 더 자세한 내용은 ['end'][]를 
+    봐라.
+
+`connectListener` 파라미터를 ['connect'][] 이벤트의 
 리스터로 추가할 것이다.
 
 다음은 이전에 설명한 에코서버의 클리이언트 예제다.
 
     var net = require('net');
-    var client = net.connect(8124, function() { //'connect' listener
+    var client = net.connect({port: 8124},
+        function() { //'connect' listener
       console.log('client connected');
       client.write('world!\r\n');
     });
@@ -87,22 +94,39 @@ UNIX 도메인 소켓서버에 접속하려면 `nc`를 사용해라.
 
 `/tmp/echo.sock` 소켓에 연결하려면 두번째 줄을 다음과 같이 변경한다.
 
-    var client = net.connect('/tmp/echo.sock', function() { //'connect' listener
+    var client = net.connect({path: '/tmp/echo.sock'},
+
+## net.connect(port, [host], [connectListener])
+## net.createConnection(port, [host], [connectListener])
+
+`host`의 `port`로 TCP 연결을 생성한다. `host`를 생략하면 `'localhost'`라고 
+가정한다. 
+`connectListener` 파라미터는 ['connect'][] 이벤트의 리스너로 추가될 것이다.
+
+## net.connect(path, [connectListener])
+## net.createConnection(path, [connectListener])
+
+`path`로 유닉스 소켓 연결을 생성한다. 
+`connectListener` 파라미터는 ['connect'][] 이벤트의 리스너로 추가될 것이다.
 
 ## Class: net.Server
 
 이 클래스는 TCP나 UNIX 서버를 생성하는데 사용한다.
 서버는 새로 들어오는 연결을 받을 수 있는 `net.Socket`이다.
 
-### server.listen(port, [host], [listeningListener])
+### server.listen(port, [host], [backlog], [listeningListener])
 
 지정한 `port`와 `host`에서 연결을 받아들이기 시작한다. `host`를 생략하면 
 모든 IPv4 주소(`INADDR_ANY`)에서 직접 들어오는 연결을 받아들일 것이다. 
 포트를 0으로 지정하면 임의의 포트를 사용할 것이다.
 
+백로그는 대기하는 연결의 큐의 최대 길이이다. 
+실제 길이는 리눅스의 `tcp_max_syn_backlog`와 `somaxconn`같은 sysctl 설정으로 
+OS가 결정한다. 백로그의 기본값은 511이다.(512가 아니다)
+
 이 함수는 비동기함수이다. 서버가 바인딩되었을 때 
-['listening'](#event_listening_) 이벤트가 발생할 것이다.
-마지막 파라미터 `listeningListener`는 ['listening'](#event_listening_) 이벤트의 
+['listening'][] 이벤트가 발생할 것이다.
+마지막 파라미터 `listeningListener`는 ['listening'][] 이벤트의 
 리스터로 추가할 것이다.
 
 몇몇 유저는 실행했을 때 `EADDRINUSE` 오류가 발생하는 이슈가 있다. 이는 다른 서버가 
@@ -127,21 +151,41 @@ UNIX 도메인 소켓서버에 접속하려면 `nc`를 사용해라.
 전달한 `path`에서 연결을 받아들이는 UNIX 소켓서버를 시작한다.
 
 이 함수는 비동기 함수이다. 서버가 바인딩되었을 때 
+['listening'][] 이벤트가 발생할 것이다.
+마지막 파라미터 `listeningListener`는 ['listening'][] 이벤트의 
+리스터로 추가될 것이다.
+
+### server.listen(handle, [listeningListener])
+
+* `handle` {Object}
+* `listeningListener` {Function}
+
+`handle` 객체는 서버나 소켓으로 설정되거나(의존하는 `_handle` 멤버를 가진
+어떤 것이든) `{fd: <n>}` 객체가 될 수 있다.
+
+이 함수는 서버가 지정한 핸들에서 연결받아들이도록 하지만 파일 디스크립터나 
+핸들이 이미 포트나 도메인 소켓에 바인딩되었다고 가정한다.
+
+Windows에서는 파일스크립터에서 연결을 받아들이는 것을 지원하지 않는다.
+
+이 함수는 비동기 함수이다. 서버가 바인딩되었을 때 
 ['listening'](#event_listening_) 이벤트가 발생할 것이다.
 마지막 파라미터 `listeningListener`는 ['listening'](#event_listening_) 이벤트의 
 리스터로 추가될 것이다.
 
-### server.close()
+### server.close([cb])
 
-서버가 새로운 연결을 받아들이는 것을 멈춘다. 이 함수는 비동기함수이고 서버가 
-`'close'` 이벤트를 발생했을 때 완전히 닫힌다.
-
+서버가 새로운 연결을 받아들이는 것과 현재 존재하는 연결을 유지하는 것을 멈춘다.
+이 함수는 비동기 함수이고 모든 연결이 종료되고 서버에서 `'close'` 이벤트가 
+발생했을 때 완전히 닫힌다. 선택적으로 `'close'` 이벤트를 받는 콜백을 
+전달할 수 있다.
 
 ### server.address()
 
-운영체제가 보고한대로 서버에 바인딩된 주소와 포트를 반환한다.
+운영체제가 보고한대로 서버에 바인딩된 주소와 주소 패밀리 이름과 포트를 반환한다.
 운영체제에 할당된 주소를 사용했을 때 할당된 포트를 찾는데 유용하다.
-두 개의 프로퍼티를 가진 객체를 리턴한다. 예시: `{"address":"127.0.0.1", "port":2121}`
+세 개의 프로퍼티를 가진 객체를 리턴한다. 예시: 
+`{ port: 12346, family: 'IPv4', address: '127.0.0.1' }`
 
 예제:
 
@@ -161,12 +205,16 @@ UNIX 도메인 소켓서버에 접속하려면 `nc`를 사용해라.
 
 서버의 연결수가 많아졌을 때 연결을 거절하려면 이 프로퍼티를 설정해라.
 
+`child_process.fork()`로 자식에 소켓을 보냈을 때 이 옵션을 사용하는 것은
+권하지 않는다.
+
 ### server.connections
 
 서버의 동시접속 수.
 
+`child_process.fork()`로 자식 프로세스에 소켓을 보냈을 때 이 값은 `null`이 된다.
 
-`net.Server`는 다음 이벤트를 가진 `EventEmitter`이다.
+`net.Server`는 다음 이벤트를 가진 [EventEmitter][]이다.
 
 ### Event: 'listening'
 
@@ -181,7 +229,8 @@ UNIX 도메인 소켓서버에 접속하려면 `nc`를 사용해라.
 
 ### Event: 'close'
 
-서버를 닫을 때 발생한다.
+서버를 닫을 때 발생한다. 연결이 존재하는 경우
+모든 연결이 종료될 때까지 이 이벤트틑 발생하지 않는다.
 
 ### Event: 'error'
 
@@ -223,9 +272,11 @@ UNIX 도메인 소켓서버에 접속하려면 `nc`를 사용해라.
 구현하거나 Socket이 닫혔는데 다른 서버로 연결할 때 이 닫힌 소켓을 다시 사용하고 싶을 때만 
 이 메서드를 사용해라.
 
-이 함수는 비동기 함수이다. ['connect'](#event_connect_) 이벤트가 발생하면 소켓이 구성된 
+이 함수는 비동기 함수이다. ['connect'][] 이벤트가 발생하면 소켓이 구성된 
 것이다. 연결하는데 문제가 있다면 `'connect'` 이벤트는 발생하지 않고 `'error'` 이벤트가 
 예외와 함께 발생할 것이다.
+
+`connectListener` 파라미터는 ['connect'][] 이벤트의 리스터로 추가된다.
 
 
 ### socket.bufferSize
@@ -247,14 +298,8 @@ UNIX 도메인 소켓서버에 접속하려면 `nc`를 사용해라.
 
 ### socket.setEncoding([encoding])
 
-받는 데이터의 인코딩(`'ascii'`, `'utf8'`, `'base64'`)을 설정한다. 
-기본값은 `null`이다.
-
-### socket.setSecure()
-
-이 함수는 v0.3에서 삭제되었다. 연결을 SSL/TLS로 업그래이드하는 데 사용한다. 
-새로운 API에 대해서는 [TLS section](tls.html#tLS_)를 봐라.
-
+읽을 수 있는 스트림인 소켓의 인코딩을 설정한다. 더 자세한 내용은
+[stream.setEncoding()][]를 봐라.
 
 ### socket.write(data, [encoding], [callback])
 
@@ -322,9 +367,9 @@ keep-alive 기능을 사용하거나 사용하지 않고 비어있는 소켓에 
 
 ### socket.address()
 
-운영체제가 보고한대로 소켓에 바인딩된 주소와 포트를 반환한다.
-두 개의 프로퍼티를 가진 객체를 리턴한다. 
-예시: `{"address":"192.168.57.1", "port":62053}`
+운영체제가 보고한대로 소켓에 바인딩된 주소와 주소 패밀리 이름과 포트를 반환한다.
+세 개의 프로퍼티를 가진 객체를 리턴한다. 
+예시: `{ port: 12346, family: 'IPv4', address: '127.0.0.1' }`
 
 ### socket.remoteAddress
 
@@ -344,7 +389,7 @@ keep-alive 기능을 사용하거나 사용하지 않고 비어있는 소켓에 
 보낸 바이트의 양.
 
 
-`net.Socket` 인스턴스는 다음의 이벤트를 가진 EventEmitter이다.
+`net.Socket` 인스턴스는 다음의 이벤트를 가진 [EventEmitter][]이다.
 
 ### Event: 'connect'
 
@@ -357,7 +402,7 @@ keep-alive 기능을 사용하거나 사용하지 않고 비어있는 소켓에 
 
 데이터를 받았을 때 발생한다. `data` 아규먼트는 `Buffer`나 `String`이 될 것이다.
 데이터의 인코딩은 `socket.setEncoding()`로 설정한다. 
-(더 자세한 내용은 [Readable Stream](stream.html#readable_stream)를 봐라.)
+(더 자세한 내용은 [Readable Stream][]를 봐라.)
 
 `Socket`이 `'data'` 이벤트를 발생시켰을 때 리스너가 없으면 __데이터를 잃어버릴 것이다.__
 
@@ -414,3 +459,10 @@ input이 IP 버전 4 주소이면 true를 반환하고 IP 버전 4 주소가 아
 
 input이 IP 버전 6 주소이면 true를 반환하고 IP 버전 6 주소가 아니면 false를 반환한다.
 
+['connect']: #net_event_connect
+['connection']: #net_event_connection
+['end']: #net_event_end
+[EventEmitter]: events.html#events_class_events_eventemitter
+['listening']: #net_event_listening
+[Readable Stream]: stream.html#stream_readable_stream
+[stream.setEncoding()]: stream.html#stream_stream_setencoding_encoding
