@@ -23,6 +23,13 @@ HTTP 어플리케이션이 가능한 전체 범위를 다 지원하기 위해서
 파싱하지만 실제 헤더와 바디는 파싱하지 않는다.
 
 
+## http.STATUS_CODES
+
+* {Object}
+
+모든 표준 HTTP 응답 상태코드와 짧은 설명의 모음이다. 
+예를 들어 `http.STATUS_CODES[404] === 'Not Found'`와 같이 할 수 있다.
+
 ## http.createServer([requestListener])
 
 새로운 웹서버 객체를 반환한다.
@@ -30,9 +37,14 @@ HTTP 어플리케이션이 가능한 전체 범위를 다 지원하기 위해서
 `requestListener`는 자동으로 `'request'` 이벤트에 추가되는 
 함수다.
 
+## http.createClient([port], [host])
+
+이 함수는 **폐기되었다**. 대신에 [http.request()][]를 사용해라.
+새로운 HTTP 클라이언트를 구성한다. `port`와 `host`는 연결할 서버를 가리킨다.
+
 ## Class: http.Server
 
-이 클래스는 다음의 이벤트를 가진 `EventEmitter`다.
+이 클래스는 다음의 이벤트를 가진 [EventEmitter][]다.
 
 ### Event: 'request'
 
@@ -69,6 +81,20 @@ http Expect: 100-continue 헤더를 가진 요청을 받을 때마다 발생한�
 `response.writeContinue` 호출하고 클라이언트가 요청 바디를 계속 보내지 않는다면 
 적절한 HTTP 응답(예시: 400 Bad Request)을 생성한다.
 
+### Event: 'connect'
+
+`function (request, socket, head) { }`
+
+클라이언트가 http CONNECT 메서드를 요청할 때마다 발생한다. 이 이벤트에 등록된
+리스너가 없으면 CONNECT 메서드를 요청한 클라이언트의 연결이 닫힐 것이다.
+
+* `request`는 request 이벤트와 같이 http 요청의 아규먼트다. 
+* `socket`는 서버와 클라이언트 간의 네트워크 소켓이다.
+* `head`는 터널링 스트림의 첫 패킷인 Buffer의 인스턴스다. 이 값은 비어있을 것이다.
+
+이 이벤트가 발생한 후 요청의 소켓은 `data` 이벤트 리스너를 가지지 않을 것이다.
+즉, 해당 소켓으로 서버에 보낸 데이터를 다루려면 리스너에 바인딩해야 한다.
+
 ### Event: 'upgrade'
 
 `function (request, socket, head) { }`
@@ -91,31 +117,58 @@ http Expect: 100-continue 헤더를 가진 요청을 받을 때마다 발생한�
 
 클라이언트 연결에서 'error' 이벤트가 발생하면 이 이벤트가 진행된다.
 
-### server.listen(port, [hostname], [callback])
+### server.listen(port, [hostname], [backlog], [callback])
 
 지정한 hostname과 port에서 열결을 받아들이기 시작한다. hostname을 생락하면 서버는 
 IPv4 주소(`INADDR_ANY`)에서 들어오는 연결을 모두 받아들일 것이다.
 
 유닉스 소켓에 바인딩하려면 port와 hostname 대신에 파일명을 전달한다.
 
+백로그는 지연된는 연결 큐의 최대길이이다.
+실제 길이는 리눅스의 `tcp_max_syn_backlog`와 `somaxconn`같은 sysctl 설정을 통해
+OS가 결정한다. backlog의 기본값은 511이다.(512가 아니다)
+
 이 함수는 비동기 함수다. 마지막 파라미터 `callback`은 
-['listening'](net.html#event_listening_) 이벤트의 리스터로 추가될 것이다.
-[net.Server.listen()](net.html#server.listen)도 참고해 봐라.
+['listening'][] 이벤트의 리스터로 추가될 것이다.
+[net.Server.listen(port)][]도 참고해 봐라.
 
 
 ### server.listen(path, [callback])
 
 전달한 `path`에서 연결을 받아들이는 UNIX 소켓 서버를 시작한다.
 
-이 함수는 비동기 함수다. 마지막 파라미터 `callback`은 
+이 함수는 비동기 함수다. 마지막 파라미터 `callback`은
+['listening'][] 이벤트의 리스너로 추가될 것이다.
+[net.Server.listen(path)][]도 참고해라.
+
+
+### server.listen(handle, [listeningListener])
+
+* `handle` {Object}
+* `listeningListener` {Function}
+
+`handle` 객체는 서버나 소켓(의존하는 `_handle` 멤버를 가진 어떤 것이든)으로 
+설정하거나 `{fd: <n>}` 객체로 설정할 수 있다.
+
+이 함수는 서버가 지정한 핸들에서 연결을 받아들이도록 하지만 파일 디스크립터나 
+핸들이 이미 포트나 도메인 소켓에 바인딩되어 있다고 가정한다.
+
+윈도우는 파일 디스크립터에서 요청을 받아들이는 것을 지원하지 않는다.
+
+이 함수는 비동기 함수다. 마지막 파라미터 `callback`은
 ['listening'](net.html#event_listening_) 이벤트의 리스너로 추가될 것이다.
 [net.Server.listen()](net.html#server.listen)도 참고해라.
 
+### server.close([cb])
 
-### server.close()
+Stops the server from accepting new connections.  See [net.Server.close()][].
+서버가 새로운 연결을 받아들이는 것을 멈춘다. [net.Server.close()][]를 참고해라.
 
-서버가 새로운 연결을 받아들이는 것을 멈춘다.
-[net.Server.close()](net.html#server.close)를 봐라.
+
+### server.maxHeadersCount
+
+들어오는 헤더의 최대 수를 제한하고 기본값은 1000이다. 이 값을 0으로 설정하면
+제한을 두지 않는다.
 
 
 ## Class: http.ServerRequest
@@ -123,15 +176,15 @@ IPv4 주소(`INADDR_ANY`)에서 들어오는 연결을 모두 받아들일 것�
 사용자가 아니라 HTTP 서버 내부적으로 생성되는 객체다. 
 `'request'` 리스너의 첫번째 아규먼트로 전달한다.
 
-요청은 [Readable Stream](stream.html#readable_stream)를 구현했다. 
-이 클래스는 다음의 이벤트를 가지는 `EventEmitter`이다.
+요청은 [Readable Stream][]를 구현했다. 
+이 클래스는 다음의 이벤트를 가지는 [EventEmitter][]이다.
 
 ### Event: 'data'
 
 `function (chunk) { }`
 
 메시지 바디의 일부를 받았을 때 발생한다. `request.setEncoding()`로 인코딩을 
-설정한 경우 청크는 문자열이고 설정하지 않았으면 [Buffer](buffer.html)다.
+설정한 경우 청크는 문자열이고 설정하지 않았으면 [Buffer][]다.
 
 `ServerRequest`가 `'data'` 이벤트를 했을 때 리스터가 없다면 
 __데이터를 읽어버릴 것이다.__
@@ -212,9 +265,7 @@ HTTP 프로토콜 버전의 문자열 표현이다. 읽기 전용.
 
 ### request.setEncoding([encoding])
 
-요청 바디의 인코딩을 설정하고 `'utf8'`나 `'binary'`가 가능하다. 기본값은 `'data'` 
-이벤트가 `Buffer` 객체를 발생시킨다는 것을 나타내는 `null`이다.
-
+요청 바디의 인코딩을 설정한다. 자세한 내용은 [stream.setEncoding()][]를 참고해라.
 
 ### request.pause()
 
@@ -241,8 +292,8 @@ request.connection.getPeerCertificate()를 사용해라.
 사용자가 아니라 HTTP 서버가 내부적으로 생성하는 객체다. `'request'` 이벤트의 
 두번째 파라미터로 전달된다.
 
-응답은 [Writable  Stream](stream.html#writable_stream) 인터페이스를 구현했다.
-이 클래스는 다음의 이벤트를 가지고 있는 `EventEmitter`이다.
+응답은 [Writable Stream][] 인터페이스를 구현했다.
+이 클래스는 다음의 이벤트를 가지고 있는 [EventEmitter][]이다.
 
 ### Event: 'close'
 
@@ -254,8 +305,7 @@ request.connection.getPeerCertificate()를 사용해라.
 ### response.writeContinue()
 
 클라이언트에 요청 바디가 보내질 것이라는 것을 나타내는 HTTP/1.1 100 Continue 
-메시지를 보낸다. `Server`의 [checkContinue](#event_checkContinue_) 이벤트를 봐라.
-
+메시지를 보낸다. `Server`의 ['checkContinue'][] 이벤트를 봐라.
 
 ### response.writeHead(statusCode, [reasonPhrase], [headers])
 
@@ -306,6 +356,13 @@ Note: 해당 Content-Length는 문자가 아니라 바이트로 주어진다. �
 
     response.setHeader("Set-Cookie", ["type=ninja", "language=javascript"]);
 
+### response.sendDate
+
+이 값이 ture이면 이미 헤더에 Date 헤더가 존재하지 않으며 자동으로 Date 헤더를
+생성해서 응답에 보낼 것이다. 기본값은 true이다.
+
+이 값은 테스트할 때만 사용하지 않도록 해야 한다. HTTP는 응답에 Date 헤더를 필요로
+한다.
 
 ### response.getHeader(name)
 
@@ -373,24 +430,26 @@ Note: 해당 Content-Length는 문자가 아니라 바이트로 주어진다. �
 ## http.request(options, callback)
 
 Node는 HTTP 요청에 대한 연결을 서버당 여러 개 유지하고 있다. 이 함수는 투명하게 
-요청을 진행한다. `options`은 [url.parse()](url.html#url.parse)를 지원한다.
-Node maintains several connections per server to make HTTP requests.ㅏ
+요청을 진행한다.
+
+`options`은 객체나 문자열이 될 수 있다. `options`이 문자열이면 자동으로
+[url.parse()][]를 사용해서 파싱한다.
 
 옵션:
 
 - `host`: 요청을 보낼 서버의 도메인 명이나 IP 주소. 기본값은 `'localhost'`이다. 
 - `hostname`: `url.parse()`를 지원하려면 `host`보다 `hostname`가 낫다.
 - `port`: 원격서버의 포트. 기본포트는 80포트이다.
+- `localAddress`: 에트워크 연결에 바인딩할 로컬 인터페이스.
 - `socketPath`: Unix 도메인 소켓 (host:port난 socketPath 중 하나를 사용한다)
 - `method`: HTTP 요청 메서드를 지정하는 문자열. 기본값은 `'GET'`이다.
 - `path`: 요청 경로. 기본값은 `'/'`이다. 필요하다면 쿼리스트링도 포함시킨다.
   예시. `'/index.html?page=12'`
 - `headers`: 요청 헤더를 담고 있는 객체.
 - `auth`: 기본 인증으롤 예를 들면 인증헤더를 계산하는 `'user:password'`이다.
-- `agent`: [Agent](#http.Agent) 동작을 제어한다. 에이전트를 사용했을 때 요청은 
+- `agent`: [Agent][] 동작을 제어한다. 에이전트를 사용했을 때 요청은 
   기본적으로 `Connection: keep-alive`가 될 것이다. 가능한 값은 다음과 같다.
- - `undefined` (default): 이 호스트와 포트에 대한 [global Agent](#http.globalAgent)
-   를 사용한다.
+ - `undefined` (default): 이 호스트와 포트에 대한 [global Agent][]를 사용한다.
  - `Agent` object: 명시적으로 `Agent`에 전달된 객체를 사용한다.
  - `false`: Agent와 함께 연결 풀을 사용하지 않는다. 기본값은 
    `Connection: close`에 요청한다.
@@ -453,13 +512,7 @@ Node maintains several connections per server to make HTTP requests.ㅏ
 
 예제:
 
-    var options = {
-      host: 'www.google.com',
-      port: 80,
-      path: '/index.html'
-    };
-
-    http.get(options, function(res) {
+    http.get("http://www.google.com/index.html", function(res) {
       console.log("Got response: " + res.statusCode);
     }).on('error', function(e) {
       console.log("Got error: " + e.message);
@@ -549,8 +602,8 @@ _처리중인_ 요청을 나타낸다. `setHeader(name, value)`, `getHeader(name
 Note: Node는 Content-Length와 전송된 바디의 길이가 같은지 같지 않은지 확인하지 
 않는다.
 
-요청은 [Writable  Stream](stream.html#writable_stream) 인터페이스를 구현했다.
-이는 다음 이벤트를 가진 `EventEmitter`이다.
+요청은 [Writable Stream][] 인터페이스를 구현했다.
+이는 다음 이벤트를 가진 [EventEmitter][]이다.
 
 ### Event 'response'
 
@@ -571,6 +624,68 @@ Note: Node는 Content-Length와 전송된 바디의 길이가 같은지 같지 �
 
 해당 요청에 소켓이 할당된 후에 발생한다.
 
+### Event: 'connect'
+
+`function (response, socket, head) { }`
+
+CONNECT 메서드의 요청에 서버가 응답할 때마다 발생한다. 이 이벤트에 등록된 리스너가 없으면
+CONNECT 메서드를 받는 클라이언트의 연결을 닫힐 것이다.
+
+클라이언트와 서버가 어떻게 `connect` 이벤트를 받는지 보여준다.
+
+    var http = require('http');
+    var net = require('net');
+    var url = require('url');
+
+    // HTTP 터널링 프록시를 생성한다
+    var proxy = http.createServer(function (req, res) {
+      res.writeHead(200, {'Content-Type': 'text/plain'});
+      res.end('okay');
+    });
+    proxy.on('connect', function(req, cltSocket, head) {
+      // 원래의 서버로 연결한다
+      var srvUrl = url.parse('http://' + req.url);
+      var srvSocket = net.connect(srvUrl.port, srvUrl.hostname, function() {
+        cltSocket.write('HTTP/1.1 200 Connection Established\r\n' +
+                        'Proxy-agent: Node-Proxy\r\n' +
+                        '\r\n');
+        srvSocket.write(head);
+        srvSocket.pipe(cltSocket);
+        cltSocket.pipe(srvSocket);
+      });
+    });
+
+    // 이제 프록시서버가 동작한다
+    proxy.listen(1337, '127.0.0.1', function() {
+
+      // 터널링 프록시에 요청을 만든다
+      var options = {
+        port: 1337,
+        host: '127.0.0.1',
+        method: 'CONNECT',
+        path: 'www.google.com:80'
+      };
+
+      var req = http.request(options);
+      req.end();
+
+      req.on('connect', function(res, socket, head) {
+        console.log('got connected!');
+
+        // HTTP 터널을 통해 요청을 만든다
+        socket.write('GET / HTTP/1.1\r\n' +
+                     'Host: www.google.com:80\r\n' +
+                     'Connection: close\r\n' +
+                     '\r\n');
+        socket.on('data', function(chunk) {
+          console.log(chunk.toString());
+        });
+        socket.on('end', function() {
+          proxy.close();
+        });
+      });
+    });
+
 ### Event: 'upgrade'
 
 `function (response, socket, head) { }`
@@ -578,31 +693,28 @@ Note: Node는 Content-Length와 전송된 바디의 길이가 같은지 같지 �
 업그레이드 요청에 서버가 응답할 때마다 발생한다. 이 이벤트가 바인딩되어 있지 않으면 
 업그레이드 헤더를 받는 클라이언트는 연결이 닫힐 것이다.
 
-`http.getAgent`를 사용해서 `upgrade` 이벤트를 어떻게 바인딩하는 지 보여주는 클라이언트와 서버 쌍의 예제다:
+`upgrade` 이벤트를 어떻게 바인딩하는 지 보여주는 클라이언트와 서버 쌍의 예제다:
 
     var http = require('http');
-    var net = require('net');
 
     // HTTP 서버 생성
     var srv = http.createServer(function (req, res) {
       res.writeHead(200, {'Content-Type': 'text/plain'});
       res.end('okay');
     });
-    srv.on('upgrade', function(req, socket, upgradeHead) {
+    srv.on('upgrade', function(req, socket, head) {
       socket.write('HTTP/1.1 101 Web Socket Protocol Handshake\r\n' +
                    'Upgrade: WebSocket\r\n' +
                    'Connection: Upgrade\r\n' +
-                   '\r\n\r\n');
+                   '\r\n');
 
-      socket.ondata = function(data, start, end) {
-        socket.write(data.toString('utf8', start, end), 'utf8'); // echo back
-      };
+      socket.pipe(socket); // echo back
     });
 
     // 이제 서버가 동작한다
     srv.listen(1337, '127.0.0.1', function() {
 
-      // 요청 생성
+      // 요청 생
       var options = {
         port: 1337,
         host: '127.0.0.1',
@@ -637,7 +749,7 @@ Note: Node는 Content-Length와 전송된 바디의 길이가 같은지 같지 �
 `['Transfer-Encoding', 'chunked']` 헤더를 
 사용하기를 제안한다.
 
-`chunk` 아규먼트는 [buffer](buffer.html)나 문자열이 되어야 한다.
+`chunk` 아규먼트는 [Buffer][]나 문자열이 되어야 한다.
 
 `encoding` 아규먼트는 선택사항이고 `chunk`가 문자열인 경우에만 적용된다. 
 기본값은 `'utf8'`이다.
@@ -658,28 +770,25 @@ Note: Node는 Content-Length와 전송된 바디의 길이가 같은지 같지 �
 ### request.setTimeout(timeout, [callback])
 
 해당 요청에 소켓이 바인딩되고 소켓이 연결되면 
-[socket.setTimeout(timeout, [callback])](net.html#socket.setTimeout)
-이 호출될 것이다.
+[socket.setTimeout()][]이 호출될 것이다.
 
 ### request.setNoDelay([noDelay])
 
 해당 요청에 소켓이 바인딩되고 소켓이 연결되면 
-[socket.setNoDelay(noDelay)](net.html#socket.setNoDelay)
-이 호출될 것이다.
+[socket.setNoDelay()][]이 호출될 것이다.
 
 ### request.setSocketKeepAlive([enable], [initialDelay])
 
 해당 요청에 소켓이 바인딩되고 소켓이 연결되면 
-[socket.setKeepAlive(enable, [initialDelay])](net.html#socket.setKeepAlive)
-이 호출될 것이다.
+[socket.setKeepAlive()][]이 호출될 것이다.
 
 ## http.ClientResponse
 
 `http.request()`로 요청했을 때 생성되는 객체다. 요청 객체의 `'response'` 이벤트에 
 전달된다.
 
-응답은 [Readable Stream](stream.html#readable_stream) 인터페이스를 구현한다. 
-이 객체는 다음 이벤트를 가지는 `EventEmitter`이다.
+응답은 [Readable Stream][] 인터페이스를 구현한다. 
+이 객체는 다음 이벤트를 가지는 [EventEmitter][]이다.
 
 
 ### Event: 'data'
@@ -705,8 +814,7 @@ __데이터를 잃을 수 있다__는 것을 명심해라.
 
 `end` 이벤트가 발생하기 전에 의존하는 연결이 종료되었다는 것을 나타낸다. 
 
-더 자세한 내용은 [http.ServerRequest](#http.ServerRequest)의 `'close'` 
-이벤트를 봐라.
+더 자세한 내용은 [http.ServerRequest][]의 `'close'` 이벤트를 봐라.
 
 ### response.statusCode
 
@@ -728,8 +836,7 @@ __데이터를 잃을 수 있다__는 것을 명심해라.
 
 ### response.setEncoding([encoding])
 
-응답 바디의 인코딩을 설정한다. `'utf8'`, `'ascii'`, `'base64'`가 될 수 있다.
-기본값은 `'data'` 이벤트라 `Buffer` 객체를 발생시킨다는 의미로 `null`이다.
+응답 바디의 인코딩을 설정한다. 더 자세한 내용은 [stream.setEncoding()][]를 봐라.
 
 ### response.pause()
 
@@ -738,3 +845,22 @@ __데이터를 잃을 수 있다__는 것을 명심해라.
 ### response.resume()
 
 멈춘 응답을 복구한다.
+
+[Agent]: #http_class_http_agent
+['checkContinue']: #http_event_checkcontinue
+[Buffer]: buffer.html#buffer_buffer
+[EventEmitter]: events.html#events_class_events_eventemitter
+[global Agent]: #http_http_globalagent
+[http.request()]: #http_http_request_options_callback
+[http.ServerRequest]: #http_class_http_serverrequest
+['listening']: net.html#net_event_listening
+[net.Server.close()]: net.html#net_server_close_cb
+[net.Server.listen(path)]: net.html#net_server_listen_path_listeninglistener
+[net.Server.listen(port)]: net.html#net_server_listen_port_host_backlog_listeninglistener
+[Readable Stream]: stream.html#stream_readable_stream
+[socket.setKeepAlive()]: net.html#net_socket_setkeepalive_enable_initialdelay
+[socket.setNoDelay()]: net.html#net_socket_setnodelay_nodelay
+[socket.setTimeout()]: net.html#net_socket_settimeout_timeout_callback
+[stream.setEncoding()]: stream.html#stream_stream_setencoding_encoding
+[url.parse()]: url.html#url_url_parse_urlstr_parsequerystring_slashesdenotehost
+[Writable Stream]: stream.html#stream_writable_stream
