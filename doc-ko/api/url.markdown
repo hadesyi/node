@@ -84,7 +84,7 @@ URL 문자열을 받아서 객체를 반환한다.
 * 존재하는 경우`auth`를 사용한다.
 * `host`가 없으면 `hostname`만 사용한다.
 * `host`가 없으면 `port`를 사용한다.
-* `host`를 `auth`, `hostname`, `port` 대신에 사용한다.
+* `host`를 `hostname`, `port` 대신에 사용한다.
 * `pathname`는 `/` (슬래시)로 시작되는 부분을 포함하거나 포함하지 않고 다룬다.
 * `search`를 `query` 대신에 사용한다.
 * `search`가 없으면 `query` (객체; `querystring`를 봐라)만 사용할 것이다.
