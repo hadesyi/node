@@ -6,6 +6,10 @@ OS 유틸리티 함수를 몇 개 제공한다.
 
 이 모듈은 `require('os')`로 접근한다.
 
+## os.tmpDir()
+
+OS의 임시 파일 디렉토리를 리턴한다.
+
 ## os.hostname()
 
 OS의 호스트 이름을 리턴한다.
@@ -128,4 +132,8 @@ os.cpus의 결과:
       vmnet1: [ { address: '10.99.99.254', family: 'IPv4', internal: false } ],
       vmnet8: [ { address: '10.88.88.1', family: 'IPv4', internal: false } ],
       ppp0: [ { address: '10.2.0.231', family: 'IPv4', internal: false } ] }
+
+## os.EOL
+
+Node를 실행하는 OS용 End-of-line 상수. 
 
