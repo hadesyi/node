@@ -38,7 +38,7 @@
 HTTP client나 server에서 이 모듈를 사용하려면 request에서 사용할 수 있는 [accept-encoding](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.3)을 보고 response에서는 [content-encoding](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.11)를 보면 된다.
 
 **Note: 이 예제는 기본 개념을 보여주기 위해 극도로 단순화한 것임.** Zlib 인코딩은 비싸서 결과물을 캐시하는게 좋다. 
-[Memory Usage Tuning](#memory_Usage_Tuning)을 보면 zlib 튜닝시 speed/memory/compression에 대해 고려해야 하는 점이 나와 있다.
+[Memory Usage Tuning](#zlib_memory_usage_tuning)을 보면 zlib 튜닝시 speed/memory/compression에 대해 고려해야 하는 점이 나와 있다.
 
     // 클라이언트 요청 예제
     var zlib = require('zlib');
@@ -92,39 +92,33 @@ HTTP client나 server에서 이 모듈를 사용하려면 request에서 사용�
       }
     }).listen(1337);
 
-## Constants
-
-<!--type=misc-->
-
-zlib.h에 정의된 컨스턴트는 모두 `require('zlib')에도 정의돼 있다. zlib 문서에 자세히 설명돼 있으니 <http://zlib.net/manual.html#Constants>를 보라.
-
 ## zlib.createGzip([options])
 
-[options](#options)으로 [Gzip](#zlib.Gzip) 객채를 새로 만들어 리턴한다.
+[options](#zlib_options)으로 [Gzip](#zlib_class_zlib_gzip) 객채를 새로 만들어 리턴한다.
 
 ## zlib.createGunzip([options])
 
-[options](#options)으로 [Gunzip](#zlib.Gunzip) 객채를 새로 만들어 리턴한다.
+[options](#zlib_options)으로 [Gunzip](#zlib_class_zlib_gunzip) 객채를 새로 만들어 리턴한다.
 
 ## zlib.createDeflate([options])
 
-[options](#options)으로 [Deflate](#zlib.Deflate) 객채를 새로 만들어 리턴한다.
+[options](#zlib_options)으로 [Deflate](#zlib_class_zlib_deflate) 객채를 새로 만들어 리턴한다.
 
 ## zlib.createInflate([options])
 
-[options](#options)으로 [Inflate](#zlib.Inflate) 객채를 새로 만들어 리턴한다.
+[options](#zlib_options)으로 [Inflate](#zlib_class_zlib_inflate) 객채를 새로 만들어 리턴한다.
 
 ## zlib.createDeflateRaw([options])
 
-[options](#options)으로 [DeflateRaw](#zlib.DeflateRaw) 객채를 새로 만들어 리턴한다.
+[options](#zlib_options)으로 [DeflateRaw](#zlib_class_zlib_deflateraw) 객채를 새로 만들어 리턴한다.
 
 ## zlib.createInflateRaw([options])
 
-[options](#options)으로 [InflateRaw](#zlib.InflateRaw) 객채를 새로 만들어 리턴한다.
+[options](#zlib_options)으로 [InflateRaw](#zlib_class_zlib_inflateraw) 객채를 새로 만들어 리턴한다.
 
 ## zlib.createUnzip([options])
 
-[options](#options)으로 [Unzip](#zlib.Unzip) 객채를 새로 만들어 리턴한다.
+[options](#zlib_options)으로 [Unzip](#zlib_class_zlib_unzip) 객채를 새로 만들어 리턴한다.
 
 ## Class: zlib.Gzip
 
@@ -158,7 +152,7 @@ Gzip-이나 Deflate-로 압축한 스트림의 헤더를 자동으로 찾아서 
 
 <!--type=misc-->
 
-여기에 있는 모든 메소드는 첫번째 인자로 버퍼나 스트링을 받는다. 그리고 콜백도 `callback(error, result)` 형식으로 호출한다. 압축/압축해제 엔진은 기본 설정으로 생성하고 다른 옵션으로 생성하고 싶으면 zlib 클래스를 직접사용해야 한다.
+여기에 있는 모든 메소드는 첫번째 아규먼트로 버퍼나 스트링을 받는다. 그리고 콜백도 `callback(error, result)` 형식으로 호출한다. 압축/압축해제 엔진은 기본 설정으로 생성하고 다른 옵션으로 생성하고 싶으면 zlib 클래스를 직접사용해야 한다.
 
 ## zlib.deflate(buf, callback)
 
@@ -192,15 +186,16 @@ Unzip으로 Buffer의 압축을 푼다.
 
 <!--type=misc-->
 
-모든 클래스는 옵션 객체를 인자로 받고 생략 가능하다(단축 메소드는 기본값을 사용한다).
+모든 클래스는 옵션 객체를 아규먼트로 받고 생략 가능하다(단축 메소드는 기본값을 사용한다).
 
-어떤 옵션은 압축 클래스에만 필요하고 압축을 푸는 클래스에서는 무시한다.
+어떤 옵션은 압축 클래스에만 사용하고 압축을 푸는 클래스에서는 무시한다.
 
 * chunkSize (default: 16*1024)
 * windowBits
 * level (compression only)
 * memLevel (compression only)
 * strategy (compression only)
+* dictionary (deflate/inflate only, 기본값은 빈 dictionary)
 
 `deflateInit2`와 `inflateInit2`의 설명은 <http://zlib.net/manual.html#Advanced> 페이지에서 보라.
 
@@ -233,3 +228,62 @@ inflate에 필요한 메모리(바이트단위):
 zlib 압축의 속도는 `level` 설정이 가장 큰 영향을 끼친다. 레벨을 높이면 압축률은 높아지지만 더 오래 걸린다. 레벨을 낮추면 압축률은 낮아지지만 더 빨라진다.
 
 보통 메모리를 크게 잡으면 `write` 오퍼레이션을 한번 할 때 데이터를 더 많이 처리하기 때문에 Node가 zlib을 더 적게 호출한다.  그래서 이 요소도 속도와 메모리 사용 효율에 영향을 준다.
+
+## Constants
+
+<!--type=misc-->
+
+zlib.h에 정의된 상수는 `require('zlib')`에도 정의돼 있다. 보통은 세세한 설정이 필요하지 않지만, 여기에서는 어떤 상수들이 있는지 설명한다. 이 절의 내용은 [zlib documentation](http://zlib.net/manual.html#Constants)에서 거의 그대로 베껴왔다. 자세한 내용은 <http://zlib.net/manual.html#Constants>를 보라.
+
+허용되는 flush 옵션.
+
+* `zlib.Z_NO_FLUSH`
+* `zlib.Z_PARTIAL_FLUSH`
+* `zlib.Z_SYNC_FLUSH`
+* `zlib.Z_FULL_FLUSH`
+* `zlib.Z_FINISH`
+* `zlib.Z_BLOCK`
+* `zlib.Z_TREES`
+
+압축/압축해제 함수가 리턴하는 코드. 에러일 경우 코드값이 음수 값이고 성공 시에는 양수 값이다.
+
+* `zlib.Z_OK`
+* `zlib.Z_STREAM_END`
+* `zlib.Z_NEED_DICT`
+* `zlib.Z_ERRNO`
+* `zlib.Z_STREAM_ERROR`
+* `zlib.Z_DATA_ERROR`
+* `zlib.Z_MEM_ERROR`
+* `zlib.Z_BUF_ERROR`
+* `zlib.Z_VERSION_ERROR`
+
+압축 레벨.
+
+* `zlib.Z_NO_COMPRESSION`
+* `zlib.Z_BEST_SPEED`
+* `zlib.Z_BEST_COMPRESSION`
+* `zlib.Z_DEFAULT_COMPRESSION`
+
+압축 전략.
+
+* `zlib.Z_FILTERED`
+* `zlib.Z_HUFFMAN_ONLY`
+* `zlib.Z_RLE`
+* `zlib.Z_FIXED`
+* `zlib.Z_DEFAULT_STRATEGY`
+
+data_type 필드에서 허용하는 값.
+
+* `zlib.Z_BINARY`
+* `zlib.Z_TEXT`
+* `zlib.Z_ASCII`
+* `zlib.Z_UNKNOWN`
+
+deflate 압축 방법(이 버전에서만 지원한다).
+
+* `zlib.Z_DEFLATED`
+
+zalloc, zfree, opaque를 초기화를 위해 사용한다.
+
+* `zlib.Z_NULL`
+
