@@ -13,7 +13,7 @@ operator는 두 값을 무엇으로 비교했는지 표시하는 것이다.
 
 ## assert(value, message), assert.ok(value, [message])
 
-value가 `true`인지 검사한다. 이는 `assert.equal(true, value, message);`와 같다.
+value가 참인지 검사한다. 이는 `assert.equal(true, !!value, message);`와 같다.
 
 ## assert.equal(actual, expected, [message])
 
