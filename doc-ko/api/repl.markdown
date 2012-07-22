@@ -19,28 +19,48 @@ REPL은 극도로 단순한 emacs 라인수정을 가진다.
     3
 
 향상된 라인에디터를 위해서는 환경변수 `NODE_NO_READLINE=1`로 node를 시작해라.
-이는 `rlwrap`를 사용할 수 있도록 인정된 터미널 설정에서 REPL을 시작한다.
+이는 `rlwrap`를 사용할 수 있도록 인정된 터미널 설정에서 메인 REPL과
+디버거 REPL을 시작한다.
 
 예를 들어 bashrc 파일에 다음을 추가할 수 있다.
 
     alias node="env NODE_NO_READLINE=1 rlwrap node"
 
 
-## repl.start([prompt], [stream], [eval], [useGlobal], [ignoreUndefined])
+## repl.start(options)
 
-모든 I/O에 대한 프롬프트와 `stream`처럼 `prompt`로 REPL을 시작해라. `prompt`는 
-선택사항이고 기본적으로 `> `이다. `stream`는 선택적이고 기본값은 `process.stdin`이다. 
-`eval`도 선택적이고 기본적으로 `eval()`에 대한 비동기 랩퍼다.
+`REPLServer` 인스턴스를 시작하고 반환한다. 다음 값의 "options" 객체를 받는다.
 
-`useGlobal`를 true로 설정하면 repl은 분리된 컨텍스트에서 스크립트를 실행하는 대신에 
-전역객체를 사용할 것이다. 기본값은 `false`이다.
+ - `prompt` - 모든 I/O에 대한 프롬프트와 `stream`. 기본값은 `> `이다.
 
-`ignoreUndefined`를 true로 설정하면 repl은 반환값이 `undefined`인 경우에 명령어의 
-반환값을 출력하지 않을 것이다. 기본값은 `false`이다.
+ - `input` - 리스닝할 읽을 수 있는 스트림. 기본값은 `process.stdin`이다.
 
-다은 시그니처를 가지고 있다면 자신만의 `eval` 함수를 사용할 수 있다.
+ - `output` - readline 데이터를 작성할 쓰기가능한 스트림. 기본값은 
+   `process.stdout`이다.
 
-    function eval(cmd, callback) {
+ - `terminal` - `stream`을 TTY처럼 다뤄야 하고 작성된 데이터가 ANSI/VT100로
+   이스케이프되어 있다면 `true`를 전달해라. 기본값은 인스턴스의 `output` 스트림에서
+   `isTTY`를 확인하는 것이다.
+
+ - `eval` - 각 주어진 라인을 평가(eval)하는데 사용할 함수. 기본값은 `eval()`에 대한
+   비동기 래퍼이다. 아래의 커스텀 `eval`의 예제를 참조해라.
+
+ - `useColors` - `writer` 함수가 색상을 출력해야 하는지 아닌지를 지정하는 불리언값.
+   다른 `writer` 함수를 설정하면 이 값은 아무것도 하지 않는다. 기본값은 repl의 
+   `terminal`값이다.
+
+ - `useGlobal` - `true`로 설정하면 repl이 분리된 컨텍스트에서 스크립트를 실행하는
+   대신에 `global` 객체를 사용한다. 기본값은 `false`이다.
+
+ - `ignoreUndefined` - `true`로 설정하면 repl은 명령의 결과값이 `undefined`인
+   경우 출력하지 않는다. 기본값은 `false`이다.
+
+ - `writer` - 화면에 표시하기 위해서 포매팅(컬러링 포함)된 값을 평가하려고
+   명령마다 호출할 함수이다. 기본값은 `util.inspect`이다.
+
+다음과 같은 시그니처를 가진 자신만의 `eval`함수를 사용할 수 있다.
+
+    function eval(cmd, context, filename, callback) {
       callback(null, result);
     }
 
@@ -54,16 +74,32 @@ stdin, Unix 소켓, TCP 소켓에서 REPL을 시작하는 예제는 다음과 �
 
     connections = 0;
 
-    repl.start("node via stdin> ");
+    repl.start({
+      prompt: "node via stdin> ",
+      input: process.stdin,
+      output: process.stdout
+    });
 
     net.createServer(function (socket) {
       connections += 1;
-      repl.start("node via Unix socket> ", socket);
+      repl.start({
+        prompt: "node via Unix socket> ",
+        input: socket,
+        output: socket
+      }).on('exit', function() {
+        socket.end();
+      })
     }).listen("/tmp/node-repl-sock");
 
     net.createServer(function (socket) {
       connections += 1;
-      repl.start("node via TCP socket> ", socket);
+      repl.start({
+        prompt: "node via TCP socket> ",
+        input: socket,
+        output: socket
+      }).on('exit', function() {
+        socket.end();
+      });
     }).listen(5001);
 
 명령행에서 이 프로그램을 실행하면 stdin에서 REPL을 시작할 것이다. 다른 REPL 클라이언트는 
@@ -72,6 +108,27 @@ Unix 소켓이나 TCP 소켓을 통해서 연결할 것이다. `telnet`은 TCP �
 
 stdin 대신 Unix 소켓에 기반한 서버에서 REPL을 시작하면 재시작 없이 오랫동안 
 실행되는 node 프로세스에 연결할 수 있다.
+
+`net.Server`와 `net.Socket` 인스턴스에서 실행되는 "완전한 기능의" (`terminal`) REPL의
+예제는 https://gist.github.com/2209310 를 참고해라.
+
+`curl(1)`을 실행하는 REPL 인스턴스의 예제는
+https://gist.github.com/2053342 를 참고해라.
+
+### Event: 'exit'
+
+`function () {}`
+
+사용자가 어떤 방법으로든 REPL을 종료했을 때 발생한다. 즉 repl에서 `.exit`를 입력하거나
+SIGINT 신호를 위해 Ctrl+C를 두번 입력하거나 `input` 스트림에서 "end" 신호를 위해
+Ctrl+D를 입력하는 등이다.
+
+`exit` 이벤트를 리스닝하는 예제:
+
+    r.on('exit', function () {
+      console.log('Got "exit" event from repl!');
+      process.exit();
+    });
 
 
 ## REPL Features
