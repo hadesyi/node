@@ -1,6 +1,6 @@
 # Executing JavaScript
 
-    Stability: 3 - Stable
+    Stability: 2 - Unstable. 아래의 주의사항(Caveats) 참고
 
 <!--name=vm-->
 
@@ -10,6 +10,35 @@
 
 자바스크립트 코드는 컴파일하고 바로 실행하거나 컴파일하고 저장한 후에 나중에 실행할 수 있다.
 
+## Caveats
+
+`vm` 모듈은 많은 이슈와 엣지 케이스(edge cases)가 있다. 어떤 이슈나
+기대하지 않은 결과를 만난다면
+[the open issues on GitHub](https://github.com/joyent/node/issues/search?q=vm)
+를 참고해라. 가장 큰 문제들은 아래에 설명했다.
+
+### Sandboxes
+
+`vm.runInNewContext`와 `vm.createContext`의 `sandbox` 아규먼트와
+`vm.createContext`의 `initSandbox` 아규먼트는 Node의 다양한 버전에서
+보통 한가지 동작으로 기대할 수 없고 다양하게 동작한다.
+
+알려진 핵심이슈는 컨텍스트내에서 사용한 전역객체를 직접 제어할 방법을 V8이 제공하지
+않는다는 것이다. 그 결과 `sandbox` 객체의 프로퍼티를 컨텍스트에서 이용할 수
+있더라도 `sandbox`의 `prototype`에서 어떤 프로퍼티도 이용할 수 없다. 게다가
+컨텍스트의 전역범위내에서 `this` 표현식은 sandbox 대신 빈 객체(`{}`)가 된다.
+
+실행할 때 컨텍스트로 복사되고 실행후에 변경사항을 전파하기 위해 다시 복사된다.
+
+### Globals
+
+`Array`와 `String`같은 전역객체의 프로퍼티들은 컨텍스트내에서 다른 값들을 가진다.
+이는 `vm` 모듈을 통해서 실행한 스트립트내에서는 `[] instanceof Array`나
+`Object.getPrototypeOf([]) === Array.prototype`같은 일반적인 표현식이
+기대한 결과가 되지 않는다는 의미이다. 
+
+이러한 문제들 중 일부는 Github의 `vm`에 대한 이슈에 우회방법이 리스트되어 있다.
+예를 들어 `Array.isArray`는 `Array` 문제로 우회할 수 있다.
 
 ## vm.runInThisContext(code, [filename])
 
