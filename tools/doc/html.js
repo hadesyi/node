@@ -37,9 +37,10 @@ function render(lexed, filename, template, cb) {
   // get the section
   var section = getSection(lexed);
 
+  var englishFilename = filename.replace(/doc-ko/g, 'doc');
   filename = path.basename(filename, '.markdown');
 
-  lexed = parseLists(lexed);
+  lexed = parseLists(lexed, englishFilename);
 
   // generate the table of contents.
   // this mutates the lexed contents in-place.
@@ -63,10 +64,11 @@ function render(lexed, filename, template, cb) {
 
 // just update the list item text in-place.
 // lists that come right after a heading are what we're after.
-function parseLists(input) {
+function parseLists(input, englishFilename) {
   var state = null;
   var depth = 0;
   var output = [];
+  var englishInput = toEnglishHTML(englishFilename);
   output.links = input.links;
   input.forEach(function(tok) {
     if (state === null) {
@@ -74,6 +76,36 @@ function parseLists(input) {
         state = 'AFTERHEADING';
       }
       output.push(tok);
+
+      if (tok.type === 'heading') {
+        var isParagraph = false;
+        var hasContents = false;
+        var asideStartTag = null;
+        englishInput.forEach(function(eTok) {
+          if (isParagraph && eTok.type === 'heading' && tok.text !== eTok.text) {
+            isParagraph = false;
+            if (hasContents) {
+              output.push({ type:'html', text: '</aside>' });
+            }
+          }
+          if (isParagraph) {
+            if (asideStartTag) {
+              output.push(asideStartTag);
+              asideStartTag = null;
+            }
+            output.push(eTok);
+            hasContents = true;
+          }
+          if (tok.text === eTok.text) {
+            isParagraph = true;
+            asideStartTag = { type:'html', text: '<aside>' };
+          }
+        });
+        if (isParagraph) {
+          output.push({ type:'html', text: '</aside>' });
+        }
+      }
+
       return;
     }
     if (state === 'AFTERHEADING') {
@@ -111,8 +143,15 @@ function parseLists(input) {
     }
     output.push(tok);
   });
+  
 
   return output;
+}
+
+
+function toEnglishHTML(filename) {
+  var input = fs.readFileSync(filename, 'utf8');
+  return marked.lexer(input);
 }
 
 
