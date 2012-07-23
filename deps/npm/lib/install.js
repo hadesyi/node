@@ -635,16 +635,8 @@ function installOne (target, where, context, cb) {
 }
 
 function localLink (target, where, context, cb) {
-<<<<<<< HEAD
-  log.verbose(target._id, "try to link")
-  var jsonFile = path.resolve( npm.globalDir, target.name
-||||||| merged common ancestors
-  log.verbose(target._id, "try to link")
-  var jsonFile = path.resolve( npm.dir, target.name
-=======
   log.verbose("localLink", target._id)
   var jsonFile = path.resolve( npm.globalDir, target.name
->>>>>>> v0.8.2
                              , "package.json" )
     , parent = context.parent
 

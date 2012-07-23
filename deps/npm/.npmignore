@@ -15,9 +15,6 @@ npm-debug.log
 # don't need these in the npm package.
 html/*.png
 
-# don't need these in the npm package.
-html/*.png
-
 # don't ignore .npmignore files
 # these are used in some tests.
 !.npmignore

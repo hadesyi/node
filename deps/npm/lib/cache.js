@@ -363,39 +363,7 @@ function addRemoteGit (u, parsed, name, cb_) {
     })
   }
 
-<<<<<<< HEAD
-  // figure out what we should check out.
-  var co = parsed.hash && parsed.hash.substr(1) || "master"
-  // git is so tricky!
-  // if the path is like ssh://foo:22/some/path then it works, but
-  // it needs the ssh://
-  // If the path is like ssh://foo:some/path then it works, but
-  // only if you remove the ssh://
-  u = u.replace(/^git\+/, "")
-       .replace(/#.*$/, "")
-
-  // ssh paths that are scp-style urls don't need the ssh://
-  if (parsed.pathname.match(/^\/?:/)) {
-    u = u.replace(/^ssh:\/\//, "")
-  }
-
-  log.verbose([u, co], "addRemoteGit")
-
-  var tmp = path.join(npm.tmp, Date.now()+"-"+Math.random())
-  mkdir(path.dirname(tmp), function (er) {
-||||||| merged common ancestors
-  // figure out what we should check out.
-  var co = parsed.hash && parsed.hash.substr(1) || "master"
-  u = u.replace(/^git\+/, "")
-       .replace(/#.*$/, "")
-       .replace(/^ssh:\/\//, "") // ssh is the default anyway
-  log.verbose([u, co], "addRemoteGit")
-
-  var tmp = path.join(npm.tmp, Date.now()+"-"+Math.random())
-  mkdir(path.dirname(tmp), function (er) {
-=======
   lock(u, function (er) {
->>>>>>> v0.8.2
     if (er) return cb(er)
 
     // figure out what we should check out.

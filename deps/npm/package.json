@@ -11,12 +11,6 @@
     "install",
     "package.json"
   ],
-<<<<<<< HEAD
-  "version": "1.1.24",
-||||||| merged common ancestors
-  "version": "1.1.21",
-=======
->>>>>>> v0.8.2
   "preferGlobal": true,
   "config": {
     "publishtest": false
@@ -58,19 +52,9 @@
     "inherits": "1",
     "mkdirp": "~0.3.3",
     "read": "0",
-<<<<<<< HEAD
-    "lru-cache": "1",
-    "node-gyp": "~0.4.5",
-    "fstream-npm": "0.1",
-||||||| merged common ancestors
-    "lru-cache": "1",
-    "node-gyp": "~0.4.1",
-    "fstream-npm": "0 >=0.0.5",
-=======
     "lru-cache": "~1.1.0",
     "node-gyp": "~0.5",
     "fstream-npm": "0.1",
->>>>>>> v0.8.2
     "uid-number": "0",
     "archy": "0",
     "chownr": "0",

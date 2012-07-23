@@ -37,20 +37,10 @@ function publish (args, isRetry, cb) {
     // the prepublish script, since that gets run when adding a folder
     // to the cache.
     if (er) return cacheAddPublish(arg, false, isRetry, cb)
-<<<<<<< HEAD
-
-    cacheAddPublish(arg, true, isRetry, cb)
-||||||| merged common ancestors
-    lifecycle(data, "prepublish", arg, function (er) {
-      if (er) return cb(er)
-      cacheAddPublish(arg, true, isRetry, cb)
-    })
-=======
 
     data._npmUser = { name: npm.config.get("username")
                     , email: npm.config.get("email") }
     cacheAddPublish(arg, true, isRetry, cb)
->>>>>>> v0.8.2
   })
 }
 

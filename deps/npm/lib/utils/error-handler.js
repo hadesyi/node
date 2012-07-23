@@ -42,48 +42,8 @@ process.on("exit", function (code) {
   } else {
     itWorked = false // ready for next exit
   }
-<<<<<<< HEAD
-
-  var doExit = npm.config.get("_exit")
-  if (doExit) {
-    // actually exit.
-    if (exitCode === 0 && !itWorked) {
-      exitCode = 1
-    }
-    if (exitCode !== 0) process.exit(exitCode)
-  } else {
-    itWorked = false // ready for next exit
-  }
-||||||| merged common ancestors
-  itWorked = false // ready for next exit
-=======
->>>>>>> v0.8.2
 })
 
-<<<<<<< HEAD
-function exit (code, noLog) {
-  exitCode = exitCode || code
-
-  var doExit = npm.config.get("_exit")
-  log.verbose([code, doExit], "exit")
-  if (log.level === log.LEVEL.silent) noLog = true
-
-  if (code && !noLog) writeLogFile(reallyExit)
-  else rm("npm-debug.log", function () { rm(npm.tmp, reallyExit) })
-
-  function reallyExit() {
-    itWorked = !code
-
-    // just emit a fake exit event.
-    // if we're really exiting, then let it exit on its own, so that
-    // in-process stuff can finish or clean up first.
-    if (!doExit) process.emit("exit", code)
-  }
-}
-
-
-||||||| merged common ancestors
-=======
 function exit (code, noLog) {
   exitCode = exitCode || code
 
@@ -108,7 +68,6 @@ function exit (code, noLog) {
 }
 
 
->>>>>>> v0.8.2
 function errorHandler (er) {
   // console.error("errorHandler", er)
   if (!ini.resolved) {

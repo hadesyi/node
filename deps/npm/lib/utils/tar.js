@@ -28,64 +28,6 @@ exports.pack = pack
 exports.unpack = unpack
 
 function pack (targetTarball, folder, pkg, dfc, cb) {
-<<<<<<< HEAD
-  log.verbose([targetTarball, folder], "tar.pack")
-  if (typeof cb !== "function") cb = dfc, dfc = false
-
-  log.verbose(targetTarball, "tarball")
-  log.verbose(folder, "folder")
-
-  if (dfc) {
-    // do fancy crap
-    return lifecycle(pkg, 'prepublish', folder, function (er) {
-      if (er) return cb(er)
-      pack_(targetTarball, folder, pkg, cb)
-    })
-  } else {
-    pack_(targetTarball, folder, pkg, cb)
-  }
-}
-
-function pack_ (targetTarball, folder, pkg, cb) {
-  new Packer({ path: folder, type: "Directory", isDirectory: true })
-    .on("error", log.er(cb, "error reading "+folder))
-
-    // By default, npm includes some proprietary attributes in the
-    // package tarball.  This is sane, and allowed by the spec.
-    // However, npm *itself* excludes these from its own package,
-    // so that it can be more easily bootstrapped using old and
-    // non-compliant tar implementations.
-    .pipe(tar.Pack({ noProprietary: !npm.config.get("proprietary-attribs") }))
-    .on("error", log.er(cb, "tar creation error "+targetTarball))
-    .pipe(zlib.Gzip())
-    .on("error", log.er(cb, "gzip error "+targetTarball))
-    .pipe(fstream.Writer({ type: "File", path: targetTarball }))
-    .on("error", log.er(cb, "Could not write "+targetTarball))
-    .on("close", function () {
-      cb()
-||||||| merged common ancestors
-  log.verbose([targetTarball, folder], "tar.pack")
-  if (typeof cb !== "function") cb = dfc, dfc = true
-
-  log.verbose(targetTarball, "tarball")
-  log.verbose(folder, "folder")
-  new Packer({ path: folder, type: "Directory", isDirectory: true })
-    .on("error", log.er(cb, "error reading "+folder))
-
-    // By default, npm includes some proprietary attributes in the
-    // package tarball.  This is sane, and allowed by the spec.
-    // However, npm *itself* excludes these from its own package,
-    // so that it can be more easily bootstrapped using old and
-    // non-compliant tar implementations.
-    .pipe(tar.Pack({ noProprietary: !npm.config.get("proprietary-attribs") }))
-    .on("error", log.er(cb, "tar creation error "+targetTarball))
-    .pipe(zlib.Gzip())
-    .on("error", log.er(cb, "gzip error "+targetTarball))
-    .pipe(fstream.Writer({ type: "File", path: targetTarball }))
-    .on("error", log.er(cb, "Could not write "+targetTarball))
-    .on("close", function () {
-      cb()
-=======
   log.verbose("tar pack", [targetTarball, folder])
   if (typeof cb !== "function") cb = dfc, dfc = false
 
@@ -97,7 +39,6 @@ function pack_ (targetTarball, folder, pkg, cb) {
     return lifecycle(pkg, 'prepublish', folder, function (er) {
       if (er) return cb(er)
       pack_(targetTarball, folder, pkg, cb)
->>>>>>> v0.8.2
     })
   } else {
     pack_(targetTarball, folder, pkg, cb)

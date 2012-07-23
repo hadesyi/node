@@ -173,19 +173,6 @@ function mutate (pkg, user, mutation, cb) {
              , _rev : data._rev
              , maintainers : m
              }
-<<<<<<< HEAD
-      put("/"+pkg+"/-rev/"+data._rev, data, function (er, data) {
-        if (er) return log.er(cb, "Failed to update package metadata")(er)
-        if (data.error) return cb(new Error(
-          "Failed to update package metadata: "+JSON.stringify(data)))
-        cb(null, data)
-||||||| merged common ancestors
-      put("/"+pkg+"/-rev/"+data._rev, data, function (er, data) {
-        if (er) return log.er(cb, "Failed to update package metadata")(er)
-        if (data.error) return cb(new Error(
-          "Failed to update pacakge metadata: "+JSON.stringify(data)))
-        cb(null, data)
-=======
       registry.request("PUT"
           , pkg+"/-rev/"+data._rev, data
           , function (er, data) {
@@ -195,7 +182,6 @@ function mutate (pkg, user, mutation, cb) {
           log.error("owner mutate", "Failed to update package metadata")
         }
         cb(er, data)
->>>>>>> v0.8.2
       })
     })
   }

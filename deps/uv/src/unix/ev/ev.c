@@ -2558,6 +2558,7 @@ void
 ev_unref (EV_P)
 {
   --activecnt;
+  if (activecnt < 0) abort();
 }
 
 void
