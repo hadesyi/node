@@ -84,10 +84,12 @@ V8에는 확장 가능한 디버거가 들어 있다. 이 디버거는 간단한
 * `next`, `n` - Step next
 * `step`, `s` - Step in
 * `out`, `o` - Step out
+* `pause` - 실행을 멈춘다(크롬 개발자 도구에서의 pause 버튼처럼)
 
 ### Breakpoints
 
 * `setBreakpoint()`, `sb()` - 현 라인에 breakpoint를 설정한다.
+* `setBreakpoint(line)`, `sb(line)` - 특정 라인에 breakpoint를 설정한다.
 * `setBreakpoint('fn()')`, `sb(...)` - 함수 바디의 첫 라인에 breakpoint를 설정한다.
 * `setBreakpoint('script.js', 1)`, `sb(...)` - script.js의 첫 라인에 breakpoint를 설정한다.
 * `clearBreakpoint`, `cb(...)` - breakpoint를 제거
