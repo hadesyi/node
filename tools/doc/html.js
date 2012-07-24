@@ -96,7 +96,7 @@ function parseLists(input, englishFilename) {
             output.push(eTok);
             hasContents = true;
           }
-          if (tok.text === eTok.text) {
+          if (tok.text === eTok.text && tok.depth === eTok.depth) {
             isParagraph = true;
             asideStartTag = { type:'html', text: '<aside>' };
           }
@@ -140,7 +140,7 @@ function parseLists(input, englishFilename) {
             output.push(eTok);
             hasContents = true;
           }
-          if (tok.text === eTok.text) {
+          if (tok.text === eTok.text && tok.depth === eTok.depth) {
             isParagraph = true;
             asideStartTag = { type:'html', text: '<aside>' };
           }
