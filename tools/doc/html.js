@@ -120,6 +120,36 @@ function parseLists(input, englishFilename) {
       }
       state = null;
       output.push(tok);
+
+      if (tok.type === 'heading') {
+        var isParagraph = false;
+        var hasContents = false;
+        var asideStartTag = null;
+        englishInput.forEach(function(eTok) {
+          if (isParagraph && eTok.type === 'heading' && tok.text !== eTok.text) {
+            isParagraph = false;
+            if (hasContents) {
+              output.push({ type:'html', text: '</aside>' });
+            }
+          }
+          if (isParagraph) {
+            if (asideStartTag) {
+              output.push(asideStartTag);
+              asideStartTag = null;
+            }
+            output.push(eTok);
+            hasContents = true;
+          }
+          if (tok.text === eTok.text) {
+            isParagraph = true;
+            asideStartTag = { type:'html', text: '<aside>' };
+          }
+        });
+        if (isParagraph) {
+          output.push({ type:'html', text: '</aside>' });
+        }
+      }
+
       return;
     }
     if (state === 'LIST') {
