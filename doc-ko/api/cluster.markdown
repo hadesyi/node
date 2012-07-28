@@ -56,6 +56,17 @@ Windows에서는 네임드 파이프 서버를 만들 수 없으므로 주의해
 
 워커는 서로 독립적인 프로세스이므로 프로그램의 필요에 따라 죽이거나(kill) 재생성(re-spawn)할 수 있다. 워커가 살아 있는 한 새 연결을 계속 수락한다. Node는 워커를 관리해주지 않는다. 애플리케이션에 필요한대로 워커 풀을 관리하는 것은 개발자 책임이다.
 
+## cluster.settings
+
+* {Object}
+* `exec` {String} 워커 파일의 경로.  (Default=`__filename`)
+  * `args` {Array} 워커에 넘겨지는 스트링 아규먼트.
+    (Default=`process.argv.slice(2)`)
+  * `silent` {Boolean} 워커의 output을 부모의 stdio로 보낼지 말지.
+    (Default=`false`)
+
+`.setupMaster()` 메소드로 설정하면 이 settings 객체에 저장된다. 이 객체를 직접 수정하지 말아야 한다.
+
 ## cluster.isMaster
 
 * {Boolean}

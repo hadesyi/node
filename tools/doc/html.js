@@ -81,11 +81,12 @@ function parseLists(input, englishFilename) {
         var isParagraph = false;
         var hasContents = false;
         var asideStartTag = null;
-        englishInput.forEach(function(eTok) {
+        englishInput.every(function(eTok) {
           if (isParagraph && eTok.type === 'heading' && tok.text !== eTok.text) {
             isParagraph = false;
             if (hasContents) {
               output.push({ type:'html', text: '</aside>' });
+              return false;
             }
           }
           if (isParagraph) {
@@ -100,6 +101,7 @@ function parseLists(input, englishFilename) {
             isParagraph = true;
             asideStartTag = { type:'html', text: '<aside>' };
           }
+          return true;
         });
         if (isParagraph) {
           output.push({ type:'html', text: '</aside>' });
@@ -125,11 +127,12 @@ function parseLists(input, englishFilename) {
         var isParagraph = false;
         var hasContents = false;
         var asideStartTag = null;
-        englishInput.forEach(function(eTok) {
+        englishInput.every(function(eTok) {
           if (isParagraph && eTok.type === 'heading' && tok.text !== eTok.text) {
             isParagraph = false;
             if (hasContents) {
               output.push({ type:'html', text: '</aside>' });
+              return false;
             }
           }
           if (isParagraph) {
@@ -144,6 +147,7 @@ function parseLists(input, englishFilename) {
             isParagraph = true;
             asideStartTag = { type:'html', text: '<aside>' };
           }
+          return true;
         });
         if (isParagraph) {
           output.push({ type:'html', text: '</aside>' });
