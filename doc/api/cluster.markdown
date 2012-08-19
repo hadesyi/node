@@ -20,7 +20,7 @@ all share server ports.
       }
 
       cluster.on('exit', function(worker, code, signal) {
-        console.log('worker ' + worker.pid + ' died');
+        console.log('worker ' + worker.process.pid + ' died');
       });
     } else {
       // Workers can share any TCP connection
@@ -201,7 +201,7 @@ This can be used to restart the worker by calling `fork()` again.
 
     cluster.on('exit', function(worker, code, signal) {
       var exitCode = worker.process.exitCode;
-      console.log('worker ' + worker.pid + ' died ('+exitCode+'). restarting...');
+      console.log('worker ' + worker.process.pid + ' died ('+exitCode+'). restarting...');
       cluster.fork();
     });
 
@@ -242,18 +242,6 @@ Example:
 
 Spawn a new worker process. This can only be called from the master process.
 
-## cluster.settings
-
-* {Object}
-  * `exec` {String} file path to worker file.  Default: `__filename`
-  * `args` {Array} string arguments passed to worker.
-    (Default=`process.argv.slice(2)`)
-  * `silent` {Boolean} whether or not to send output to parent's stdio.
-    (Default=`false`)
-
-All settings set by the `.setupMaster` is stored in this settings object.
-This object is not supposed to be change or set manually.
-
 ## cluster.disconnect([callback])
 
 * `callback` {Function} called when all workers are disconnected and handlers are closed
@@ -268,8 +256,8 @@ The method takes an optional callback argument which will be called when finishe
 
 * {Object}
 
-In the cluster all living worker objects are stored in this object by there
-`id` as the key. This makes it easy to loop through all living workers.
+A hash that stores the active worker objects, keyed by `id` field. Makes it
+easy to loop through all the workers.
 
     // Go through all workers
     function eachWorker(callback) {

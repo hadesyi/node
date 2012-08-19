@@ -200,12 +200,12 @@
             '_UNICODE=1',
           ],
           'libraries': [ '-lpsapi.lib' ]
-        },{ # POSIX
+        }, { # POSIX
           'defines': [ '__POSIX__' ],
           'sources': [
             'src/node_signal_watcher.cc',
             'src/node_io_watcher.cc',
-          ]
+          ],
         }],
         [ 'OS=="mac"', {
           'libraries': [ '-framework Carbon' ],
@@ -226,6 +226,7 @@
         [ 'OS=="solaris"', {
           'libraries': [
             '-lkstat',
+            '-lumem',
           ],
         }],
       ],

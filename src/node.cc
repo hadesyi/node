@@ -1184,7 +1184,25 @@ ssize_t DecodeWrite(char *buf,
     return -1;
   }
 
-  Local<String> str = val->ToString();
+  bool is_buffer = Buffer::HasInstance(val);
+
+  if (is_buffer && encoding == BINARY) { // fast path, copy buffer data
+    const char* data = Buffer::Data(val.As<Object>());
+    size_t size = Buffer::Length(val.As<Object>());
+    size_t len = size < buflen ? size : buflen;
+    memcpy(buf, data, len);
+    return len;
+  }
+
+  Local<String> str;
+
+  if (is_buffer) { // slow path, convert to binary string
+    Local<Value> arg = String::New("binary");
+    str = MakeCallback(val.As<Object>(), "toString", 1, &arg)->ToString();
+  }
+  else {
+    str = val->ToString();
+  }
 
   if (encoding == UTF8) {
     str->WriteUtf8(buf, buflen, NULL, String::HINT_MANY_WRITES_EXPECTED);
@@ -1214,8 +1232,15 @@ ssize_t DecodeWrite(char *buf,
   return buflen;
 }
 
-
 void DisplayExceptionLine (TryCatch &try_catch) {
+  // Prevent re-entry into this function.  For example, if there is
+  // a throw from a program in vm.runInThisContext(code, filename, true),
+  // then we want to show the original failure, not the secondary one.
+  static bool displayed_error = false;
+
+  if (displayed_error) return;
+  displayed_error = true;
+
   HandleScope scope;
 
   Handle<Message> message = try_catch.Message();
@@ -1234,33 +1259,37 @@ void DisplayExceptionLine (TryCatch &try_catch) {
     String::Utf8Value sourceline(message->GetSourceLine());
     const char* sourceline_string = *sourceline;
 
-    // HACK HACK HACK
-    //
-    // FIXME
-    //
-    // Because of how CommonJS modules work, all scripts are wrapped with a
-    // "function (function (exports, __filename, ...) {"
+    // Because of how node modules work, all scripts are wrapped with a
+    // "function (module, exports, __filename, ...) {"
     // to provide script local variables.
     //
     // When reporting errors on the first line of a script, this wrapper
-    // function is leaked to the user. This HACK is to remove it. The length
-    // of the wrapper is 62. That wrapper is defined in src/node.js
+    // function is leaked to the user. There used to be a hack here to
+    // truncate off the first 62 characters, but it caused numerous other
+    // problems when vm.runIn*Context() methods were used for non-module
+    // code.
     //
-    // If that wrapper is ever changed, then this number also has to be
-    // updated. Or - someone could clean this up so that the two peices
-    // don't need to be changed.
+    // If we ever decide to re-instate such a hack, the following steps
+    // must be taken:
     //
-    // Even better would be to get support into V8 for wrappers that
-    // shouldn't be reported to users.
-    int offset = linenum == 1 ? 62 : 0;
+    // 1. Pass a flag around to say "this code was wrapped"
+    // 2. Update the stack frame output so that it is also correct.
+    //
+    // It would probably be simpler to add a line rather than add some
+    // number of characters to the first line, since V8 truncates the
+    // sourceline to 78 characters, and we end up not providing very much
+    // useful debugging info to the user if we remove 62 characters.
 
-    fprintf(stderr, "%s\n", sourceline_string + offset);
-    // Print wavy underline (GetUnderline is deprecated).
     int start = message->GetStartColumn();
-    for (int i = offset; i < start; i++) {
+    int end = message->GetEndColumn();
+
+    // fprintf(stderr, "---\nsourceline:%s\noffset:%d\nstart:%d\nend:%d\n---\n", sourceline_string, start, end);
+
+    fprintf(stderr, "%s\n", sourceline_string);
+    // Print wavy underline (GetUnderline is deprecated).
+    for (int i = 0; i < start; i++) {
       fputc((sourceline_string[i] == '\t') ? '\t' : ' ', stderr);
     }
-    int end = message->GetEndColumn();
     for (int i = start; i < end; i++) {
       fputc('^', stderr);
     }
@@ -1690,6 +1719,11 @@ Handle<Value> Hrtime(const v8::Arguments& args) {
 
   if (args.Length() > 0) {
     // return a time diff tuple
+    if (!args[0]->IsArray()) {
+      Local<Value> exception = Exception::TypeError(
+          String::New("process.hrtime() only accepts an Array tuple."));
+      return ThrowException(exception);
+    }
     Local<Array> inArray = Local<Array>::Cast(args[0]);
     uint64_t seconds = inArray->Get(0)->Uint32Value();
     uint64_t nanos = inArray->Get(1)->Uint32Value();
@@ -2466,10 +2500,34 @@ static void ParseArgs(int argc, char **argv) {
 static Isolate* node_isolate = NULL;
 static volatile bool debugger_running = false;
 
+
+static uv_async_t dispatch_debug_messages_async;
+
+
+// Called from the main thread.
+static void DispatchDebugMessagesAsyncCallback(uv_async_t* handle, int status) {
+  v8::Debug::ProcessDebugMessages();
+}
+
+
+// Called from V8 Debug Agent TCP thread.
+static void DispatchMessagesDebugAgentCallback() {
+  uv_async_send(&dispatch_debug_messages_async);
+}
+
+
 static void EnableDebug(bool wait_connect) {
   // If we're called from another thread, make sure to enter the right
   // v8 isolate.
   node_isolate->Enter();
+
+  v8::Debug::SetDebugMessageDispatchHandler(DispatchMessagesDebugAgentCallback,
+                                            false);
+
+  uv_async_init(uv_default_loop(),
+                &dispatch_debug_messages_async,
+                DispatchDebugMessagesAsyncCallback);
+  uv_unref((uv_handle_t*) &dispatch_debug_messages_async);
 
   // Start the debug thread and it's associated TCP server on port 5858.
   bool r = v8::Debug::EnableAgent("node " NODE_VERSION,

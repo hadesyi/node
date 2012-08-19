@@ -1,6 +1,5 @@
 {
   'variables': {
-    'node_no_strict_aliasing%': 0,   # turn off -fstrict-aliasing
     'visibility%': 'hidden',         # V8's visibility setting
     'target_arch%': 'ia32',          # set v8's target architecture
     'host_arch%': 'ia32',            # set v8's host architecture
@@ -8,6 +7,12 @@
     'library%': 'static_library',    # allow override to 'shared_library' for DLL/.so builds
     'component%': 'static_library',  # NB. these names match with what V8 expects
     'msvs_multi_core_compile': '0',  # we do enable multicore compiles, but not using the V8 way
+    'gcc_version%': 'unknown',
+    'clang%': 0,
+
+    # Turn on optimizations that may trigger compiler bugs.
+    # Use at your own risk. Do *NOT* report bugs if this option is enabled.
+    'node_unsafe_optimizations%': 0,
 
     # Enable V8's post-mortem debugging only on unix flavors.
     'conditions': [
@@ -42,18 +47,34 @@
         },
       },
       'Release': {
-        'cflags': [ '-O3', '-fdata-sections', '-ffunction-sections' ],
         'conditions': [
           ['target_arch=="x64"', {
             'msvs_configuration_platform': 'x64',
+          }],
+          ['node_unsafe_optimizations==1', {
+            'cflags': [ '-O3', '-ffunction-sections', '-fdata-sections' ],
+            'ldflags': [ '-Wl,--gc-sections' ],
+          }, {
+            'cflags': [ '-O2', '-fno-strict-aliasing' ],
+            'cflags!': [ '-O3', '-fstrict-aliasing' ],
+            'conditions': [
+              # Required by the dtrace post-processor. Unfortunately,
+              # some gcc/binutils combos generate bad code when
+              # -ffunction-sections is enabled. Let's hope for the best.
+              ['OS=="solaris"', {
+                'cflags': [ '-ffunction-sections', '-fdata-sections' ],
+              }, {
+                'cflags!': [ '-ffunction-sections', '-fdata-sections' ],
+              }],
+              ['clang==1 or gcc_version >= 40', {
+                'cflags': [ '-fno-tree-vrp' ],
+              }],
+            ],
           }],
           ['OS=="solaris"', {
             'cflags': [ '-fno-omit-frame-pointer' ],
             # pull in V8's postmortem metadata
             'ldflags': [ '-Wl,-z,allextract' ]
-          }],
-          ['node_no_strict_aliasing==1', {
-            'cflags': [ '-fno-strict-aliasing' ],
           }],
         ],
         'msvs_settings': {
@@ -139,7 +160,7 @@
       [ 'OS=="linux" or OS=="freebsd" or OS=="openbsd" or OS=="solaris"', {
         'cflags': [ '-Wall', '-pthread', ],
         'cflags_cc': [ '-fno-rtti', '-fno-exceptions' ],
-        'ldflags': [ '-pthread', ],
+        'ldflags': [ '-pthread', '-rdynamic' ],
         'conditions': [
           [ 'target_arch=="ia32"', {
             'cflags': [ '-m32' ],
@@ -148,9 +169,6 @@
           [ 'target_arch=="x64"', {
             'cflags': [ '-m64' ],
             'ldflags': [ '-m64' ],
-          }],
-          [ 'OS=="linux"', {
-            'ldflags': [ '-rdynamic' ],
           }],
           [ 'OS=="solaris"', {
             'cflags': [ '-pthreads' ],

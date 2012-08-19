@@ -164,6 +164,12 @@ parser.add_option("--no-ifaddrs",
     dest="no_ifaddrs",
     help="Use on deprecated SunOS systems that do not support ifaddrs.h")
 
+parser.add_option("--with-arm-float-abi",
+    action="store",
+    dest="arm_float_abi",
+    help="Specifies which floating-point ABI to use. Valid values are: "
+         "soft, softfp, hard")
+
 (options, args) = parser.parse_args()
 
 
@@ -189,8 +195,8 @@ def pkg_config(pkg):
   return (libs, cflags)
 
 
-def host_arch_cc():
-  """Host architecture check using the CC command."""
+def cc_macros():
+  """Checks predefined macros using the CC command."""
 
   try:
     p = subprocess.Popen(CC.split() + ['-dM', '-E', '-'],
@@ -219,6 +225,52 @@ def host_arch_cc():
       key = lst[1]
       val = lst[2]
       k[key] = val
+  return k
+
+
+def is_arch_armv7():
+  """Check for ARMv7 instructions"""
+  cc_macros_cache = cc_macros()
+  return ('__ARM_ARCH_7__' in cc_macros_cache or
+          '__ARM_ARCH_7A__' in cc_macros_cache or
+          '__ARM_ARCH_7R__' in cc_macros_cache or
+          '__ARM_ARCH_7M__' in cc_macros_cache)
+
+
+def arm_hard_float_abi():
+  """Check for hardfloat or softfloat eabi on ARM"""
+  # GCC versions 4.6 and above define __ARM_PCS or __ARM_PCS_VFP to specify
+  # the Floating Point ABI used (PCS stands for Procedure Call Standard).
+  # We use these as well as a couple of other defines to statically determine
+  # what FP ABI used.
+  # GCC versions 4.4 and below don't support hard-fp.
+  # GCC versions 4.5 may support hard-fp without defining __ARM_PCS or
+  # __ARM_PCS_VFP.
+
+  if compiler_version() >= (4, 6, 0):
+    return '__ARM_PCS_VFP' in cc_macros()
+  elif compiler_version() < (4, 5, 0):
+    return False
+  elif '__ARM_PCS_VFP' in cc_macros():
+    return True
+  elif ('__ARM_PCS' in cc_macros() or
+        '__SOFTFP' in cc_macros() or
+        not '__VFP_FP__' in cc_macros()):
+    return False
+  else:
+    print '''Node.js configure error: Your version of GCC does not report
+      the Floating-Point ABI to compile for your hardware
+
+      Please manually specify which floating-point ABI to use with the
+      --with-arm-float-abi option.
+      '''
+    sys.exit()
+
+
+def host_arch_cc():
+  """Host architecture check using the CC command."""
+
+  k = cc_macros()
 
   matchup = {
     '__x86_64__'  : 'x64',
@@ -250,19 +302,6 @@ def host_arch_win():
   return matchup.get(arch, 'ia32')
 
 
-def host_arch():
-  """Host architecture. One of arm, ia32 or x64."""
-  if os.name == 'nt':
-    arch = host_arch_win()
-  else:
-    arch = host_arch_cc()
-  return arch
-
-
-def target_arch():
-  return host_arch()
-
-
 def compiler_version():
   try:
     proc = subprocess.Popen(CC.split() + ['--version'], stdout=subprocess.PIPE)
@@ -279,21 +318,32 @@ def compiler_version():
 
 def configure_node(o):
   # TODO add gdb
+  o['variables']['v8_no_strict_aliasing'] = 1 # work around compiler bugs
   o['variables']['node_prefix'] = os.path.expanduser(options.prefix or '')
   o['variables']['node_install_npm'] = b(not options.without_npm)
   o['variables']['node_install_waf'] = b(not options.without_waf)
-  o['variables']['host_arch'] = host_arch()
-  o['variables']['target_arch'] = options.dest_cpu or target_arch()
   o['default_configuration'] = 'Debug' if options.debug else 'Release'
 
-  cc_version, is_clang = compiler_version()
+  host_arch = host_arch_win() if os.name == 'nt' else host_arch_cc()
+  target_arch = options.dest_cpu or host_arch
+  o['variables']['host_arch'] = host_arch
+  o['variables']['target_arch'] = target_arch
 
-  # turn off strict aliasing if gcc < 4.6.0 unless it's llvm-gcc
-  # see http://gcc.gnu.org/bugzilla/show_bug.cgi?id=45883
-  # see http://code.google.com/p/v8/issues/detail?id=884
-  no_strict_aliasing = int(not(is_clang or cc_version >= (4,6,0)))
-  o['variables']['v8_no_strict_aliasing'] = no_strict_aliasing
-  o['variables']['node_no_strict_aliasing'] = no_strict_aliasing
+  # V8 on ARM requires that armv7 is set. CPU Model detected by
+  # the presence of __ARM_ARCH_7__ and the like defines in compiler
+  if target_arch == 'arm':
+    if options.arm_float_abi:
+      hard_float = options.arm_float_abi == 'hard'
+    else:
+      hard_float = arm_hard_float_abi()
+    o['variables']['v8_use_arm_eabi_hardfloat'] = b(hard_float)
+    o['variables']['armv7'] = 1 if is_arch_armv7() else 0
+
+  cc_version, is_clang = compiler_version()
+  o['variables']['clang'] = 1 if is_clang else 0
+
+  if not is_clang and cc_version != 0:
+    o['variables']['gcc_version'] = 10 * cc_version[0] + cc_version[1]
 
   # clang has always supported -fvisibility=hidden, right?
   if not is_clang and cc_version < (4,0,0):
@@ -303,9 +353,7 @@ def configure_node(o):
   # systems, since it won't work.  (The MacOS build process is different than
   # SunOS, and we haven't implemented it.)
   if sys.platform.startswith('sunos'):
-    o['variables']['node_use_dtrace'] = b(not options.without_dtrace);
-    # Strict aliasing causes problems with the V8 snapshots on SunOS
-    o['variables']['strict_aliasing'] = b(False);
+    o['variables']['node_use_dtrace'] = b(not options.without_dtrace)
   elif b(options.with_dtrace) == 'true':
     raise Exception('DTrace is currently only supported on SunOS systems.')
   else:
