@@ -145,7 +145,7 @@
 
 ## util.pump(readableStream, writableStream, [callback])
 
-실험적
+    Stability: 0 - Deprecated: readableStream.pipe(writableStream)를 사용해라
 
 `readableStream`에서 데이터를 읽어서 읽은 데이터를 `writableStream`으로 보낸다.
 `writableStream.write(data)`가 `false`를 리턴하면 `writableStream`에서 

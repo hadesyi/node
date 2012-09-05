@@ -17,7 +17,7 @@ Node 프로세스 하나는 쓰레드 하나로 동작한다. 멀티 코어 시�
       }
 
       cluster.on('exit', function(worker, code, signal) {
-        console.log('worker ' + worker.id + ' died');
+        console.log('worker ' + worker.process.pid + ' died');
       });
     } else {
       // 워커는 TCP 연결을 공유할 수 있다.
@@ -146,7 +146,7 @@ Windows에서는 네임드 파이프 서버를 만들 수 없으므로 주의해
 
     cluster.on('exit', function(worker, code, signal) {
       var exitCode = worker.process.exitCode;
-      console.log('worker ' + worker.id + ' died ('+exitCode+'). restarting...');
+      console.log('worker ' + worker.process.pid + ' died ('+exitCode+'). restarting...');
       cluster.fork();
     });
 
@@ -184,17 +184,6 @@ Windows에서는 네임드 파이프 서버를 만들 수 없으므로 주의해
 
 워커 프로세스를 하나 만든다(spawn). 이 함수는 마스터 프로세스에서만 호출할 수 있다.
 
-## cluster.settings
-
-* {Object}
-  * `exec` {String} 워커 파일의 경로.  (Default=`__filename`)
-  * `args` {Array} 워커에 넘겨지는 스트링 아규먼트.
-    (Default=`process.argv.slice(2)`)
-  * `silent` {Boolean} 워커의 output을 부모의 stdio로 보낼지 말지.
-    (Default=`false`)
-
-`.setupMaster()` 메소드로 설정하면 이 settings 객체에 저장된다. 이 객체를 직접 수정하지 말아야 한다.
-
 ## cluster.disconnect([callback])
 
 * `callback` {Function} 모든 워커가 Disconnect되고 핸들러가 닫히면 호출되는 함수
@@ -207,7 +196,7 @@ Windows에서는 네임드 파이프 서버를 만들 수 없으므로 주의해
 
 * {Object}
 
-cluster 모듈에 있는 워커 객체는 전부 여기에 저장된다. 워커 `id`가 키이다. 어떤 일을 모든 워커에 적용시킬 때 유용하다.
+살아있는 워커 객체가 저장되는 해쉬로 `id`필드가 키다. 모든 워커를 쉽게 순회할 수 있다.
 
     // 모든 워커에 적용한다.
     function eachWorker(callback) {

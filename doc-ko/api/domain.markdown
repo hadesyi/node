@@ -181,9 +181,9 @@ Timer나 EventEmitter가 도메인에 이미 바인딩되어 있으면 이전에
     var d = domain.create();
 
     function readSomeFile(filename, cb) {
-      fs.readFile(filename, d.bind(function(er, data) {
+      fs.readFile(filename, 'utf8', d.bind(function(er, data) {
         // 여기서 오류를 던지면 도메인으로 전달된다.
-        return cb(er, JSON.parse(data));
+        return cb(er, data ? JSON.parse(data) : null);
       }));
     }
 
@@ -209,7 +209,7 @@ Timer나 EventEmitter가 도메인에 이미 바인딩되어 있으면 이전에
     var d = domain.create();
 
     function readSomeFile(filename, cb) {
-      fs.readFile(filename, d.intercept(function(data) {
+      fs.readFile(filename, 'utf8', d.intercept(function(data) {
         // 첫 아규먼트를 'Error' 라고 가정하지만 도메인이 
         // 가로챘기 때문에 첫 아규먼트는 콜백에 
         // 전달되지 않는다

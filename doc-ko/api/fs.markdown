@@ -164,7 +164,7 @@ Mac OS X에서만 사용할 수 있다.
 
 동기 link(2).
 
-## fs.symlink(destination, path, [type], [callback])
+## fs.symlink(srcpath, dstpath, [type], [callback])
 
 비동기 symlink(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 `type` 아규먼트는 `'dir'`이나 `'file'`, `'junction'`이 가능하다.(기본값은 `'file'`이다) 이 옵션은 
@@ -172,7 +172,7 @@ Mac OS X에서만 사용할 수 있다.
 Windows의 junction에서는 목적지경로가 절대경로여야 한다. `'junction'`을 사용하면 `destination` 
 아규먼트를 절대경로로 자동으로 정규화한다.
 
-## fs.symlinkSync(destination, path, [type])
+## fs.symlinkSync(srcpath, dstpath, [type])
 
 동기 symlink(2).
 
@@ -435,11 +435,15 @@ pwrite(2)를 봐라.
 `curr.mtime`와 `prev.mtime`를 비교해야 한다.
 
 
-## fs.unwatchFile(filename)
+## fs.unwatchFile(filename, [listener])
 
     Stability: 2 - Unstable.  가능하다면 대신 fs.watch를 사용해라.
 
-`filename`의 변경사항을 감시하는 것을 멈춘다.
+`filename`의 변경사항을 감시하는 것을 멈춘다. `listener`를 지정하면 해당 리스너만 제거한다.
+`listener`를 지정하지 않으면 *모든* 리스너를 제거하고 `filename` 감시를 효율적으로 멈춘다.
+
+감시받지 않는 파일명으로 `fs.unwatchFile()`를 호출하면 오류는 발생하지 않고 아무 작업도
+일어나지 않는다.
 
 ## fs.watch(filename, [options], [listener])
 

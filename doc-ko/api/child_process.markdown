@@ -261,8 +261,7 @@ second argument to the `message` event.
 
 다음은 `ls -lh /usr`를 실행하고 `stdout`, `stderr`와 종료 코드를 잡는 예제다.
 
-    var util  = require('util'),
-        spawn = require('child_process').spawn,
+    var spawn = require('child_process').spawn,
         ls    = spawn('ls', ['-lh', '/usr']);
 
     ls.stdout.on('data', function (data) {
@@ -279,8 +278,7 @@ second argument to the `message` event.
 
 예제: 'ps ax | grep ssh'를 실행하는 아주 정교한 방법.
 
-    var util  = require('util'),
-        spawn = require('child_process').spawn,
+    var spawn = require('child_process').spawn,
         ps    = spawn('ps', ['ax']),
         grep  = spawn('grep', ['ssh']);
 
@@ -300,7 +298,7 @@ second argument to the `message` event.
     });
 
     grep.stdout.on('data', function (data) {
-      console.log(data);
+      console.log('' + data);
     });
 
     grep.stderr.on('data', function (data) {
@@ -432,8 +430,7 @@ spawn이 비어 있는 옵션 객체를 받으면 `process.env`를 사용하는 
 
 쉘에서 명령어를 실행하고 출력을 버퍼에 넣는다.
 
-    var util = require('util'),
-        exec = require('child_process').exec,
+    var exec = require('child_process').exec,
         child;
 
     child = exec('cat *.js bad_file | wc -l',
@@ -496,16 +493,18 @@ spawn이 비어 있는 옵션 객체를 받으면 `process.env`를 사용하는 
   * `cwd` {문자열} 자식프로세스의 현재 워킹 디렉토리
   * `env` {객체} 환경변수의 키-밸류 쌍
   * `encoding` {문자열} (기본값: 'utf8')
-  * `timeout` {숫자} (기본값: 0)
 * Return: ChildProcess 객체
 
-이는 Node 프로세스를 생성하기(spawn) 위해 `spawn()` 기능의 틀별한 경우이다. 게다가 
+이는 Node 프로세스를 생성하기(spawn) 위해 `spawn()` 기능의 특별한 경우이다. 게다가 
 보통의 ChildProcess 인스턴스에서 모든 메서드를 가지려고 반환된 객체는 내장된 
 통신 채널을 가진다. 자세한 내용은 `child.send(message, [sendHandle])`를 참고해라.
 
 기본적으로 생성된(spawned) Node 프로세서는 부모의 stdout, stderr와 연관된 
 stdout, stderr를 가질 것이다. 이 동작을 변경하려면 `options` 객체의 `silent` 
 프로퍼티를 `true`로 설정해라.
+
+자식 프로세스들은 완료되었다고 자동으로 종료되지 않으므로 명시적으로 `process.exit()`를 호출해야
+한다. 차후에는 이 제약사항이 없어질 것이다.
 
 이러한 자식 노드들도 V8의 완전한 새 인스턴스이다. 새로운 각 노드마다 최소한 30ms의 
 구동시간과 10mb의 메모리를 가정해보자. 즉, 수천 개의 노드를 생성할 수 없다.

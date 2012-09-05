@@ -40,10 +40,19 @@
     nonexistentFunc();
     console.log('This will not run.');
 
-`uncaughtException`는 세련되지 않은 예외처리 방법이다. 프로그램에서 try / catch를
-사용하는 것이 프로그램의 흐름을 더 잘 제어할 수 있을 것이다. 특히 계속해서 실행되어야 하는
-서버 프로그램에서 `uncaughtException`는 유용하고 안전한 방법이 될 것이다.
+`uncaughtException`는 세련되지 않은 예외처리 방법이이고 차후에는 제거될 것이다.
 
+`uncaughtException`를 사용하지 말고 대신 [domains](domain.html)를 사용해라.
+`uncaughtException`를 사용한다면 처리하지 않은 예외마다 어플리케이션을 리스타트해라!
+
+`uncaughtException`를 node.js의 `On Error Resume Next`로 사용하지 *마라*.
+처리하지 않은 예외는 어플리케이션(그리고 node.js 확장)이 정의되지 않은 상태에 있음을 의미한다.
+맹목적으로 복구하면 *무슨 일이든* 발생할 수 있다.
+
+시스템을 업그레이드 하는 중에 파워코드가 빠졌을 때의 복구를 생각해보자.
+열의 아홉은 아무일도 발생하지 않을 것이다. 하지만 10번째는 시스템이 깨진다.
+
+주의해라.
 
 ## Signal Events
 
