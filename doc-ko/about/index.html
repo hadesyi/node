@@ -28,7 +28,7 @@
             <div id="column2" class="interior">
                 <ul>
                     <li><a href="/" class="home">Home</a></li>
-                    <li><a href="/#download" class="download">Download</a></li>
+                    <li><a href="/download/" class="download">Download</a></li>
                     <li><a href="/about/" class="about current">About</a></li>
                     <li><a href="http://search.npmjs.org/" class="npm">npm Registry</a></li>
                     <li><a href="http://nodejs.org/api/" class="docs">Docs</a></li>
@@ -139,15 +139,14 @@ console.log('Server running at http://127.0.0.1:1337/');</pre>
     <script>highlight(undefined, undefined, 'pre');</script>
 
     <script>
-      var gaJsHost = (("https:" == document.location.protocol) ?
-      "https://ssl." : "http://www.");
-      document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+      window._gaq = [['_setAccount', 'UA-10874194-2'], ['_trackPageview']];
+      (function(d, t) {
+        var g = d.createElement(t),
+            s = d.getElementsByTagName(t)[0];
+        g.src = '//www.google-analytics.com/ga.js';
+        s.parentNode.insertBefore(g, s);
+      }(document, 'script'));
     </script>
-    <script>
-      try {
-        var pageTracker = _gat._getTracker("UA-10874194-2");
-        pageTracker._trackPageview();
-      } catch(err) {}
-    </script>
+
   </body>
 </html>
