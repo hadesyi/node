@@ -94,22 +94,30 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
   - `crl` : PEM으로 인코딩된 CRL(Certificate Revocation List)의 문자열이나 문자열의 
     리스트
 
-  - `ciphers`: 사용하거나 제외할 암호(cipher)를 설명하는 문자열이다. 자세한 형식은 
-    <http://www.openssl.org/docs/apps/ciphers.html#CIPHER_LIST_FORMAT>를
-    참고해라.
-    [BEAST attacks]
-    (http://blog.ivanristic.com/2011/10/mitigating-the-beast-attack-on-tls.html)을 
-    완화시키려면 CBC가 아닌 암호문인 RC4 알고리즘을 우선시하도록 아래에서 설명할 
-    `honorCipherOrder`을 이 옵션과 함께 사용하기를 권장한다. 추천하는 암호문 리스트는 
-    다음과 같다.
-    `ECDHE-RSA-AES256-SHA:AES256-SHA:RC4-SHA:RC4:HIGH:!MD5:!aNULL:!EDH:!AESGCM`
+  - `ciphers`: 사용하거나 제외할 암호(cipher)를 설명하는 문자열이다.
 
-  - `honorCipherOrder` :
-  암호문을 선택할 때 클라이언트의 설정대신에 서버의 설정을 사용해라.
-  SSLv2을 사용함다면 서버는 클라이언트로 설정리스트를 보낼 것이고 클라이언트가 암호문을 
-  선택한다.
-  이 옵션은 기본적으로는 사용안함으로 되어 있지만 BEAST공격을 완화하려면 `ciphers` 옵션과 
-  함께 이 옵션을 사용하기를 *권장한다*.
+    [BEAST attacks]을 완화시키려면 CBC가 아닌 암호문을 우선시하도록 아래에서 설명할 
+    `honorCipherOrder`을 이 옵션과 함께 사용하기를 권장한다.
+
+    기본값은
+    `ECDHE-RSA-AES128-SHA256:AES128-GCM-SHA256:RC4:HIGH:!MD5:!aNULL:!EDH`이다.
+    형식에 대해 자세히 알고 싶으면 [OpenSSL cipher list format documentation]를 참고해라.
+
+    node.js가 OpenSSL 1.0.1이나 그 상위 버전과 연결되었을 때 `ECDHE-RSA-AES128-SHA256`와 
+    `AES128-GCM-SHA256`를 사용하고 클라이언트는 TLS 1.2, RC4을 안전한 폴백(fallback)으로 
+    사용한다.
+
+    **NOTE**: 이 섹션의 이전 버전에서는 `AES256-SHA`를 괜찮은 암호문으로 제안했었다. 하지만 
+    `AES256-SHA`는 CBC 암호문이므로 BEAST attacks을 받기 쉽다. `AES256-SHA`를 
+    사용하지 *말아라*.
+
+  - `honorCipherOrder` : 암호문을 선택할 때 클라이언트의 설정대신에 서버의 설정을 사용해라.
+
+    SSLv2을 사용한다면 서버는 클라이언트로 설정리스트를 보낼 것이고 클라이언트가 암호문을 
+    선택한다.
+
+    이 옵션은 기본적으로는 사용안함으로 되어 있지만 BEAST attacks을 완화하려면 `ciphers`
+    옵션과 함께 이 옵션을 사용하기를 *권장한다*.
 
   - `requestCert`: `true`로 지정하면 연결할 때 서버가 클라이언트한테 인증서를 요청하고
     인증서를 검증하는 데 사용할 것이다. 기본값: `false`.
@@ -459,6 +467,8 @@ SSL_CIPHER_get_name()와 SSL_CIPHER_get_version()를 봐라.
 
 원격 포트르르 나태내는 숫자다. 예를 들면 `443`.
 
+[OpenSSL cipher list format documentation]: http://www.openssl.org/docs/apps/ciphers.html#CIPHER_LIST_FORMAT
+[BEAST attacks]: http://blog.ivanristic.com/2011/10/mitigating-the-beast-attack-on-tls.html
 [CleartextStream]: #tls_class_tls_cleartextstream
 [net.Server.address()]: net.html#net_server_address
 ['secureConnect']: #tls_event_secureconnect

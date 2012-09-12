@@ -165,7 +165,8 @@ Windows에서는 네임드 파이프 서버를 만들 수 없으므로 주의해
   * `silent` {Boolean} 워커의 output을 부모의 stdio로 보낼지 말지.
     (Default=`false`)
 
-`setupMaster`는 옵션 객체를 넘겨서 호출하면 `fork`의 기본 행동이 수정된다.
+`setupMaster`는 'fork'의 기본 행동을 수정하는데 사용한다. 사실상 새로운 설정은 즉각적이고 
+영구적이라서 나중에 이를 수정할 수 없다.
 
 예제:
 
@@ -192,11 +193,28 @@ Windows에서는 네임드 파이프 서버를 만들 수 없으므로 주의해
 
 콜백을 아규먼트로 넘기면 끝날 때 호출된다.
 
+## cluster.worker
+
+* {Object}
+
+현재 워커 객체에 대한 참조. 마스터 프로세스에서는 사용할 수 없다.
+
+    var cluster = require('cluster');
+
+    if (cluster.isMaster) {
+      console.log('I am master');
+      cluster.fork();
+      cluster.fork();
+    } else if (cluster.isWorker) {
+      console.log('I am worker #' + cluster.worker.id);
+    }
+
 ## cluster.workers
 
 * {Object}
 
 살아있는 워커 객체가 저장되는 해쉬로 `id`필드가 키다. 모든 워커를 쉽게 순회할 수 있다.
+이는 마스터 프로세스에서만 사용할 수 있다.
 
     // 모든 워커에 적용한다.
     function eachWorker(callback) {
@@ -279,7 +297,7 @@ See: [Child Process module](child_process.html)
 바로 끊기지 않는 연결이 있을 수도 있기 때문에 타임아웃을 사용하는 게 좋다. 먼저 워커를 Disconnect시키고 2초 후에 서버를 죽인다(destroy). 2초 후에 `server.destroy()` 대신 `worker.destroy()` 메소드를 실행할 수도 있지만, 워커가 충분히 소거하지 못할 수 있다.
 
     if (cluster.isMaster) {
-      var worker = cluser.fork();
+      var worker = cluster.fork();
       var timeout;
 
       worker.on('listening', function(address) {

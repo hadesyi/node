@@ -346,7 +346,7 @@ node와 의존성에 대한 버전 문자열을 노출하는 프로퍼티이다.
 ## process.platform
 
 어떤 플랫폼에서 실행되고 있는지 보여준다.
-`'darwin'`, `'freebsd'`, `'linux'`, `'solaris'`, `'win32'`
+`'darwin'`, `'freebsd'`, `'linux'`, `'sunos'`, `'win32'`
 
     console.log('This platform is ' + process.platform);
 

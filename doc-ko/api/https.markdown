@@ -49,7 +49,10 @@ HTTPS는 TLS/SSL를 사용하는 HTTP 프로토콜이다. Node에서 HTTPS는 �
 ## https.request(options, callback)
 
 안전한 웹서버로의 요청을 생성한다.
-Makes a request to a secure web server.
+
+`options`은 객체거나 문자열이다. `options`이 문자열인 경우 자동적으로
+[url.parse()](url.html#url.parse)로 파싱한다.
+
 [http.request()][]의 모든 옵션이 유효하다.
 
 예제:
@@ -154,11 +157,14 @@ options 아규먼트는 다음과 같다.
 
 `http.get()`와 같지만 HTTPS다.
 
+`options`은 객체거나 문자열이다. `options`이 문자열인 경우 자동적으로
+[url.parse()](url.html#url.parse)로 파싱한다.
+
 예제:
 
     var https = require('https');
 
-    https.get({ host: 'encrypted.google.com', path: '/' }, function(res) {
+    https.get('https://encrypted.google.com/', function(res) {
       console.log("statusCode: ", res.statusCode);
       console.log("headers: ", res.headers);
 
