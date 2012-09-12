@@ -174,7 +174,7 @@ apidoc_sources_ko = $(wildcard doc-ko/api/*.markdown)
 apidocs_ko = $(addprefix out/,$(apidoc_sources_ko:.markdown=.html)) \
           $(addprefix out/,$(apidoc_sources_ko:.markdown=.json))
 
-apidoc_dirs_ko = out/doc-ko out/doc-ko/api/ out/doc-ko/api/assets out/doc-ko/about out/doc-ko/community out/doc-ko/logos out/doc-ko/images out/doc-ko/contributors
+apidoc_dirs_ko = out/doc-ko out/doc-ko/api/ out/doc-ko/api/assets out/doc-ko/about out/doc-ko/community out/doc-ko/download out/doc-ko/logos out/doc-ko/images out/doc-ko/contributors
 
 apiassets_ko = $(subst api_assets,api/assets,$(addprefix out/,$(wildcard doc-ko/api_assets/*)))
 
@@ -197,7 +197,7 @@ website_files_ko = \
 	out/doc-ko/contributors/index.html \
 	$(doc-ko_images_ko)
 
-doc-ko: program $(apidoc_dirs_ko) $(website_files_ko) $(apiassets_ko) $(apidocs_ko) tools/doc/
+doc-ko: $(apidoc_dirs_ko) $(website_files_ko) $(apiassets_ko) $(apidocs_ko) tools/doc/ blog node
 
 $(apidoc_dirs_ko):
 	mkdir -p $@
@@ -205,19 +205,19 @@ $(apidoc_dirs_ko):
 out/doc-ko/api/assets/%: doc-ko/api_assets/% out/doc-ko/api/assets/
 	cp $< $@
 
-out/doc-ko/changelog.html: ChangeLog doc-ko/changelog-head.html doc-ko/changelog-foot.html tools/build-changelog-ko.sh
+out/doc-ko/changelog.html: ChangeLog doc-ko/changelog-head.html doc-ko/changelog-foot.html tools/build-changelog-ko.sh node
 	bash tools/build-changelog-ko.sh
 
-out/doc-ko/%.html: doc-ko/%.html
+out/doc-ko/%.html: doc-ko/%.html node
 	cat $< | sed -e 's|__VERSION__|'$(VERSION)'|g' > $@
 
 out/doc-ko/%: doc-ko/%
 	cp -r $< $@
 
-out/doc-ko/api/%.json: doc-ko/api/%.markdown
+out/doc-ko/api/%.json: doc-ko/api/%.markdown node
 	out/Release/node tools/doc/generate.js --format=json $< > $@
 
-out/doc-ko/api/%.html: doc-ko/api/%.markdown
+out/doc-ko/api/%.html: doc-ko/api/%.markdown node
 	out/Release/node tools/doc/generate.js --format=html --template=doc-ko/template.html $< > $@
 
 blog.html: email.md
