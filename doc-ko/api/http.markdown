@@ -142,10 +142,10 @@ OS가 결정한다. backlog의 기본값은 511이다.(512가 아니다)
 [net.Server.listen(path)][]도 참고해라.
 
 
-### server.listen(handle, [listeningListener])
+### server.listen(handle, [callback])
 
 * `handle` {Object}
-* `listeningListener` {Function}
+* `callback` {Function}
 
 `handle` 객체는 서버나 소켓(의존하는 `_handle` 멤버를 가진 어떤 것이든)으로 
 설정하거나 `{fd: <n>}` 객체로 설정할 수 있다.
@@ -157,9 +157,9 @@ OS가 결정한다. backlog의 기본값은 511이다.(512가 아니다)
 
 이 함수는 비동기 함수다. 마지막 파라미터 `callback`은
 ['listening'](net.html#event_listening_) 이벤트의 리스너로 추가될 것이다.
-[net.Server.listen()](net.html#server.listen)도 참고해라.
+[net.Server.listen()](net.html#net_server_listen_handle_callback)도 참고해라.
 
-### server.close([cb])
+### server.close([callback])
 
 Stops the server from accepting new connections.  See [net.Server.close()][].
 서버가 새로운 연결을 받아들이는 것을 멈춘다. [net.Server.close()][]를 참고해라.
@@ -204,7 +204,8 @@ __데이터를 읽어버릴 것이다.__
 종료했다는 것을 나타낸다. 
 
 `'end'`처럼 이 이벤트는 요청당 딱 한번만 발생하고 그 후에는 더 이상 
-`'data'` 이벤트가 발생하지 않을 것이다.
+`'data'` 이벤트가 발생하지 않을 것이다. 자세한 내용은
+[http.ServerResponse][]의 `'close'` 이벤트를 참고해라.
 
 Note: `'end'`후에 `'close'`가 발생할 수 있지만 그 반대로는 안된다.
 
@@ -249,7 +250,16 @@ URL을 부분별로 파싱하고 싶다면 `require('url').parse(request.url)`�
 
 ### request.headers
 
-읽기 전용.
+헤더의 이름과 값으로 이루어진 읽기전용 맵. 헤더의 이름은 소문자다.
+예제:
+
+    // 다음과 같이 출력된다:
+    //
+    // { 'user-agent': 'curl/7.22.0',
+    //   host: '127.0.0.1:8000',
+    //   accept: '*/*' }
+    console.log(request.headers);
+
 
 ### request.trailers
 
@@ -465,7 +475,7 @@ Node는 HTTP 요청에 대한 연결을 서버당 여러 개 유지하고 있다
 예제:
 
     var options = {
-      host: 'www.google.com',
+      hostname: 'www.google.com',
       port: 80,
       path: '/upload',
       method: 'POST'
@@ -548,7 +558,7 @@ keep-alive 이점을 가지지만 여전히 keep-alive를 사용하는 HTTP 클�
 
 대신 `agent:false`를 사용해서 완전히 풀링을 사용하지 않을 수도 있다.
 
-    http.get({host:'localhost', port:80, path:'/', agent:false}, function (res) {
+    http.get({hostname:'localhost', port:80, path:'/', agent:false}, function (res) {
       // Do stuff
     })
 
@@ -665,7 +675,7 @@ CONNECT 메서드를 받는 클라이언트의 연결을 닫힐 것이다.
       // 터널링 프록시에 요청을 만든다
       var options = {
         port: 1337,
-        host: '127.0.0.1',
+        hostname: '127.0.0.1',
         method: 'CONNECT',
         path: 'www.google.com:80'
       };
@@ -718,10 +728,10 @@ CONNECT 메서드를 받는 클라이언트의 연결을 닫힐 것이다.
     // 이제 서버가 동작한다
     srv.listen(1337, '127.0.0.1', function() {
 
-      // 요청 생
+      // 요청 생성
       var options = {
         port: 1337,
-        host: '127.0.0.1',
+        hostname: '127.0.0.1',
         headers: {
           'Connection': 'Upgrade',
           'Upgrade': 'websocket'
@@ -858,9 +868,9 @@ __데이터를 잃을 수 있다__는 것을 명심해라.
 [http.request()]: #http_http_request_options_callback
 [http.ServerRequest]: #http_class_http_serverrequest
 ['listening']: net.html#net_event_listening
-[net.Server.close()]: net.html#net_server_close_cb
-[net.Server.listen(path)]: net.html#net_server_listen_path_listeninglistener
-[net.Server.listen(port)]: net.html#net_server_listen_port_host_backlog_listeninglistener
+[net.Server.close()]: net.html#net_server_close_callback
+[net.Server.listen(path)]: net.html#net_server_listen_path_callback
+[net.Server.listen(port)]: net.html#net_server_listen_port_host_backlog_callback
 [Readable Stream]: stream.html#stream_readable_stream
 [socket.setKeepAlive()]: net.html#net_socket_setkeepalive_enable_initialdelay
 [socket.setNoDelay()]: net.html#net_socket_setnodelay_nodelay

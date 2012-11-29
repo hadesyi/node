@@ -217,7 +217,7 @@ second argument to the `message` event.
 
     process.on('message', function(m, socket) {
       if (m === 'socket') {
-        socket.end('You where handled as a ' + process.argv[2] + ' person');
+        socket.end('You were handled as a ' + process.argv[2] + ' person');
       }
     });
 
@@ -245,6 +245,8 @@ second argument to the `message` event.
     파일 디스크립터 (하단을 참고)
   * `env` {객체} 환경변수 키-밸류 쌍
   * `detached` {불리언} 자식이 프로세스 그룹의 리더가 될 것이다. (하단을 참고)
+  * `uid` {숫자} 프로세스의 사용자 id를 설정한다. (setuid(2) 참고.)
+  * `gid` {숫자} 프로세스의 그룹 id를 설정한다. (setgid(2) 참고.)
 * return: {ChildProcess 객체}
 
 명령행 아규먼트 `args`와 함께 주어진 `command`로 새로운 프로세스를 실행한다. 생략할 경우 

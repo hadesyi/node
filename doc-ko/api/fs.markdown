@@ -341,7 +341,7 @@ pwrite(2)를 봐라.
 
 `buffer`는 데이터가 작성될 버퍼이다.
 
-`offset`은 버퍼내에서 작성이 시작될 오프셋이다.
+`offset`은 버퍼내에서 읽기 시작할 오프셋이다.
 
 `length`는 읽어들일 바이트 수를 지정하는 정수이다.
 
@@ -447,7 +447,7 @@ pwrite(2)를 봐라.
 
 ## fs.watch(filename, [options], [listener])
 
-    Stability: 2 - Unstable.  모든 플랫폼에서 사용할 수 있는 것은 아니다.
+    Stability: 2 - Unstable.
 
 `filename`의 변경사항을 감시하고 `filename`은 파일이나 디렉토리가 될 수 있다. 
 반환객체는 [fs.FSWatcher](#fs_class_fs_fswatcher)이다.
@@ -478,6 +478,9 @@ pwrite(2)를 봐라.
 * Windows 시스템에서 이 기능은 `ReadDirectoryChangesW`에 달려있다.
 
 몇가지 이유로 의존하는 기능을 사용할 수 없다면 `fs.watch`를 사용할 수 없을 것이다.
+예를 들어 네트워크 파일시스템(NFS, SMB 등)에서 파일이나 디렉토리를 감시하면 종종 신뢰할 수
+있을만큼 동작하지 않거나 전혀 작동하지 않는다.
+
 stat 폴링(polling)을 사용하지만 더 느리고 덜 신뢰적인 `fs.watchFile`는 여전히 
 사용할 수 있다.
 
