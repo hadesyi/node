@@ -196,8 +196,8 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
     openssl s_client -connect 127.0.0.1:8000
 
 
-## tls.connect(options, [secureConnectListener])
-## tls.connect(port, [host], [options], [secureConnectListener])
+## tls.connect(options, [callback])
+## tls.connect(port, [host], [options], [callback])
 
 전달한 `port`와 `host`로(과거 API) 혹은 `options.port`와 `options.host`로 
 새로운 클라이언트 연결을 생성한다. (`host`를 지정하지 않으면
@@ -232,7 +232,7 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
 
   - `servername`: SNI (Server Name Indication) TLS 확장에 대한 Servername이다.
 
-`secureConnectListener` 파라미터는 ['secureConnect'][] 
+`callback` 파라미터는 ['secureConnect'][] 
 이벤트의 리스너로 추가할 것이다.
 
 `tls.connect()`는 [CleartextStream][] 객체를 반환한다.

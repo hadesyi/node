@@ -46,6 +46,17 @@ HTTPS는 TLS/SSL를 사용하는 HTTP 프로토콜이다. Node에서 HTTPS는 �
       res.end("hello world\n");
     }).listen(8000);
 
+
+### server.listen(port, [host], [backlog], [callback])
+### server.listen(path, [callback])
+### server.listen(handle, [callback])
+
+자세한 내용은 [http.listen()][]를 참고해라.
+
+### server.close([callback])
+
+자세한 내용은 [http.close()][]를 참고해라.
+
 ## https.request(options, callback)
 
 안전한 웹서버로의 요청을 생성한다.
@@ -60,7 +71,7 @@ HTTPS는 TLS/SSL를 사용하는 HTTP 프로토콜이다. Node에서 HTTPS는 �
     var https = require('https');
 
     var options = {
-      host: 'encrypted.google.com',
+      hostname: 'encrypted.google.com',
       port: 443,
       path: '/',
       method: 'GET'
@@ -81,11 +92,6 @@ HTTPS는 TLS/SSL를 사용하는 HTTP 프로토콜이다. Node에서 HTTPS는 �
     });
 
 options 아규먼트는 다음과 같다.
-
-- host: 요청을 보낼 호스트이 IP나 도메인. 기본값은 `'localhost'`이다.
-- port: 요청을 보낼 호스트의 포트. 기본값은 443이다.
-- path: 요청 경로. 기본값은 `'/'`이다.
-- method: HTTP 요청 메서드. 기본값은 `'GET'`이다.
 
 - `host`: 요청을 보낼 서버의 도메인명이나 IP 주소다. 기본값은 `'localhost'`이다.
 - `hostname`: `url.parse()`를 지원하기 위해 `host`보다 `hostname`를 선호한다.
@@ -122,7 +128,7 @@ options 아규먼트는 다음과 같다.
 예제:
 
     var options = {
-      host: 'encrypted.google.com',
+      hostname: 'encrypted.google.com',
       port: 443,
       path: '/',
       method: 'GET',
@@ -140,7 +146,7 @@ options 아규먼트는 다음과 같다.
 예제:
 
     var options = {
-      host: 'encrypted.google.com',
+      hostname: 'encrypted.google.com',
       port: 443,
       path: '/',
       method: 'GET',
@@ -189,6 +195,8 @@ options 아규먼트는 다음과 같다.
 
 [Agent]: #https_class_https_agent
 [globalAgent]: #https_https_globalagent
+[http.listen()]: http.html#http_server_listen_port_hostname_backlog_callback
+[http.close()]: http.html#http_server_close_callback
 [http.Agent]: http.html#http_class_http_agent
 [http.request()]: http.html#http_http_request_options_callback
 [https.Agent]: #https_class_https_agent

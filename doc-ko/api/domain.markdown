@@ -168,9 +168,9 @@ Timer나 EventEmitter가 도메인에 이미 바인딩되어 있으면 이전에
 
 `domain.add(emitter)`과는 반대로 지정한 이미터를 도메인에서 제거한다.
 
-### domain.bind(cb)
+### domain.bind(callback)
 
-* `cb` {Function} 콜백 함수
+* `callback` {Function} 콜백 함수
 * return: {Function} 바인딩된 함수
 
 전달한 콜백함수를 감싸고 있는 랩퍼 함수를 반환한다. 반환된 함수를 호출했을 때
@@ -193,15 +193,15 @@ Timer나 EventEmitter가 도메인에 이미 바인딩되어 있으면 이전에
       // 스택 메시지와 함께 종료된다.
     });
 
-### domain.intercept(cb)
+### domain.intercept(callback)
 
-* `cb` {Function} 콜백 함수
+* `callback` {Function} 콜백 함수
 * return: {Function} 가로챈 함수
 
-이 함수는 `domain.bind(cb)`와 대부분 같지만 던져진 오류를 잡기 위해 함수의
+이 함수는 `domain.bind(callback)`와 대부분 같지만 던져진 오류를 잡기 위해 함수의
 첫 아규먼트로 보낸 `Error`객체를 가로챈다
 
-이 방법을 통해 일반적인 `if (er) return cb(er);` 패턴을 하나의 오류 
+이 방법을 통해 일반적인 `if (er) return callback(er);` 패턴을 하나의 오류 
 핸들러로 바꿀 수 있다.
 
 #### Example

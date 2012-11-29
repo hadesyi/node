@@ -82,6 +82,19 @@
 
     console.log(util.inspect(util, true, null));
 
+객체들도 `util.inspect()`가 호출해서 객체를 건사한 결과를 사용하는 자신만의
+`inspect(depth)` 함수를 정의할 수 있다.
+
+    var util = require('util');
+
+    var obj = { name: 'nate' };
+    obj.inspect = function(depth) {
+      return '{' + this.name + '}';
+    };
+
+    util.inspect(obj);
+      // "{nate}"
+
 
 ## util.isArray(object)
 

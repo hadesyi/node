@@ -114,7 +114,7 @@ UNIX계열 소켓에서는 `options` 아규먼트는 다음을 지정하는 객�
 이 클래스는 TCP나 UNIX 서버를 생성하는데 사용한다.
 서버는 새로 들어오는 연결을 받을 수 있는 `net.Socket`이다.
 
-### server.listen(port, [host], [backlog], [listeningListener])
+### server.listen(port, [host], [backlog], [callback])
 
 지정한 `port`와 `host`에서 연결을 받아들이기 시작한다. `host`를 생략하면 
 모든 IPv4 주소(`INADDR_ANY`)에서 직접 들어오는 연결을 받아들일 것이다. 
@@ -126,7 +126,7 @@ OS가 결정한다. 백로그의 기본값은 511이다.(512가 아니다)
 
 이 함수는 비동기함수이다. 서버가 바인딩되었을 때 
 ['listening'][] 이벤트가 발생할 것이다.
-마지막 파라미터 `listeningListener`는 ['listening'][] 이벤트의 
+마지막 파라미터 `callback`는 ['listening'][] 이벤트의 
 리스터로 추가할 것이다.
 
 몇몇 유저는 실행했을 때 `EADDRINUSE` 오류가 발생하는 이슈가 있다. 이는 다른 서버가 
@@ -146,19 +146,19 @@ OS가 결정한다. 백로그의 기본값은 511이다.(512가 아니다)
 (주의: Node의 모든 소켓은 이미 `SO_REUSEADDR`를 설정한다.)
 
 
-### server.listen(path, [listeningListener])
+### server.listen(path, [callback])
 
 전달한 `path`에서 연결을 받아들이는 UNIX 소켓서버를 시작한다.
 
 이 함수는 비동기 함수이다. 서버가 바인딩되었을 때 
 ['listening'][] 이벤트가 발생할 것이다.
-마지막 파라미터 `listeningListener`는 ['listening'][] 이벤트의 
+마지막 파라미터 `callback`는 ['listening'][] 이벤트의 
 리스터로 추가될 것이다.
 
-### server.listen(handle, [listeningListener])
+### server.listen(handle, [callback])
 
 * `handle` {Object}
-* `listeningListener` {Function}
+* `callback` {Function}
 
 `handle` 객체는 서버나 소켓으로 설정되거나(의존하는 `_handle` 멤버를 가진
 어떤 것이든) `{fd: <n>}` 객체가 될 수 있다.
@@ -170,10 +170,10 @@ Windows에서는 파일스크립터에서 연결을 받아들이는 것을 지�
 
 이 함수는 비동기 함수이다. 서버가 바인딩되었을 때 
 ['listening'](#event_listening_) 이벤트가 발생할 것이다.
-마지막 파라미터 `listeningListener`는 ['listening'](#event_listening_) 이벤트의 
+마지막 파라미터 `callback`는 ['listening'](#event_listening_) 이벤트의 
 리스터로 추가될 것이다.
 
-### server.close([cb])
+### server.close([callback])
 
 서버가 새로운 연결을 받아들이는 것과 현재 존재하는 연결을 유지하는 것을 멈춘다.
 이 함수는 비동기 함수이고 모든 연결이 종료되고 서버에서 `'close'` 이벤트가 

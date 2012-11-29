@@ -36,6 +36,23 @@
 
 * `'hex'` - 각 바이트를 두 16진수 문자로 인코딩한다.
 
+`Buffer`도 Typed Array View와 DataView에 사용할 수 있다.
+
+    var buff = new Buffer(4);
+    var ui16 = new Uint16Array(buff);
+    var view = new DataView(buff);
+
+    ui16[0] = 1;
+    ui16[1] = 2;
+    console.log(buff);
+
+    view.setInt16(0, 1);       // 오프셋 0 바이트에 빅엔디언 int16을 설정한다
+    view.setInt16(2, 2, true); // 오프셋 2 바이트에 리틀엔디언 int16을 설정한다
+    console.log(buff);
+
+    // <Buffer 01 00 02 00>
+    // <Buffer 00 01 02 00>
+
 ## Class: Buffer
 
 Buffer 클래스는 바이너리 데이터를 직접 다루는 글로벌 타입니다.

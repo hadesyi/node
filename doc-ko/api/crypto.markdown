@@ -1,6 +1,7 @@
 # Crypto
 
-    Stability: 3 - Stable
+    Stability: 2 - Unstable; 차기 버전에서 API 변경을 논의 중이다.
+    호환성을 깨뜨리는 정도의 변경은 최소화할 것이다. 하단을 참고해라.
 
 이 모듈에 접근하려면 `require('crypto')`를 사용해라.
 
@@ -358,6 +359,29 @@ callback은 2개의 아규먼트 `(err, derivedKey)`를 받는다.
     } catch (ex) {
       // handle error
     }
+
+## Node의 차기버전에 제안된 API 변경사항
+
+Crypto 모듈은 통일된 Stream API의 개념과 바이너리 데이터를 다루는 Buffer 객체가 
+존재하기 전에 Node에 추가되었다. 
+
+그래서 다른 Node 클래스들에는 있는 일반적인 메서드가 스트리밍 클래스에는 없고 많은 메서드들이
+Buffers 대신 기본적으로 바이너리로 인코딩된 문자열을 받아들이고 반환한다. 
+
+node의 차기 버전에서는 Buffer를 기본 데이터 타입으로 사용할 것이다.
+이 변경사항은 전부는 아니지만 일부에서는 호환성을 깨뜨릴 것이다.
+
+예를 들어 현재 Sign 클래스에 기본 인자를 사용하고 그 결과를 Verify 클래스에 전달하고
+데이터를 검사하지 않는다면 이전과 마차가지로 계속 동작할 것이다. 
+바이너리 문자열을 얻고 Verify 객체에 바이너리 문자열을 제공하는 곳에서
+Buffer를 얻을 것이고 Verify 객체에 Buffer를 제공할 것이다.
+
+하지만 Buffers에서 제대로 동작하지 않을 문자열 데이터로 어떤 작업을 한거나(문자열을
+이어붙힌다거나 데이터베이스에 저장하는 등) 인코딩 인자없이 암호화함수에 바이너리 문자열을
+전달한다면 사용하고자 하는 인코딩을 지정하는 인코딩 인자를 제공해야 할 것이다.
+
+또한 스트리밍 API는 제공될 것이지만 레거시 API를 유지하는 방법으로 진행될 것이다.
+
 
 [createCipher()]: #crypto_crypto_createcipher_algorithm_password
 [createCipheriv()]: #crypto_crypto_createcipheriv_algorithm_key_iv

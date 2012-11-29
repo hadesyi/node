@@ -406,14 +406,15 @@ Node가 실행되고 있는 시간을 초단위로 나타낸다.
 어떤 구간을 벤치마킹을 위해 시간 간격을 얻기 위해 `process.hrtime()`에 이전 호출의 결과를 
 전달한다.
 
-    var t = process.hrtime();
+    var time = process.hrtime();
     // [ 1800216, 927643717 ]
 
     setTimeout(function () {
-      t = process.hrtime(t);
+      var diff = process.hrtime(time);
       // [ 1, 6962306 ]
 
-      console.log('benchmark took %d seconds and %d nanoseconds', t[0], t[1]);
+      console.log('benchmark took %d seconds and %d nanoseconds',
+                  diff[0], diff[1]);
       // benchmark took 1 seconds and 6962306 nanoseconds
     }, 1000);
 
