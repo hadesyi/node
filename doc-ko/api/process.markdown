@@ -8,7 +8,7 @@
 
 ## Event: 'exit'
 
-프로세스가 종료될 때 발생한다. 이 이벤트는 모듈의 상태를 상수시간으로 확인하는데 좋은 
+프로세스가 종료될 때 발생한다. 이 이벤트는 모듈의 상태를 상수시간으로 확인하는데 좋은
 훅(hook)이다.(유닛테스트에서처럼) 메인 이벤트루프는 'exit' 콜백이 종료된 후에는 더이상
 실행되지 않으므로 타이머도 스케쥴링되지 않을 것이다.
 
@@ -71,7 +71,7 @@
       console.log('Got SIGINT.  Press Control-D to exit.');
     });
 
-`SIGINT` 신호를 보내는 쉬운 방법은 대부분의 터미털 프로그램에서 `Control-C`를 입력하는 
+`SIGINT` 신호를 보내는 쉬운 방법은 대부분의 터미털 프로그램에서 `Control-C`를 입력하는
 것이다.
 
 
@@ -85,7 +85,7 @@
       process.stdout.write(d + '\n');
     };
 
-`process.stderr`와 `process.stdout`을 쓰기를 할 때 보통 블락킹된다는 점에서 Node의 
+`process.stderr`와 `process.stdout`을 쓰기를 할 때 보통 블락킹된다는 점에서 Node의
 다른 스크림과는 다르다. 이 둘은 보통의 파일이나 TTY 파일 디스크립터를 참조할 때
 블락킹된다. 파이프를 참조하는 경우에는 다른 스크림처럼 넌블락킹이다.
 
@@ -94,7 +94,7 @@
 
 stderr에 대한 writable stream이다.
 
-`process.stderr`와 `process.stdout`는 쓰기를 할 때 보통 블락킹된다는 점에서 Node의 
+`process.stderr`와 `process.stdout`는 쓰기를 할 때 보통 블락킹된다는 점에서 Node의
 다른 스크림과는 다르다. 이 둘은 보통의 파일이나 TTY 파일 디스크립터를 참조할 때
 블락킹된다. 파이프를 참조하는 경우에는 다른 스크림처럼 넌블락킹이다.
 
@@ -120,11 +120,11 @@ stdin에 대한 `Readable Stream`이다. stdin 스트림은 기본적으로 멈�
 
 ## process.argv
 
-커맨드라인 아규먼트를 담고 있는 배열이다. 첫 엘리먼트는 'node'일 것이고 두 번째 
+커맨드라인 아규먼트를 담고 있는 배열이다. 첫 엘리먼트는 'node'일 것이고 두 번째
 엘리먼트는 자바스트립트 파일명이 될 것이다. 다음 엘리먼트들은 추가적인 커맨드라인
 아규먼트일 것이다.
 
-    // process.argv 출력 
+    // process.argv 출력
     process.argv.forEach(function (val, index, array) {
       console.log(index + ': ' + val);
     });
@@ -240,7 +240,7 @@ Note: 이 함수는 POSIX 플랫폼에서만 사용할 수 있다.(예를 들어
 Note: 이 함수는 POSIX 플랫폼에서만 사용할 수 있다.(예를 들어 Windows에서는 안된다.)
 
 프로세스의 사용자 식별자를 설정한다. (setuid(2)를 봐라.) 이는 숫자로된 ID와 문자열로 된
-사용자명을 모두 받아들인다. 사용자명을 지정하면 이 메서드가 사용자명을 숫자로 된 ID로 
+사용자명을 모두 받아들인다. 사용자명을 지정하면 이 메서드가 사용자명을 숫자로 된 ID로
 처리할 때까지 블락킹한다.
 
     if (process.getuid && process.setuid) {
@@ -277,8 +277,8 @@ node와 의존성에 대한 버전 문자열을 노출하는 프로퍼티이다.
 
 ## process.config
 
-현재 실행되는 노드를 컴파일하는데 사용한 설정 옵션의 자바스크립트 표현을 담고 있는 객체다. 
-이는 `./configure` 스크립트를 실행했을 때 생성되는 "config.gypi" 파일과 같다. 
+현재 실행되는 노드를 컴파일하는데 사용한 설정 옵션의 자바스크립트 표현을 담고 있는 객체다.
+이는 `./configure` 스크립트를 실행했을 때 생성되는 "config.gypi" 파일과 같다.
 
 출력은 다음 예제와 같다.
 
@@ -308,7 +308,7 @@ node와 의존성에 대한 버전 문자열을 노출하는 프로퍼티이다.
 설명하는 문자열이다. 신호이름은 'SIGINT'나 'SIGUSR1'같은 문자열이다. `signal`을
 생략하면 'SIGTERM'가 될 것이다. 더 자세한 내용은 kill(2)를 봐라.
 
-이 함수의 이름이 `process.kill`이므로 실제로 `kill` 시스템 호출처럼 단순히 신호 
+이 함수의 이름이 `process.kill`이므로 실제로 `kill` 시스템 호출처럼 단순히 신호
 전송자이다. 보낸 신호는 타겟 신호를 죽이는 일이외에 다른 일을 할 것이다.
 
 자신에게 신호를 보내는 예제:
@@ -381,7 +381,7 @@ Node 프로세스의 메모리 사용량을 바이트로 나타내서 보여주�
 ## process.umask([mask])
 
 프로세스의 파일 모드 생성 마스크를 설정하거나 읽는다. 자식 프로세스는 부모 프로세스에서
-이 마스크를 상속받는다. `mask`아규먼트를 전달하면 이전의 마스크를 리턴하고 `mask`아규먼트를 
+이 마스크를 상속받는다. `mask`아규먼트를 전달하면 이전의 마스크를 리턴하고 `mask`아규먼트를
 전달하지 않으면 현재 마스크를 리턴한다.
 
     var oldmask, newmask = 0644;
@@ -398,24 +398,23 @@ Node가 실행되고 있는 시간을 초단위로 나타낸다.
 
 ## process.hrtime()
 
-`[seconds, nanoseconds]` 튜플 배열 형식으로 현재의 고해상도(high-resolution) 
-실제 시간을 반환한다. 이는 과거 임의의 시간과 관계가 있고 시각과는 관련이 없으므로 
-클럭 드리프트(clock drift)를 따르지 않는다. 어떤 구간사이의 성능을 측정하는 것이 
+`[seconds, nanoseconds]` 튜플 배열 형식으로 현재의 고해상도(high-resolution)
+실제 시간을 반환한다. 이는 과거 임의의 시간과 관계가 있고 시각과는 관련이 없으므로
+클럭 드리프트(clock drift)를 따르지 않는다. 어떤 구간사이의 성능을 측정하는 것이
 주요 사용처이다.
 
-어떤 구간을 벤치마킹을 위해 시간 간격을 얻기 위해 `process.hrtime()`에 이전 호출의 결과를 
+어떤 구간을 벤치마킹을 위해 시간 간격을 얻기 위해 `process.hrtime()`에 이전 호출의 결과를
 전달한다.
 
     var time = process.hrtime();
-    // [ 1800216, 927643717 ]
+    // [ 1800216, 25 ]
 
     setTimeout(function () {
       var diff = process.hrtime(time);
-      // [ 1, 6962306 ]
+      // [ 1, 552 ]
 
-      console.log('benchmark took %d seconds and %d nanoseconds',
-                  diff[0], diff[1]);
-      // benchmark took 1 seconds and 6962306 nanoseconds
+      console.log('benchmark took %d nanoseconds', diff[0] * 1e9 + diff[1]);
+      // benchmark took 1000000527 nanoseconds
     }, 1000);
 
 [EventEmitter]: events.html#events_class_events_eventemitter
