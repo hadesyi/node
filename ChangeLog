@@ -1,4 +1,80 @@
-2012.11.26, Version 0.8.15 (Stable)
+2013.02.15, Version 0.8.20 (Stable)
+
+* npm: Upgrade to v1.2.11
+
+* http: Do not let Agent hand out destroyed sockets (isaacs)
+
+* http: Raise hangup error on destroyed socket write (isaacs)
+
+* http: protect against response splitting attacks (Bert Belder)
+
+
+2013.02.06, Version 0.8.19 (Stable), 53978bdf420622ff0121c63c0338c9e7c2e60869
+
+* npm: Upgrade to v1.2.10
+
+* zlib: pass object size hint to V8 (Ben Noordhuis)
+
+* zlib: reduce memory consumption, release early (Ben Noordhuis)
+
+* buffer: slow buffer copy compatibility fix (Trevor Norris)
+
+* zlib: don't assert on malformed dictionary (Ben Noordhuis)
+
+* zlib: don't assert on missing dictionary (Ben Noordhuis)
+
+* windows: better ipv6 support (Bert Belder)
+
+* windows: add error mappings related to unsupported protocols (Bert Belder)
+
+* windows: map ERROR_DIRECTORY to UV_ENOENT (Bert Belder)
+
+
+2013.01.18, Version 0.8.18 (Stable), 2c4eef0d972838c51999d32c0d251857a713dc18
+
+* npm: Upgrade to v1.2.2
+
+* dns: make error message match errno (Dan Milon)
+
+* tls: follow RFC6125 more stricly (Fedor Indutny)
+
+* buffer: reject negative SlowBuffer offsets (Ben Noordhuis)
+
+* install: add simplejson fallback (Chris Dent)
+
+* http: fix "Cannot call method 'emit' of null" (Ben Noordhuis)
+
+
+2013.01.09, Version 0.8.17 (Stable), c50c33e9397d7a0a8717e8ce7530572907c054ad
+
+* npm: Upgrade to v1.2.0
+  - peerDependencies (Domenic Denicola)
+  - node-gyp v0.8.2 (Nathan Rajlich)
+  - Faster installs from github user/project shorthands (Nathan Zadoks)
+
+* typed arrays: fix 32 bit size/index overflow (Ben Noordhuis)
+
+* http: Improve performance of single-packet responses (Ben Noordhuis)
+
+* install: fix openbsd man page location (Ben Noordhuis)
+
+* http: bubble up parser errors to ClientRequest (Brian White)
+
+
+2012.12.13, Version 0.8.16 (Stable), 1c9c6277d5cfcaaac8569c0c8f7daa64292048a9
+
+* npm: Upgrade to 1.1.69
+
+* fs: fix WriteStream/ReadStream fd leaks (Ben Noordhuis)
+
+* crypto: fix leak in GetPeerCertificate (Fedor Indutny)
+
+* buffer: Don't double-negate numeric buffer arg (Trevor Norris)
+
+* net: More accurate IP address validation and IPv6 dotted notation. (Joshua Erickson)
+
+
+2012.11.26, Version 0.8.15 (Stable), fdf91afb494a7a2fff2913d817f589c191a2c88f
 
 * npm: Upgrade to 1.1.66 (isaacs)
 

@@ -1,7 +1,7 @@
 # REPL
 
 Read-Eval-Print-Loop (REPL)는 단독 프로그램과 다른 프로그램에 쉽게 포함해서 사용할 수 있다.
-REPL은 자바스크립트를 실행하고 결과를 보는 대화식 방법을 제공한다. 이는 디버깅, 테스팅이나 
+REPL은 자바스크립트를 실행하고 결과를 보는 대화식 방법을 제공한다. 이는 디버깅, 테스팅이나
 그냥 간단한 것을 시도해 볼 때 사용할 수 있다.
 
 명령행에서 아규먼트없이 `node`를 실행하면 REPL에 들어간다.
@@ -35,7 +35,7 @@ REPL은 극도로 단순한 emacs 라인수정을 가진다.
 
  - `input` - 리스닝할 읽을 수 있는 스트림. 기본값은 `process.stdin`이다.
 
- - `output` - readline 데이터를 작성할 쓰기가능한 스트림. 기본값은 
+ - `output` - readline 데이터를 작성할 쓰기가능한 스트림. 기본값은
    `process.stdout`이다.
 
  - `terminal` - `stream`을 TTY처럼 다뤄야 하고 작성된 데이터가 ANSI/VT100로
@@ -46,7 +46,7 @@ REPL은 극도로 단순한 emacs 라인수정을 가진다.
    비동기 래퍼이다. 아래의 커스텀 `eval`의 예제를 참조해라.
 
  - `useColors` - `writer` 함수가 색상을 출력해야 하는지 아닌지를 지정하는 불리언값.
-   다른 `writer` 함수를 설정하면 이 값은 아무것도 하지 않는다. 기본값은 repl의 
+   다른 `writer` 함수를 설정하면 이 값은 아무것도 하지 않는다. 기본값은 repl의
    `terminal`값이다.
 
  - `useGlobal` - `true`로 설정하면 repl이 분리된 컨텍스트에서 스크립트를 실행하는
@@ -64,7 +64,7 @@ REPL은 극도로 단순한 emacs 라인수정을 가진다.
       callback(null, result);
     }
 
-다중 REPL은 node에서 실행되는 같은 인스턴스에서 시작될 것이다. 각 REPL은 같은 전역객체를 
+다중 REPL은 node에서 실행되는 같은 인스턴스에서 시작될 것이다. 각 REPL은 같은 전역객체를
 공유하지만 각각 유일한 I/O를 가질 것인다.
 
 stdin, Unix 소켓, TCP 소켓에서 REPL을 시작하는 예제는 다음과 같다.
@@ -102,11 +102,11 @@ stdin, Unix 소켓, TCP 소켓에서 REPL을 시작하는 예제는 다음과 �
       });
     }).listen(5001);
 
-명령행에서 이 프로그램을 실행하면 stdin에서 REPL을 시작할 것이다. 다른 REPL 클라이언트는 
-Unix 소켓이나 TCP 소켓을 통해서 연결할 것이다. `telnet`은 TCP 소켓에 연결하는 데 유용하고 
+명령행에서 이 프로그램을 실행하면 stdin에서 REPL을 시작할 것이다. 다른 REPL 클라이언트는
+Unix 소켓이나 TCP 소켓을 통해서 연결할 것이다. `telnet`은 TCP 소켓에 연결하는 데 유용하고
 `socat`은 Unix와 TCP 소켓에 연결하는 데 사용할 수 있다.
 
-stdin 대신 Unix 소켓에 기반한 서버에서 REPL을 시작하면 재시작 없이 오랫동안 
+stdin 대신 Unix 소켓에 기반한 서버에서 REPL을 시작하면 재시작 없이 오랫동안
 실행되는 node 프로세스에 연결할 수 있다.
 
 `net.Server`와 `net.Socket` 인스턴스에서 실행되는 "완전한 기능의" (`terminal`) REPL의
@@ -147,15 +147,15 @@ REPL내에서 Control+D를 누르면 종료될 것이다. 다중라인 포현식
     > _ += 1
     4
 
-REPL은 전역범위의 어떤 변수라도 접근할 수 있다. 
-각 `REPLServer`과 연결된 `context` 객체에 할당해서 명시적으로 REPL에 변수를 
+REPL은 전역범위의 어떤 변수라도 접근할 수 있다.
+각 `REPLServer`과 연결된 `context` 객체에 할당해서 명시적으로 REPL에 변수를
 노출할 수 있다. 예를 들어
 
     // repl_test.js
     var repl = require("repl"),
         msg = "message";
 
-    repl.start().context.m = msg;
+    repl.start("> ").context.m = msg;
 
 REPL내 `context` 객체에서 지역변수로 나타나는 변수들이 있다.
 
@@ -165,9 +165,9 @@ REPL내 `context` 객체에서 지역변수로 나타나는 변수들이 있다.
 
 몇몇 REPL 명령어가 있다.
 
-  - `.break` - 다중 라인 표현식을 입력하는 동안 종종 멈추거나 표현식을 완성하기를 신경쓰지 
+  - `.break` - 다중 라인 표현식을 입력하는 동안 종종 멈추거나 표현식을 완성하기를 신경쓰지
     않을 때 사용한다. `.break`은 다시 시작할 것이다.
-  - `.clear` - `context` 객체를 비어있는 객체로 리셋하고 모든 다중라인 표현식을 
+  - `.clear` - `context` 객체를 비어있는 객체로 리셋하고 모든 다중라인 표현식을
     정리한다.
   - `.exit` - REPL이 종료되도록 I/O 스트림을 닫는다.
   - `.help` - 이 특수한 명령어 리스트를 보여준다.
@@ -178,7 +178,7 @@ REPL내 `context` 객체에서 지역변수로 나타나는 변수들이 있다.
 
 REPL에서 다음의 키 조합은 다음과 같은 특수한 효가가 있다.
 
-  - `<ctrl>C` - `.break` 키워드와 유사하다. 현재 명령어를 종료한다. 
+  - `<ctrl>C` - `.break` 키워드와 유사하다. 현재 명령어를 종료한다.
     비어있는 라인에서 두 번 입력하면 강제적으로 종료한다.
   - `<ctrl>D` - `.exit` 키워드와 유사하다.
 
