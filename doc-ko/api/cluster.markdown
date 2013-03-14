@@ -30,9 +30,12 @@ Node 프로세스 하나는 쓰레드 하나로 동작한다. 멀티 코어 시�
 
 이 프로그램에서 워커는 8000번 포트를 공유한다:
 
-    % node server.js
-    Worker 2438 online
-    Worker 2437 online
+    % NODE_DEBUG=cluster node server.js
+    23521,Master Worker 23524 online
+    23521,Master Worker 23526 online
+    23521,Master Worker 23523 online
+    23521,Master Worker 23528 online
+
 
 이 기능은 최근에 추가돼서 앞으로 변경될 수 있다. 해보고 안되면 피드백을 주길 바란다.
 
@@ -52,7 +55,7 @@ Windows에서는 네임드 파이프 서버를 만들 수 없으므로 주의해
 2. `server.listen(handle)` 핸들에 직접 Listen하면 워커는 넘긴 핸들을 사용한다. 마스터에 메시지를 보내지 않는다. 워커가 이미 핸들을 가지고 있으면 이렇게 호출하는 사람은 자신이 무슨짓을 하는 것인지 알고 있다고 간주된다.
 3. `server.listen(0)` 이렇게 호출하면 서버는 랜덤 포트에 Listen한다. 하지만, cluster에서는 워커가 `listen(0)`를 호출할 때마다 동일한 랜덤 포트를 받는다. 사실 처음에만 랜덤이지 그다음부터는 예측 가능하다. 워커마다 고유한(unique) 포트를 사용하려면 워커 ID를 이용해서 포트 넘버를 직접 생성하라.
 
-같은 리소스에 `accept()`하는 프로세스가 여러 개이면 운영체제는 매우 효율적으로 Load-balance를 한다. Node.js에는 라우팅 로직이 없고 워커끼리 상태 정보도 공유하지도 않는다. 그러므로 로그인이나 세션 정보 같은 것을 메모리에 너무 과도하게 상주하지 않도록 프로그램을 설계하는 것이 중요하다. 
+같은 리소스에 `accept()`하는 프로세스가 여러 개이면 운영체제는 매우 효율적으로 Load-balance를 한다. Node.js에는 라우팅 로직이 없고 워커끼리 상태 정보도 공유하지도 않는다. 그러므로 로그인이나 세션 정보 같은 것을 메모리에 너무 과도하게 상주하지 않도록 프로그램을 설계하는 것이 중요하다.
 
 워커는 서로 독립적인 프로세스이므로 프로그램의 필요에 따라 죽이거나(kill) 재생성(re-spawn)할 수 있다. 워커가 살아 있는 한 새 연결을 계속 수락한다. Node는 워커를 관리해주지 않는다. 애플리케이션에 필요한대로 워커 풀을 관리하는 것은 개발자 책임이다.
 
@@ -128,7 +131,7 @@ Windows에서는 네임드 파이프 서버를 만들 수 없으므로 주의해
 
 * `worker` {Worker 객체}
 
-워커의 IPC 채널이 끊기면 이 이벤트가 발생한다. 워커가 죽을 때도 이 이벤트가 발생한다. `.destory()`를 호출해서 워커가 죽을 때도 발생한다. 
+워커의 IPC 채널이 끊기면 이 이벤트가 발생한다. 워커가 죽을 때도 이 이벤트가 발생한다. `.kill()`를 호출해서 워커가 죽을 때도 발생한다.
 
 `.disconnect()`를 호출하면 `disconnect`와 `exit` 이벤트 사이에 약간의 딜레이가 있을 수 있다. 이 이벤트는 아직 살아있는 연결이 있는지 확인하거나 프로세스가 소거 중인지 확인할 때 유용하다:
 
@@ -165,7 +168,7 @@ Windows에서는 네임드 파이프 서버를 만들 수 없으므로 주의해
   * `silent` {Boolean} 워커의 output을 부모의 stdio로 보낼지 말지.
     (Default=`false`)
 
-`setupMaster`는 'fork'의 기본 행동을 수정하는데 사용한다. 사실상 새로운 설정은 즉각적이고 
+`setupMaster`는 'fork'의 기본 행동을 수정하는데 사용한다. 사실상 새로운 설정은 즉각적이고
 영구적이라서 나중에 이를 수정할 수 없다.
 
 예제:
@@ -180,7 +183,7 @@ Windows에서는 네임드 파이프 서버를 만들 수 없으므로 주의해
 
 ## cluster.fork([env])
 
-* `env` {Object} 자식 프로세스의 환경변수, Key/value 
+* `env` {Object} 자식 프로세스의 환경변수, Key/value
 * return {Worker 객체}
 
 워커 프로세스를 하나 만든다(spawn). 이 함수는 마스터 프로세스에서만 호출할 수 있다.
@@ -256,7 +259,7 @@ See: [Child Process module](child_process.html)
 
 * {Boolean}
 
-`.destroy()`를 호출하고 나서 해당 워커가 죽으면 true가 할당되고 `.disconnect()`를 호출하면 즉시 true가 할당된다. 그때까지는 `undefined`이다.
+`.kill()`를 호출하고 나서 해당 워커가 죽으면 true가 할당되고 `.disconnect()`를 호출하면 즉시 true가 할당된다. 그때까지는 `undefined`이다.
 
 ### worker.send(message, [sendHandle])
 
@@ -277,9 +280,11 @@ See: [Child Process module](child_process.html)
       });
     }
 
-### worker.destroy()
+### worker.kill([signal='SIGTERM'])
 
-이 함수로 워커가 죽어고 워커를 다시 생성하지 말라고 마스터에게 알릴 수 있다. `suicide` 프로퍼티를 이용하면 워커가 죽은 게 계획적인지 예외적인지 구분할 수 있다.
+* `signal` {String} 워커 프로세스에 보내는 kill 신호의 이름.
+
+이 함수로 워커를 죽이고 워커를 다시 생성하지 말라고 마스터에게 알릴 수 있다. `suicide` 프로퍼티를 이용하면 워커가 죽은 게 계획적인지 예외적인지 구분할 수 있다.
 
     cluster.on('exit', function(worker, code, signal) {
       if (worker.suicide === true) {
@@ -288,13 +293,15 @@ See: [Child Process module](child_process.html)
     });
 
     // 워커를 파괴
-    worker.destroy();
+    worker.kill();
+
+이 메서드는 하위 호환성을 위한 `worker.destroy()`라는 별칭이 존재한다.
 
 ### worker.disconnect()
 
-이 함수를 호출하면 해당 워커는 더는 연결을 수락하지 않는다(하지만, 다른 워커는 여전히 연결을 수락한다). 이미 맺어진 연결도 종료할 수 있다. 맺어진 연결이 없으면 IPC 연결이 닫히고 워커가 정상적으로(graceful) 죽는다. IPC 채널이 닫히면 `disconnect` 이벤트가 발생하고 이어서 워커가 죽으면서 `exit` 이벤트가 발생한다. 
+이 함수를 호출하면 해당 워커는 더는 연결을 수락하지 않는다(하지만, 다른 워커는 여전히 연결을 수락한다). 이미 맺어진 연결도 종료할 수 있다. 맺어진 연결이 없으면 IPC 연결이 닫히고 워커가 정상적으로(graceful) 죽는다. IPC 채널이 닫히면 `disconnect` 이벤트가 발생하고 이어서 워커가 죽으면서 `exit` 이벤트가 발생한다.
 
-바로 끊기지 않는 연결이 있을 수도 있기 때문에 타임아웃을 사용하는 게 좋다. 먼저 워커를 Disconnect시키고 2초 후에 서버를 죽인다(destroy). 2초 후에 `server.destroy()` 대신 `worker.destroy()` 메소드를 실행할 수도 있지만, 워커가 충분히 소거하지 못할 수 있다.
+바로 끊기지 않는 연결이 있을 수도 있기 때문에 타임아웃을 사용하는 게 좋다. 먼저 워커를 Disconnect시키고 2초 후에 서버를 죽인다(destroy). 대신 2초 후에 `worker.kill()` 메소드를 실행할 수도 있지만, 워커가 충분히 소거하지 못할 수 있다.
 
     if (cluster.isMaster) {
       var worker = cluster.fork();
@@ -384,7 +391,7 @@ See: [Child Process module](child_process.html)
 
     cluster.fork().on('online', function() {
       // Worker is online
-    };
+    });
 
 ### Event: 'listening'
 
@@ -394,7 +401,7 @@ See: [Child Process module](child_process.html)
 
     cluster.fork().on('listening', function(address) {
       // Worker is listening
-    };
+    });
 
 ### Event: 'disconnect'
 
@@ -402,7 +409,7 @@ See: [Child Process module](child_process.html)
 
     cluster.fork().on('disconnect', function() {
       // Worker has disconnected
-    };
+    });
 
 ### Event: 'exit'
 
@@ -420,4 +427,4 @@ See: [Child Process module](child_process.html)
       } else {
         console.log("worker success!");
       }
-    };
+    });

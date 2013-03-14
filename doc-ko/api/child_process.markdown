@@ -6,7 +6,9 @@ Node는 `child_process` 모듈로 세 방향의 `popen(3)` 기능을
 제공한다.
 
 완전한 넌블락킹 방법으로 자식 프로세스의 `stdin`, `stdout`, `stderr`에
-데이터를 스트리밍하는 것이 가능하다.
+데이터를 스트리밍하는 것이 가능하다. (일부 프로그램은 내부적으로 라인버퍼링 I/O
+(line-buffered I/O)를 사용한다. 이는 node.js에는 영향을 주지 않지만 자식
+프로세스에 보낸 데이터가 즉시 소비되지 않는다는 것을 의미한다.)
 
 자식 프로세스를 생성하려면 `require('child_process').spawn()`나
 `require('child_process').fork()`를 사용해라. 각각의 의미는
@@ -38,6 +40,9 @@ ChildProcess 클래스는 직접 사용하도록 만들어 진 것이 아니다.
 `waitpid(2)`를 봐라.
 
 ### Event: 'close'
+
+* `code` {Number} 정상적으로 종료되었다면 종료 코드다.
+* `signal` {String} 부모가 자식 프로세스를 종료했다면 자시 프로세스에 전달된 신호이다.
 
 이 이벤트는 자식 프로세스의 stdio 스트림이 모두 종료되었을 때 발생한다. 이 이벤트는
 다중 프로세스가 같은 stdio 스트림을 공유할 수도 있으므로 'exit'와는 다르다.
@@ -107,7 +112,7 @@ ChildProcess 클래스는 직접 사용하도록 만들어 진 것이 아니다.
     var spawn = require('child_process').spawn,
         grep  = spawn('grep', ['ssh']);
 
-    grep.on('exit', function (code, signal) {
+    grep.on('close', function (code, signal) {
       console.log('child process terminated due to receipt of signal '+signal);
     });
 
@@ -155,14 +160,11 @@ ChildProcess 클래스는 직접 사용하도록 만들어 진 것이 아니다.
 `message` 이벤트에서 발생하지 않을 것이다. 접두사가 있는 메시지들은 `internalMessage` 이벤트를
 발생시킨다. 이는 별도의 공지없이 변경되므로 이 기능을 사용하지 말아야 한다는 것을 의미한다.
 
-The `sendHandle` option to `child.send()` is for sending a TCP server or
-socket object to another process. The child will receive the object as its
-second argument to the `message` event.
 `child.send()`의 `sendHandle` 옵션은 TCP 서버나 소켓 객체를 다른 프로세스에 보내는
 용도이다. 자식 프로세스는 `message` 이벤트의 두번째 아규먼트로 이 객체를 받을 것이다.
 자식 프로세스에 메시지(선택적으로 핸들 객체와 함께)를 보낸다.
 
-**서버 객체 전송**
+#### Example: sending server object
 
 다음은 서버를 전송하는 예제다.
 
@@ -171,7 +173,7 @@ second argument to the `message` event.
     // 서버객체를 열고 handle을 전송한다.
     var server = require('net').createServer();
     server.on('connection', function (socket) {
-      socket.end('handled by parent');
+      socket.end('부모가 처리한다');
     });
     server.listen(1337, function() {
       child.send('server', server);
@@ -182,7 +184,7 @@ second argument to the `message` event.
     process.on('message', function(m, server) {
       if (m === 'server') {
         server.on('connection', function (socket) {
-          socket.end('handled by child');
+          socket.end('자식이 처리한다');
         });
       }
     });
@@ -190,11 +192,14 @@ second argument to the `message` event.
 서버는 이제 부모와 자식사이에서 공유된다. 이는 연결들이 부모와 자식에서 모두 다룰 수
 있다는 의미이다.
 
-**소켓 객체 전송**
+`dgram` 서버에서 워크플로우는 완전히 동일하다. 여기서 `connection` 대신 `message` 이벤트를
+리스닝하고 `server.listen` 대신 `server.bind`를 사용한다.
+
+#### Example: sending socket object
 
 다음은 소켓을 전송하는 예제다. 이 예제는 두 자식 프로세스를 생성하고 "특별한" 자식 프로세스에
-소켓을 전송해서 VIP인 원격주소 "special"의 연결을 다룬다. 다른 소켓들은 "보통의" 프로세스로
-갈 것이다.
+소켓을 전송해서 VIP인 원격주소 `74.125.127.100`의 연결을 다룬다. 다른 소켓들은 "보통의"
+프로세스로 갈 것이다.
 
     var normal = require('child_process').fork('child.js', ['normal']);
     var special = require('child_process').fork('child.js', ['special']);
@@ -274,7 +279,7 @@ second argument to the `message` event.
       console.log('stderr: ' + data);
     });
 
-    ls.on('exit', function (code) {
+    ls.on('close', function (code) {
       console.log('child process exited with code ' + code);
     });
 
@@ -292,7 +297,7 @@ second argument to the `message` event.
       console.log('ps stderr: ' + data);
     });
 
-    ps.on('exit', function (code) {
+    ps.on('close', function (code) {
       if (code !== 0) {
         console.log('ps process exited with code ' + code);
       }
@@ -307,7 +312,7 @@ second argument to the `message` event.
       console.log('grep stderr: ' + data);
     });
 
-    grep.on('exit', function (code) {
+    grep.on('close', function (code) {
       if (code !== 0) {
         console.log('grep process exited with code ' + code);
       }
@@ -496,6 +501,7 @@ spawn이 비어 있는 옵션 객체를 받으면 `process.env`를 사용하는 
   * `cwd` {문자열} 자식프로세스의 현재 워킹 디렉토리
   * `env` {객체} 환경변수의 키-밸류 쌍
   * `encoding` {문자열} (기본값: 'utf8')
+  * `execPath` {String} 자식 프로세스를 생성하는데 사용하는 실행가능한 경로
 * Return: ChildProcess 객체
 
 이는 Node 프로세스를 생성하기(spawn) 위해 `spawn()` 기능의 특별한 경우이다. 게다가
@@ -511,5 +517,9 @@ stdout, stderr를 가질 것이다. 이 동작을 변경하려면 `options` 객�
 
 이러한 자식 노드들도 V8의 완전한 새 인스턴스이다. 새로운 각 노드마다 최소한 30ms의
 구동시간과 10mb의 메모리를 가정해보자. 즉, 수천 개의 노드를 생성할 수 없다.
+
+`options`객체의 `execPath` 프로퍼티는 현재 실행된 `node` 대신 자식을 위한 프로세스를 생성할
+수 있게 한다. 이는 조심히 수행되어야 하고 기본적으로 자식프로세스의 `NODE_CHANNEL_FD` 환경변수를
+나타내는 fd에 얘기할 것이다. 이 fd의 입력과 출력은 라인으로 구분된 JSON 객체일 것이다.
 
 [EventEmitter]: events.html#events_class_events_eventemitter

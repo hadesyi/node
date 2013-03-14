@@ -14,12 +14,13 @@
 
 `exit`이벤트 예제:
 
-    process.on('exit', function () {
-      process.nextTick(function () {
-       console.log('This will not run');
-      });
+    process.on('exit', function() {
+      setTimeout(function() {
+        console.log('This will not run');
+      }, 0);
       console.log('About to exit.');
     });
+
 
 ## Event: 'uncaughtException'
 
@@ -28,11 +29,11 @@
 
 `uncaughtException`이벤트 예제:
 
-    process.on('uncaughtException', function (err) {
+    process.on('uncaughtException', function(err) {
       console.log('Caught exception: ' + err);
     });
 
-    setTimeout(function () {
+    setTimeout(function() {
       console.log('This will still run.');
     }, 500);
 
@@ -67,7 +68,7 @@
     // stdin를 읽기 시작하므로 종료되지 않는다.
     process.stdin.resume();
 
-    process.on('SIGINT', function () {
+    process.on('SIGINT', function() {
       console.log('Got SIGINT.  Press Control-D to exit.');
     });
 
@@ -81,7 +82,7 @@
 
 예제: `console.log`의 정의
 
-    console.log = function (d) {
+    console.log = function(d) {
       process.stdout.write(d + '\n');
     };
 
@@ -109,11 +110,11 @@ stdin에 대한 `Readable Stream`이다. stdin 스트림은 기본적으로 멈�
     process.stdin.resume();
     process.stdin.setEncoding('utf8');
 
-    process.stdin.on('data', function (chunk) {
+    process.stdin.on('data', function(chunk) {
       process.stdout.write('data: ' + chunk);
     });
 
-    process.stdin.on('end', function () {
+    process.stdin.on('end', function() {
       process.stdout.write('end');
     });
 
@@ -125,7 +126,7 @@ stdin에 대한 `Readable Stream`이다. stdin 스트림은 기본적으로 멈�
 아규먼트일 것이다.
 
     // process.argv 출력
-    process.argv.forEach(function (val, index, array) {
+    process.argv.forEach(function(val, index, array) {
       console.log(index + ': ' + val);
     });
 
@@ -255,6 +256,43 @@ Note: 이 함수는 POSIX 플랫폼에서만 사용할 수 있다.(예를 들어
     }
 
 
+## process.getgroups()
+
+Note: 이 함수는 POSIX 플랫폼에서만 사용할 수 있다.(윈도우즈에선 사용할 수 없다.)
+
+추가적인 그룹 ID를 가진 배열을 반환한다. POSIX는 유효한 그룹 ID를 포함하고 있는지
+지정하지 않지만 node.js를 이를 항상 보장한다.
+
+
+## process.setgroups(groups)
+
+Note: 이 함수는 POSIX 플랫폼에서만 사용할 수 있다.(윈도우즈에선 사용할 수 없다.)
+
+추가적인 그룹 ID를 설정한다. 이는 권한힌 필요한 작업이다. 즉, root이거나 CAP_SETGID 권한을
+가져야 한다.
+
+목록은 그룹 ID, 그룹명 또는 둘 다를 포함할 수 있다.
+
+
+## process.initgroups(user, extra_group)
+
+Note: 이 함수는 POSIX 플랫폼에서만 사용할 수 있다.(윈도우즈에선 사용할 수 없다.)
+
+/etc/group를 읽고 사용자가 멤버로 있는 모든 그룹을 사용해서 그룹 접근 목록을 초기화한다.
+이는 권한이 필요한 작업이므로 root이거나 CAP_SETGID 권한을 가져야 한다.
+
+`user`는 사용자명이거나 사용자 ID이다. `extra_group`는 그룹명이나 그룹ID이다.
+
+권한을 버릴때는 조심할 필요가 있다.
+예제:
+
+    console.log(process.getgroups());         // [ 0 ]
+    process.initgroups('bnoordhuis', 1000);   // switch user
+    console.log(process.getgroups());         // [ 27, 30, 46, 1000, 0 ]
+    process.setgid(1000);                     // drop root gid
+    console.log(process.getgroups());         // [ 27, 30, 46, 1000 ]
+
+
 ## process.version
 
 `NODE_VERSION`으로 노출된 컴파일된 프로퍼티이다.
@@ -291,8 +329,10 @@ node와 의존성에 대한 버전 문자열을 노출하는 프로퍼티이다.
       variables:
        { host_arch: 'x64',
          node_install_npm: 'true',
-         node_install_waf: 'true',
          node_prefix: '',
+         node_shared_cares: 'false',
+         node_shared_http_parser: 'false',
+         node_shared_libuv: 'false',
          node_shared_v8: 'false',
          node_shared_zlib: 'false',
          node_use_dtrace: 'false',
@@ -313,11 +353,11 @@ node와 의존성에 대한 버전 문자열을 노출하는 프로퍼티이다.
 
 자신에게 신호를 보내는 예제:
 
-    process.on('SIGHUP', function () {
+    process.on('SIGHUP', function() {
       console.log('Got SIGHUP signal.');
     });
 
-    setTimeout(function () {
+    setTimeout(function() {
       console.log('Exiting.');
       process.exit(0);
     }, 100);
@@ -372,11 +412,81 @@ Node 프로세스의 메모리 사용량을 바이트로 나타내서 보여주�
 
 이벤트 루프의 다음 번 루프에서 이 callback을 호출한다.
 이는 단순히 `setTimeout(fn, 0)`에 대한 별칭이 *아니라* 훨씬 더 효율적이다.
+이는 보통 어떤 I/O 이벤트도 발생하기 전에 실행되지만 몇가지 예외가 존재한다.
+아래의 `process.maxTickDepth`를 참고해라.
 
-    process.nextTick(function () {
+    process.nextTick(function() {
       console.log('nextTick callback');
     });
 
+이는 객체가 만들어 진 후이지만 어떤 I/O도 발생하기 전에 사용자가 이벤트 핸들러를 할당할 기회를
+주고자 하는 API를 개발할 때 중요하다.
+
+    function MyThing(options) {
+      this.setupOptions(options);
+
+      process.nextTick(function() {
+        this.startDoingStuff();
+      }.bind(this));
+    }
+
+    var thing = new MyThing();
+    thing.getReadyForStuff();
+
+    // thing.startDoingStuff()는 이제 호출된다.(그 이전이 아니라)
+
+이는 100% 동기이거나 100% 비동기여야 하는 API에 아주 중요한다.
+다음 예제를 봐라.
+
+    // WARNING!  DO NOT USE!  BAD UNSAFE HAZARD!
+    function maybeSync(arg, cb) {
+      if (arg) {
+        cb();
+        return;
+      }
+
+      fs.stat('file', cb);
+    }
+
+이 API는 위험하다. 다음과 같이 사용한다면
+
+    maybeSync(true, function() {
+      foo();
+    });
+    bar();
+
+`foo()`와 `bar()` 중 어느 쪽이 먼저 호출될 것인지 명확하지 않다.
+
+다음 접근방법이 훨씬 좋다.
+
+    function definitelyAsync(arg, cb) {
+      if (arg) {
+        process.nextTick(cb);
+        return;
+      }
+
+      fs.stat('file', cb);
+    }
+
+## process.maxTickDepth
+
+* {Number} Default = 1000
+
+`process.nextTick`에 전달되는 콜백은 *보통* 현재 실행 흐름의 끝에 호출될 것이므로
+대략 함수를 동기적으로 호출한 것만큼 빠르게 호출된다. 확인하지 않은채로 놔두면 이는
+어떤 I/O의 발생도 발생하지 못하게 막으면서 이벤트 루프가 굶주리게(starve)할 것이다.
+
+다음 코드를 보자.
+
+    process.nextTick(function foo() {
+      process.nextTick(foo);
+    });
+
+nextTick의 재귀 호출로 인한 무한루프가 Node를 블락하는 상황을 피하려면 매번
+일부 I/O가 수행되도록 지연시켜야 한다.
+
+`process.maxTickDepth` 값은 다른 I/O가 일어나도록 하기전에 계산할
+nextTick이 호출하는 nextTick 콜백의 최대 깊이이다.
 
 ## process.umask([mask])
 
@@ -409,7 +519,7 @@ Node가 실행되고 있는 시간을 초단위로 나타낸다.
     var time = process.hrtime();
     // [ 1800216, 25 ]
 
-    setTimeout(function () {
+    setTimeout(function() {
       var diff = process.hrtime(time);
       // [ 1, 552 ]
 

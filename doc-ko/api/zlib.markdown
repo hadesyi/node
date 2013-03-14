@@ -37,7 +37,7 @@
 
 HTTP client나 server에서 이 모듈를 사용하려면 request에서 사용할 수 있는 [accept-encoding](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.3)을 보고 response에서는 [content-encoding](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.11)를 보면 된다.
 
-**Note: 이 예제는 기본 개념을 보여주기 위해 극도로 단순화한 것임.** Zlib 인코딩은 비싸서 결과물을 캐시하는게 좋다. 
+**Note: 이 예제는 기본 개념을 보여주기 위해 극도로 단순화한 것임.** Zlib 인코딩은 비싸서 결과물을 캐시하는게 좋다.
 [Memory Usage Tuning](#zlib_memory_usage_tuning)을 보면 zlib 튜닝시 speed/memory/compression에 대해 고려해야 하는 점이 나와 있다.
 
     // 클라이언트 요청 예제
@@ -120,6 +120,22 @@ HTTP client나 server에서 이 모듈를 사용하려면 request에서 사용�
 
 [options](#zlib_options)으로 [Unzip](#zlib_class_zlib_unzip) 객채를 새로 만들어 리턴한다.
 
+
+## Class: zlib.Zlib
+
+`zlib` 모듈이 익스포트하지 않는다. 여기서 문서화한 이유는 compressor/decompressor 클래스의
+기반 클래스이기 때문이다.
+
+### zlib.flush(callback)
+
+지연되고 있는 데이터를 내보낸다. 경박하게 호출하지 말아라. 너무 이른 플러시는
+압축 알고리즘의 효율성에 부정적인 영향을 준다.
+
+### zlib.reset()
+
+compressor/decompressor를 원래의 기본값으로 리셋한다.
+inflate와 deflate 알로리즘에만 적용할 수 있다.
+
 ## Class: zlib.Gzip
 
 gzip으로 데이터를 압축한다.
@@ -190,12 +206,13 @@ Unzip으로 Buffer의 압축을 푼다.
 
 어떤 옵션은 압축 클래스에만 사용하고 압축을 푸는 클래스에서는 무시한다.
 
-* chunkSize (default: 16*1024)
+* flush (기본값: `zlib.Z_NO_FLUSH`)
+* chunkSize (기본값: 16*1024)
 * windowBits
-* level (compression only)
-* memLevel (compression only)
-* strategy (compression only)
-* dictionary (deflate/inflate only, 기본값은 빈 dictionary)
+* level (압축 전용)
+* memLevel (압축 전용)
+* strategy (압축 전용)
+* dictionary (deflate/inflate 전용, 기본값은 빈 dictionary)
 
 `deflateInit2`와 `inflateInit2`의 설명은 <http://zlib.net/manual.html#Advanced> 페이지에서 보라.
 
