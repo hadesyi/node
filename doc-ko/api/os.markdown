@@ -6,9 +6,13 @@ OS 유틸리티 함수를 몇 개 제공한다.
 
 이 모듈은 `require('os')`로 접근한다.
 
-## os.tmpDir()
+## os.tmpdir()
 
 OS의 임시 파일 디렉토리를 리턴한다.
+
+## os.endianness()
+
+CPU의 엔디언(endianness)을 반환한다. 가능한 값은 `"BE"`나 `"LE"`이다.
 
 ## os.hostname()
 
@@ -48,7 +52,9 @@ OS 버전을 리턴한다(역주, '3.2.0-26-generic').
 
 ## os.cpus()
 
-모든 CPU/코어에 대한 정보를 배열에 담아서 그 배열을 리턴한다. CPU/코어에 대한 정보는 model, speed(MHz 단위), times(user, nide, sys, idle, irq로 분류해서 각각 사용한 CPU 타임(CPU 틱의 수)이다.
+모든 CPU/코어에 대한 정보를 배열에 담아서 그 배열을 리턴한다. CPU/코어에 대한 정보는
+model, speed(MHz 단위), times(user, nide, sys, idle, irq로 분류해서 각각
+사용한 CPU 타임(CPU 틱의 수)이다.
 
 os.cpus의 결과:
 
@@ -121,11 +127,11 @@ os.cpus의 결과:
 
 네트워크 인터페이스의 목록을 리턴한다:
 
-    { lo0: 
+    { lo0:
        [ { address: '::1', family: 'IPv6', internal: true },
          { address: 'fe80::1', family: 'IPv6', internal: true },
          { address: '127.0.0.1', family: 'IPv4', internal: true } ],
-      en1: 
+      en1:
        [ { address: 'fe80::cabc:c8ff:feef:f996', family: 'IPv6',
            internal: false },
          { address: '10.0.1.123', family: 'IPv4', internal: false } ],
@@ -135,5 +141,5 @@ os.cpus의 결과:
 
 ## os.EOL
 
-Node를 실행하는 OS용 End-of-line 상수. 
+Node를 실행하는 OS용 End-of-line 상수.
 

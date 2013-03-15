@@ -4,29 +4,31 @@
 API는(현 시점에) 여러 가지 라이브러리에 대한 지식을 포함해서 상당히 복잡하다.
 
  - V8 자바스트립트, C++ 라이브러리. 자바스크립트와 인터페이스로 연결하는데 사용한다:
-   객체를 생성하고 함수를 호출하는 등. `v8.h` 헤더파일(Node 소스트리의 
-   `deps/v8/include/v8.h`)에 주로 문서화되어 있고 
+   객체를 생성하고 함수를 호출하는 등. `v8.h` 헤더파일(Node 소스트리의
+   `deps/v8/include/v8.h`)에 주로 문서화되어 있고
    [online](http://izs.me/v8-docs/main.html)에서도 확인할 수 있다.
 
  - [libuv](https://github.com/joyent/libuv), C 이벤트루프 라이브러리. 파일 디스크립터가
-   읽을 수 있게 되기를 기다린다거나 타이머를 기다리거나 받아야할 신호를 기다려야 할 때는 
-   언제든지 libuv와 인터페이스로 연결할 필요가 있을 것이다. 즉 어떤 I/O라도 수행한다면 
+   읽을 수 있게 되기를 기다린다거나 타이머를 기다리거나 받아야할 신호를 기다려야 할 때는
+   언제든지 libuv와 인터페이스로 연결할 필요가 있을 것이다. 즉 어떤 I/O라도 수행한다면
    libuv를 사용해야 한다.
 
- - 내부 Node 라이브러리. 가장 중요한 것은 `node::ObjectWrap` 클래스이다. 아마 
+ - 내부 Node 라이브러리. 가장 중요한 것은 `node::ObjectWrap` 클래스이다. 아마
    이 클래스에서 파생하기를 원할 것이다.
 
  - 그 밖에. 무엇을 사용할 수 있는지 알고 싶으면 `deps/`를 봐라.
 
-Node는 실행가능하도록 모든 의존성을 정적으로 컴파일한다. 모듈을 컴파일할 때 이러한 
+Node는 실행가능하도록 모든 의존성을 정적으로 컴파일한다. 모듈을 컴파일할 때 이러한
 라이브러리의 연결에 대해서 걱정할 필요가 없다.
 
+아래의 예제는 모두 [download](https://github.com/rvagg/node-addon-examples)에서
+다운받을 수 있고 자신만의 애드온을 작성할 때 시작지점으로 사용할 수 있다.
 
 ## Hello world
 
 다음 자바스크립트 코드와 동일한 작은 애드온을 C++로 작성하면서 시작해 보자.
 
-    exports.hello = function() { return 'world'; };
+    module.exports.hello = function() { return 'world'; };
 
 우선 `hello.cc`파일을 생성한다.
 
@@ -40,22 +42,22 @@ Node는 실행가능하도록 모든 의존성을 정적으로 컴파일한다. 
       return scope.Close(String::New("world"));
     }
 
-    void init(Handle<Object> target) {
-      target->Set(String::NewSymbol("hello"),
+    void init(Handle<Object> exports) {
+      exports->Set(String::NewSymbol("hello"),
           FunctionTemplate::New(Method)->GetFunction());
     }
     NODE_MODULE(hello, init)
 
 모든 Node 애드온은 초기화 함수를 외부에 노출해야 한다.
 
-    void Initialize (Handle<Object> target);
+    void Initialize (Handle<Object> exports);
     NODE_MODULE(module_name, Initialize)
 
 함수가 아니므로 `NODE_MODULE`뒤에 세미콜론이 없다.(`node.h`를 봐라.)
 
 `module_name`은 최종 바이너리의 파일명과 일치시켜야 한다.(.node 접미사는 제외하고)
 
-소스코드는 바이너리 애드온인 `hello.node`로 빌드되어야 한다. 이를 위해서 
+소스코드는 바이너리 애드온인 `hello.node`로 빌드되어야 한다. 이를 위해서
 JSON과 유사한 형식으로 모듈의 빌드 설정을 나타내는 `binding.gyp`파일을 생성해야 한다.
 이 파일은 [node-gyp](https://github.com/TooTallNate/node-gyp)가 컴파일한다.
 
@@ -71,27 +73,27 @@ JSON과 유사한 형식으로 모듈의 빌드 설정을 나타내는 `binding.
 다음 과정은 현재 플랫폼에 적절한 프로젝트 빌드 파일을 생성하는 것이다.
 빌드파일을 생성하기 위해서 `node-gyp configure`를 사용해라.
 
-이제 `build/` 디렉토리에 `Makefile`(Unix 플랫폼)과 `vcxproj`(Windows 플랫폼)가 
+이제 `build/` 디렉토리에 `Makefile`(Unix 플랫폼)과 `vcxproj`(Windows 플랫폼)가
 있을 것이다. 그 다음 `node-gyp build`명령어를 실행한다.
 
 컴파일된 `.node` 바인딩 파일을 얻었다! 컴파일된 파인딩 파일들은 `build/Release/`에 있다.
 
-최근에 빌드한 `hello.node` 모듈을 `require`함으로써 Node 프로젝트 `hello.js`에서 바이너리 
+최근에 빌드한 `hello.node` 모듈을 `require`함으로써 Node 프로젝트 `hello.js`에서 바이너리
 애드온을 사용할 수 있다.
 
     var addon = require('./build/Release/hello');
 
     console.log(addon.hello()); // 'world'
 
-더 많은 정보는 아래의 패턴들을 보거나 실사용 예제를 보려면 
+더 많은 정보는 아래의 패턴들을 보거나 실사용 예제를 보려면
 <https://github.com/pietern/hiredis-node>를 봐라.
 
 
 ## Addon patterns
 
-다음은 애드온 개발을 시작할 때 도움이 될만한 애드폰 패턴들이다. 여러 가지 v8 호출에 대해서는 
-온라인 [v8 reference](http://izs.me/v8-docs/main.html)를 참고하고 핸들, 범위, 함수 템플릿 
-등과 같이 사용된 여러가지 개념에 대한 설명은 v8의 
+다음은 애드온 개발을 시작할 때 도움이 될만한 애드폰 패턴들이다. 여러 가지 v8 호출에 대해서는
+온라인 [v8 reference](http://izs.me/v8-docs/main.html)를 참고하고 핸들, 범위, 함수 템플릿
+등과 같이 사용된 여러가지 개념에 대한 설명은 v8의
 [Embedder's Guide](http://code.google.com/apis/v8/embed.html)를 참고해라.
 
 이 예제를 사용하려면 `node-gyp`를 사용해서 컴파일해야 한다.
@@ -143,8 +145,8 @@ JSON과 유사한 형식으로 모듈의 빌드 설정을 나타내는 `binding.
       return scope.Close(num);
     }
 
-    void Init(Handle<Object> target) {
-      target->Set(String::NewSymbol("add"),
+    void Init(Handle<Object> exports) {
+      exports->Set(String::NewSymbol("add"),
           FunctionTemplate::New(Add)->GetFunction());
     }
 
@@ -159,7 +161,7 @@ JSON과 유사한 형식으로 모듈의 빌드 설정을 나타내는 `binding.
 
 ### Callbacks
 
-C++ 함수에 자바스크립트 함수를 전달해서 C++ 함수에서 자바스크립트 함수를 실행할 수 
+C++ 함수에 자바스크립트 함수를 전달해서 C++ 함수에서 자바스크립트 함수를 실행할 수
 있다. 다음은 `addon.cc`이다:
 
     #define BUILDING_NODE_EXTENSION
@@ -178,26 +180,30 @@ C++ 함수에 자바스크립트 함수를 전달해서 C++ 함수에서 자바�
       return scope.Close(Undefined());
     }
 
-    void Init(Handle<Object> target) {
-      target->Set(String::NewSymbol("runCallback"),
+    void Init(Handle<Object> exports, Handle<Object> module) {
+      module->Set(String::NewSymbol("exports"),
           FunctionTemplate::New(RunCallback)->GetFunction());
     }
 
     NODE_MODULE(addon, Init)
 
+이 예제는 전체 `module` 객체를 두번째 인자로 받는 두개의 인자를 갖는 형식의 `Init()`를
+사용한다. 이는 애드온이 `exports`의 프로퍼티로 함수를 추가하는 대신 하나의 함수로
+`exports`를 완전히 덮어쓸 수 있게 한다.
+
 다음 자바스크립트 코드를 실행해서 이를 테스트 할 수 있다:
 
     var addon = require('./build/Release/addon');
 
-    addon.runCallback(function(msg){
+    addon(function(msg){
       console.log(msg); // 'hello world'
     });
 
 
 ### Object factory
 
-`createObject()`에 전달된 문자열을 출력하는 `msg` 프로퍼티를 가진 객체를 리턴하는 
-이 `addon.cc` 패턴과 함께 C++ 함수내에서 새로운 객체를 생성해서 리턴할 수 있다. 
+`createObject()`에 전달된 문자열을 출력하는 `msg` 프로퍼티를 가진 객체를 리턴하는
+이 `addon.cc` 패턴과 함께 C++ 함수내에서 새로운 객체를 생성해서 리턴할 수 있다.
 
     #define BUILDING_NODE_EXTENSION
     #include <node.h>
@@ -213,8 +219,8 @@ C++ 함수에 자바스크립트 함수를 전달해서 C++ 함수에서 자바�
       return scope.Close(obj);
     }
 
-    void Init(Handle<Object> target) {
-      target->Set(String::NewSymbol("createObject"),
+    void Init(Handle<Object> exports, Handle<Object> module) {
+      module->Set(String::NewSymbol("exports"),
           FunctionTemplate::New(CreateObject)->GetFunction());
     }
 
@@ -224,8 +230,8 @@ C++ 함수에 자바스크립트 함수를 전달해서 C++ 함수에서 자바�
 
     var addon = require('./build/Release/addon');
 
-    var obj1 = addon.createObject('hello');
-    var obj2 = addon.createObject('world');
+    var obj1 = addon('hello');
+    var obj2 = addon('world');
     console.log(obj1.msg+' '+obj2.msg); // 'hello world'
 
 
@@ -253,8 +259,8 @@ C++ 함수에 자바스크립트 함수를 전달해서 C++ 함수에서 자바�
       return scope.Close(fn);
     }
 
-    void Init(Handle<Object> target) {
-      target->Set(String::NewSymbol("createFunction"),
+    void Init(Handle<Object> exports, Handle<Object> module) {
+      module->Set(String::NewSymbol("exports"),
           FunctionTemplate::New(CreateFunction)->GetFunction());
     }
 
@@ -265,7 +271,7 @@ C++ 함수에 자바스크립트 함수를 전달해서 C++ 함수에서 자바�
 
     var addon = require('./build/Release/addon');
 
-    var fn = addon.createFunction();
+    var fn = addon();
     console.log(fn()); // 'hello world'
 
 
@@ -280,8 +286,8 @@ C++ 함수에 자바스크립트 함수를 전달해서 C++ 함수에서 자바�
 
     using namespace v8;
 
-    void InitAll(Handle<Object> target) {
-      MyObject::Init(target);
+    void InitAll(Handle<Object> exports) {
+      MyObject::Init(exports);
     }
 
     NODE_MODULE(addon, InitAll)
@@ -295,7 +301,7 @@ C++ 함수에 자바스크립트 함수를 전달해서 C++ 함수에서 자바�
 
     class MyObject : public node::ObjectWrap {
      public:
-      static void Init(v8::Handle<v8::Object> target);
+      static void Init(v8::Handle<v8::Object> exports);
 
      private:
       MyObject();
@@ -320,7 +326,7 @@ C++ 함수에 자바스크립트 함수를 전달해서 C++ 함수에서 자바�
     MyObject::MyObject() {};
     MyObject::~MyObject() {};
 
-    void MyObject::Init(Handle<Object> target) {
+    void MyObject::Init(Handle<Object> exports) {
       // Prepare constructor template
       Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
       tpl->SetClassName(String::NewSymbol("MyObject"));
@@ -330,7 +336,7 @@ C++ 함수에 자바스크립트 함수를 전달해서 C++ 함수에서 자바�
           FunctionTemplate::New(PlusOne)->GetFunction());
 
       Persistent<Function> constructor = Persistent<Function>::New(tpl->GetFunction());
-      target->Set(String::NewSymbol("MyObject"), constructor);
+      exports->Set(String::NewSymbol("MyObject"), constructor);
     }
 
     Handle<Value> MyObject::New(const Arguments& args) {
@@ -364,7 +370,7 @@ C++ 함수에 자바스크립트 함수를 전달해서 C++ 함수에서 자바�
 
 ### Factory of wrapped objects
 
-이는 자바스크립트에서 `new` 오퍼레이터로 명시적인 인스턴스화 없이 네이티브 객체를 
+이는 자바스크립트에서 `new` 오퍼레이터로 명시적인 인스턴스화 없이 네이티브 객체를
 생성할 수 있도록 하고 싶을 때 유용하다.
 
     var obj = addon.createObject();
@@ -384,10 +390,10 @@ C++ 함수에 자바스크립트 함수를 전달해서 C++ 함수에서 자바�
       return scope.Close(MyObject::NewInstance(args));
     }
 
-    void InitAll(Handle<Object> target) {
+    void InitAll(Handle<Object> exports, Handle<Object> module) {
       MyObject::Init();
 
-      target->Set(String::NewSymbol("createObject"),
+      module->Set(String::NewSymbol("exports"),
           FunctionTemplate::New(CreateObject)->GetFunction());
     }
 
@@ -475,14 +481,14 @@ C++ 함수에 자바스크립트 함수를 전달해서 C++ 함수에서 자바�
 
 다음으로 테스트한다:
 
-    var addon = require('./build/Release/addon');
+    var createObject = require('./build/Release/addon');
 
-    var obj = addon.createObject(10);
+    var obj = createObject(10);
     console.log( obj.plusOne() ); // 11
     console.log( obj.plusOne() ); // 12
     console.log( obj.plusOne() ); // 13
 
-    var obj2 = addon.createObject(20);
+    var obj2 = createObject(20);
     console.log( obj2.plusOne() ); // 21
     console.log( obj2.plusOne() ); // 22
     console.log( obj2.plusOne() ); // 23
@@ -517,19 +523,19 @@ C++ 객체를 감싸고 리턴하는 부분에 대해서 추가적으로 Node의
       return scope.Close(Number::New(sum));
     }
 
-    void InitAll(Handle<Object> target) {
+    void InitAll(Handle<Object> exports) {
       MyObject::Init();
 
-      target->Set(String::NewSymbol("createObject"),
+      exports->Set(String::NewSymbol("createObject"),
           FunctionTemplate::New(CreateObject)->GetFunction());
 
-      target->Set(String::NewSymbol("add"),
+      exports->Set(String::NewSymbol("add"),
           FunctionTemplate::New(Add)->GetFunction());
     }
 
     NODE_MODULE(addon, InitAll)
 
-흥미롭게 `myobject.h`에서 퍼블릭 메서드를 도입해서 객체를 풀어버린(unwrapping) 후 
+흥미롭게 `myobject.h`에서 퍼블릭 메서드를 도입해서 객체를 풀어버린(unwrapping) 후
 private 값을 자세히 조사할 수 있다:
 
     #define BUILDING_NODE_EXTENSION

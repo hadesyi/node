@@ -2,7 +2,7 @@
 
     Stability: 3 - Stable
 
-자바스크립트 자체는 유니코드에 친화적이지만 바이너리 데이터에는 별로 좋지 않다. TCP 
+자바스크립트 자체는 유니코드에 친화적이지만 바이너리 데이터에는 별로 좋지 않다. TCP
 스트림이나 파일시스템을 다룰 때 옥텟(octet) 스트림을 다룰 필요가 있다. Node에는
 옥텟 스트림을 조작하고, 생성하고, 소비하는 여러 전략이 있다.
 
@@ -15,15 +15,17 @@
 버퍼와 자바스크립트 문자열 객체간에 변환을 하려면 명시적인 인코딩 메서드가 필요하다.
 여러 가지 문자열 인코딩이 있다.
 
-* `'ascii'` - 7 비트 ASCII 데이터 전용이다. 이 인코딩 메서드는 아주 빠르고 7비트가 넘는 
-  비트가 있는 경우 제거한다. 
-  이 인코딩은 null 문자(`'\0'`나 `'\u0000'`)를 `0x20` (공백의 문자코드)로 변환한다.
-  null 문자를 `0x00`로 변환하려면 `'utf8'`를 사용해야 한다.
+* `'ascii'` - 7 비트 ASCII 데이터 전용이다. 이 인코딩 메서드는 아주 빠르고 7비트가 넘는
+  비트가 있는 경우 제거한다.
 
-* `'utf8'` - 멀티바이트로 인코딩된 유니코드 문자다. 다수의 웹페이지와 문서 형식을 
+  문자열을 버퍼로 변환하는 경우 이 인코딩은 null 문자(`'\0'`나 `'\u0000'`)를
+  `0x20` (공백의 문자코드)로 변환한다. null 문자를 `0x00`로 변환하려면 `'utf8'`를
+  사용해야 한다.
+
+* `'utf8'` - 멀티바이트로 인코딩된 유니코드 문자다. 다수의 웹페이지와 문서 형식을
   UTF-8을 사용한다.
 
-* `'utf16le'` - 2 바이트나 4바이트의 리들 엔디언(little endian)으로 인코딩된 
+* `'utf16le'` - 2 바이트나 4바이트의 리들 엔디언(little endian)으로 인코딩된
   유니코드 문자이다. 대리쌍(surrogate pairs)을 지원한다.(U+10000 ~ U+10FFFF)
 
 * `'ucs2'` - `'utf16le'`의 별칭이다.
@@ -36,22 +38,15 @@
 
 * `'hex'` - 각 바이트를 두 16진수 문자로 인코딩한다.
 
-`Buffer`도 Typed Array View와 DataView에 사용할 수 있다.
+`Buffer` 객체는 타입있는 배열(typed array)과도 사용할 수 있다. 이 때 버퍼 객체는 타입있는
+배열을 지원하는 저장소로 사용하는 `ArrayBuffer`로 복제(clone)된다. 버퍼의 메모리와
+`ArrayBuffer`는 공유되지 않는다.
 
-    var buff = new Buffer(4);
-    var ui16 = new Uint16Array(buff);
-    var view = new DataView(buff);
+NOTE: Node.js v0.8은 복제하는 대신 단순히 `array.buffer`안에 버퍼에 대한 참조를 유지한다.
 
-    ui16[0] = 1;
-    ui16[1] = 2;
-    console.log(buff);
-
-    view.setInt16(0, 1);       // 오프셋 0 바이트에 빅엔디언 int16을 설정한다
-    view.setInt16(2, 2, true); // 오프셋 2 바이트에 리틀엔디언 int16을 설정한다
-    console.log(buff);
-
-    // <Buffer 01 00 02 00>
-    // <Buffer 00 01 02 00>
+더 효율적이지만 타입있는 배열(typed array) 스펙과 미세하게 호환되지 않는다.
+`ArrayBuffer#slice()`가 slice의 복사본을 만드는 반면 `Buffer#slice()`는
+뷰(view)를 생성한다.
 
 ## Class: Buffer
 
@@ -78,6 +73,13 @@ Buffer 클래스는 바이너리 데이터를 직접 다루는 글로벌 타입�
 주어진 `str`를 담고있는 새로운 버퍼를 할당한다.
 `encoding`의 기본값은 `'utf8'`이다.
 
+### Class Method: Buffer.isEncoding(encoding)
+
+* `encoding` {문자열} 테스트할 인코딩 문자열
+
+`encoding`이 유효한 인코딩 인자라면 true를 반환하고 유효한 인코딩 인자가 아니면 false를
+반환한다.
+
 ### buf.write(string, [offset], [length], [encoding])
 
 * `string` 문자열 - 버퍼에 작성할 데이터
@@ -85,11 +87,11 @@ Buffer 클래스는 바이너리 데이터를 직접 다루는 글로벌 타입�
 * `length` 숫자, 선택사항, 기본값: `buffer.length - offset`
 * `encoding` 문자열, 선택사항, 기본값: 'utf8'
 
-주어진 인코딩을 사용해서 버퍼의 `offset`위치에 `string`을 작성한다. 
+주어진 인코딩을 사용해서 버퍼의 `offset`위치에 `string`을 작성한다.
 `offset`의 기본값은 `0`이고 `encoding`의 기본값은 `'utf8'`이다. `length`는
-작성할 바이트의 수이다. 작성된 옥텟의 수를 반환한다. 전체 문자열을 작성하기에 
+작성할 바이트의 수이다. 작성된 옥텟의 수를 반환한다. 전체 문자열을 작성하기에
 `buffer`가 충분한 공간을 가지고 있지 않다면 문자열의 일부만 작성할 것이다.
-`length`의 기본값은 `buffer.length - offset`이다. 이 메서드는 문자의 일부만 
+`length`의 기본값은 `buffer.length - offset`이다. 이 메서드는 문자의 일부만
 작성하지는 않는다.
 
     buf = new Buffer(256);
@@ -109,8 +111,26 @@ Buffer 클래스는 바이너리 데이터를 직접 다루는 글로벌 타입�
 `start`(기본값은 `0`)부터 `end` (기본값은 `buffer.length`)까지 `encoding`로
 인코딩된 버퍼 데이터를 디코딩해서 문자열을 리턴한다.
 
-`buffer.write()` 예제를 봐라.
+위의 `buffer.write()` 예제를 봐라.
 
+
+### buf.toJSON()
+
+Buffer 인스턴스의 JSON 표현을 반환하고 이 JSON 표현은 JSON 배열을 출력한 것과 동일하다.
+Buffer 인스턴스를 문자열화했을 때 `JSON.stringify`가 암묵적으로 이 함수를 호출한다.
+
+예제:
+
+    var buf = new Buffer('test');
+    var json = JSON.stringify(buf);
+
+    console.log(json);
+    // '[116,101,115,116]'
+
+    var copy = new Buffer(JSON.parse(json));
+
+    console.log(copy);
+    // <Buffer 74 65 73 74>
 
 ### buf[index]
 
@@ -147,7 +167,7 @@ Buffer 클래스는 바이너리 데이터를 직접 다루는 글로벌 타입�
 * 반환타입: 숫자
 
 문자열의 실제 바이트 길이를 리턴한다. `encoding`의 기본값은 `'utf8'`이다.
-`String.prototype.length`는 스트링에서 *문자*의 수를 리턴하기 때문에 
+`String.prototype.length`는 스트링에서 *문자*의 수를 리턴하기 때문에
 `String.prototype.length`와 이 메서드는 같지 않다.
 
 예제:
@@ -173,7 +193,7 @@ list에 딱 하나의 아이템만 있으면 list의 첫 아이템을 반환한�
 list에 하나 이상의 아이템에 있으면 새로운 Buffer가 생성된다.
 
 totalLength를 전달하지 않으면 list의 버퍼들에서 읽어들인다.
-하지만 이는 함수에 추가적인 루프가 생기므로 명시적으로 길이를 전달하는 것이 
+하지만 이는 함수에 추가적인 루프가 생기므로 명시적으로 길이를 전달하는 것이
 더 빠르다.
 
 ### buf.length
@@ -181,7 +201,7 @@ totalLength를 전달하지 않으면 list의 버퍼들에서 읽어들인다.
 * 숫자
 
 바이트로 나타낸 버퍼 크기. 이는 반드시 내용의 크기인 것은 아니다.
-`length`는 버퍼 객체가 할당된 메모리의 양을 참조한다. 
+`length`는 버퍼 객체가 할당된 메모리의 양을 참조한다.
 버퍼의 내용이 변경되었을 때도 변경되지 않는다.
 
     buf = new Buffer(1234);
@@ -204,8 +224,11 @@ totalLength를 전달하지 않으면 list의 버퍼들에서 읽어들인다.
 `targetStart`와 `sourceStart`의 기본값은 `0`이다.
 `sourceEnd`의 기본값은 `buffer.length`이다.
 
-예제: 두 버퍼를 만들고 `buf1`의 16 바이트부터 19 바이트까지를 `buf2`의 
-8번째 바이트위치에 복사한다. 
+`undefined`/`NaN`이나 범위를 벗어난(out of bound) 값을 전달하면
+각각의 기본값을 설정한 것과 같다.
+
+예제: 두 버퍼를 만들고 `buf1`의 16 바이트부터 19 바이트까지를 `buf2`의
+8번째 바이트위치에 복사한다.
 
     buf1 = new Buffer(26);
     buf2 = new Buffer(26);
@@ -254,7 +277,7 @@ totalLength를 전달하지 않으면 list의 버퍼들에서 읽어들인다.
 * `noAssert` 불리언, 선택사항, 기본값: false
 * 반환타입: 숫자
 
-버퍼의 지정한 offset에서 기호가 없은 8비트 정수(unsigned 8 bit integer)를 
+버퍼의 지정한 offset에서 기호가 없은 8비트 정수(unsigned 8 bit integer)를
 읽는다.
 
 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은 `offset`이
@@ -285,7 +308,7 @@ totalLength를 전달하지 않으면 list의 버퍼들에서 읽어들인다.
 * `noAssert` 불리언, 선택사항, 기본값: false
 * 반환타입: 숫자
 
-버퍼의 지정한 offset에서 지정한 엔디언(endian) 형식으로 기호가 없는 16비트 
+버퍼의 지정한 offset에서 지정한 엔디언(endian) 형식으로 기호가 없는 16비트
 정수(unsigned 16 bit integer)를 읽는다.
 
 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은 `offset`이
@@ -321,7 +344,7 @@ totalLength를 전달하지 않으면 list의 버퍼들에서 읽어들인다.
 * `noAssert` 불리언, 선택사항, 기본값: false
 * 반환타입: 숫자
 
-버퍼의 지정한 offset에서 지정한 엔디언(endian) 형식으로 기호가 없는 
+버퍼의 지정한 offset에서 지정한 엔디언(endian) 형식으로 기호가 없는
 32비트 정수(unsigned 32 bit integer)를 읽는다.
 
 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은 `offset`이
@@ -348,13 +371,13 @@ totalLength를 전달하지 않으면 list의 버퍼들에서 읽어들인다.
 * `noAssert` 불리언, 선택사항, 기본값: false
 * 반환타입: 숫자
 
-버퍼에서 지정한 offset에서 기호가 있는 8비트 정수(signed 8 bit integer)를 
+버퍼에서 지정한 offset에서 기호가 있는 8비트 정수(signed 8 bit integer)를
 읽는다.
 
 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은 `offset`이
 버퍼의 끝을 넘어갈 수도 있다는 의미다. 기본값은 `false`다.
 
-`buffer.readUInt8`와 같이 동작하지만 버퍼의 내용을 2가지 완전한 기호가 있는 값으로 
+`buffer.readUInt8`와 같이 동작하지만 버퍼의 내용을 2가지 완전한 기호가 있는 값으로
 다룬다는 점이 다르다.
 
 ### buf.readInt16LE(offset, [noAssert])
@@ -364,13 +387,13 @@ totalLength를 전달하지 않으면 list의 버퍼들에서 읽어들인다.
 * `noAssert` 불리언, 선택사항, 기본값: false
 * 반환타입: 숫자
 
-버퍼에서 지정한 offset에서 기호가 있는 16비트 정수(signed 16 bit integer)를 
+버퍼에서 지정한 offset에서 기호가 있는 16비트 정수(signed 16 bit integer)를
 읽는다.
 
 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은 `offset`이
 버퍼의 끝을 넘어갈 수도 있다는 의미다. 기본값은 `false`다.
 
-`buffer.readUInt16*`와 같이 동작하지만 버퍼의 내용을 2가지 완전한 기호가 있는 값으로 
+`buffer.readUInt16*`와 같이 동작하지만 버퍼의 내용을 2가지 완전한 기호가 있는 값으로
 다룬다는 점이 다르다.
 
 ### buf.readInt32LE(offset, [noAssert])
@@ -380,13 +403,13 @@ totalLength를 전달하지 않으면 list의 버퍼들에서 읽어들인다.
 * `noAssert` 불리언, 선택사항, 기본값: false
 * 반환타입: 숫자
 
-버퍼에서 지정한 offset에서 기호가 있는 32비트 정수(signed 32 bit integer)를 
+버퍼에서 지정한 offset에서 기호가 있는 32비트 정수(signed 32 bit integer)를
 읽는다.
 
 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은 `offset`이
 버퍼의 끝을 넘어갈 수도 있다는 의미다. 기본값은 `false`다.
 
-`buffer.readUInt32*`와 같이 동작하지만 버퍼의 내용을 2가지 완전한 기호가 있는 값으로 
+`buffer.readUInt32*`와 같이 동작하지만 버퍼의 내용을 2가지 완전한 기호가 있는 값으로
 다룬다는 점이 다르다.
 
 ### buf.readFloatLE(offset, [noAssert])
@@ -396,7 +419,7 @@ totalLength를 전달하지 않으면 list의 버퍼들에서 읽어들인다.
 * `noAssert` 불리언, 선택사항, 기본값: false
 * 반환타입: 숫자
 
-버퍼의 지정한 offset에서 지정한 엔디언(endian) 형식으로 32비트 소수(32 bit float)를 
+버퍼의 지정한 offset에서 지정한 엔디언(endian) 형식으로 32비트 소수(32 bit float)를
 읽는다.
 
 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은 `offset`이
@@ -422,7 +445,7 @@ totalLength를 전달하지 않으면 list의 버퍼들에서 읽어들인다.
 * `noAssert` 불리언, 선택사항, 기본값: false
 * 반환타입: 숫자
 
-버퍼의 지정한 offset에서 지정한 엔디언(endian) 형식으로 64 bit double을 
+버퍼의 지정한 offset에서 지정한 엔디언(endian) 형식으로 64 bit double을
 읽는다.
 
 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은 `offset`이
@@ -454,7 +477,7 @@ totalLength를 전달하지 않으면 list의 버퍼들에서 읽어들인다.
 버터의 지정한 offset에 `value`를 작성한다. `value`는 반드시 유효한 기호가 없은 8비트
 정수여야 한다.
 
-`value`와 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은 
+`value`와 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은
 지정한 함수에 `value`가 너무 크거나 `offset`이 버퍼의 끝을 넘어가서 값들이 어떤 경고없이
 버려질 수 있다는 것을 의미한다. 확실히 정확함을 유지할 수 없다면 사용하지 말아야 한다.
 기본값은 `false`다.
@@ -481,7 +504,7 @@ totalLength를 전달하지 않으면 list의 버퍼들에서 읽어들인다.
 버퍼의 지정한 offset에 지정한 엔디언(endian) 형식으로 `value`을 작성한다.
 `value`는 반드시 유효한 기호가 없는 16비트 정수여야 한다.
 
-`value`와 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은 
+`value`와 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은
 지정한 함수에 `value`가 너무 크거나 `offset`이 버퍼의 끝을 넘어가서 값들이 어떤 경고없이
 버려질 수 있다는 것을 의미한다. 확실히 정확함을 유지할 수 없다면 사용하지 말아야 한다.
 기본값은 `false`다.
@@ -512,7 +535,7 @@ totalLength를 전달하지 않으면 list의 버퍼들에서 읽어들인다.
 버퍼의 지정한 offset에 지정한 엔디언(endian) 형식으로 `value`을 작성한다.
 `value`는 반드시 유효한 기호가 없는 32비트 정수여야 한다.
 
-`value`와 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은 
+`value`와 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은
 지정한 함수에 `value`가 너무 크거나 `offset`이 버퍼의 끝을 넘어가서 값들이 어떤 경고없이
 버려질 수 있다는 것을 의미한다. 확실히 정확함을 유지할 수 없다면 사용하지 말아야 한다.
 기본값은 `false`다.
@@ -540,7 +563,7 @@ totalLength를 전달하지 않으면 list의 버퍼들에서 읽어들인다.
 버퍼의 지정한 offset에 `value`를 작성한다. `value`는 반드시 유효하고 기호가 있는 8비트
 정수여야 한다.
 
-`value`와 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은 
+`value`와 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은
 지정한 함수에 `value`가 너무 크거나 `offset`이 버퍼의 끝을 넘어가서 값들이 어떤 경고없이
 버려질 수 있다는 것을 의미한다. 확실히 정확함을 유지할 수 없다면 사용하지 말아야 한다.
 기본값은 `false`다.
@@ -555,10 +578,10 @@ totalLength를 전달하지 않으면 list의 버퍼들에서 읽어들인다.
 * `offset` 숫자
 * `noAssert` 불리언, 선택사항, 기본값: false
 
-버퍼의 지정한 offset에 지정한 엔디언(endian) 형식으로 `value`를 작성한다. `value`는 
+버퍼의 지정한 offset에 지정한 엔디언(endian) 형식으로 `value`를 작성한다. `value`는
 반드시 유효하고 기호가 있는 16비트 정수여야 한다.
 
-`value`와 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은 
+`value`와 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은
 지정한 함수에 `value`가 너무 크거나 `offset`이 버퍼의 끝을 넘어가서 값들이 어떤 경고없이
 버려질 수 있다는 것을 의미한다. 확실히 정확함을 유지할 수 없다면 사용하지 말아야 한다.
 기본값은 `false`다.
@@ -573,10 +596,10 @@ totalLength를 전달하지 않으면 list의 버퍼들에서 읽어들인다.
 * `offset` 숫자
 * `noAssert` 불리언, 선택사항, 기본값: false
 
-버퍼의 지정한 offset에 지정한 엔디언(endian) 형식으로 `value`를 작성한다. `value`는 
+버퍼의 지정한 offset에 지정한 엔디언(endian) 형식으로 `value`를 작성한다. `value`는
 반드시 유효하고 기호가 있는 32비트 정수여야 한다.
 
-`value`와 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은 
+`value`와 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은
 지정한 함수에 `value`가 너무 크거나 `offset`이 버퍼의 끝을 넘어가서 값들이 어떤 경고없이
 버려질 수 있다는 것을 의미한다. 확실히 정확함을 유지할 수 없다면 사용하지 말아야 한다.
 기본값은 `false`다.
@@ -591,10 +614,10 @@ totalLength를 전달하지 않으면 list의 버퍼들에서 읽어들인다.
 * `offset` 숫자
 * `noAssert` 불리언, 선택사항, 기본값: false
 
-버퍼의 지정한 offset에 지정한 엔디언(endian) 형식으로 `value`를 작성한다. `value`는 
-반드시 유효한 32비트 실수여야 한다.
+버퍼의 지정한 offset에 지정한 엔디언(endian) 형식으로 `value`를 작성한다.
+`value`가 32비트 실수가 아니라면 동작이 지정되지 않는다.
 
-`value`와 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은 
+`value`와 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은
 지정한 함수에 `value`가 너무 크거나 `offset`이 버퍼의 끝을 넘어가서 값들이 어떤 경고없이
 버려질 수 있다는 것을 의미한다. 확실히 정확함을 유지할 수 없다면 사용하지 말아야 한다.
 기본값은 `false`다.
@@ -620,10 +643,10 @@ totalLength를 전달하지 않으면 list의 버퍼들에서 읽어들인다.
 * `offset` 숫자
 * `noAssert` 불리언, 선택사항, 기본값: false
 
-버퍼의 지정한 offset에 지정한 엔디언(endian) 형식으로 `value`를 작성한다. `value`는 
+버퍼의 지정한 offset에 지정한 엔디언(endian) 형식으로 `value`를 작성한다. `value`는
 반드시 유효한 64비트 더블이여야 한다.
 
-`value`와 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은 
+`value`와 `offset`의 유효성 검사를 건너뛰려면 `noAssert`을 true로 설정한다. 이 말은
 지정한 함수에 `value`가 너무 크거나 `offset`이 버퍼의 끝을 넘어가서 값들이 어떤 경고없이
 버려질 수 있다는 것을 의미한다. 확실히 정확함을 유지할 수 없다면 사용하지 말아야 한다.
 기본값은 `false`다.
@@ -648,7 +671,7 @@ totalLength를 전달하지 않으면 list의 버퍼들에서 읽어들인다.
 * `offset` 숫자, 선택사항
 * `end` 숫자, 선택사항
 
-버퍼를 지정한 값으로 채운다. `offset` (기본값은 `0`)과 `end` (기본값은 `buffer.length`)를 
+버퍼를 지정한 값으로 채운다. `offset` (기본값은 `0`)과 `end` (기본값은 `buffer.length`)를
 전달하지 않으면 전체 버퍼를 채울 것이다.
 
     var b = new Buffer(50);
@@ -658,15 +681,15 @@ totalLength를 전달하지 않으면 list의 버퍼들에서 읽어들인다.
 
 * 숫자, 기본값: 50
 
-`buffer.inspect()`가 호출되었을 때 얼마나 많은 바이트가 반환될 것인가를 지정한다. 
+`buffer.inspect()`가 호출되었을 때 얼마나 많은 바이트가 반환될 것인가를 지정한다.
 이 값은 사용자 모듈에서 오버라이드할 수 있다.
 
-이 값은 Buffer 전역객체가 아니라 `require('buffer')`에서 반환되는 버퍼모듈이나 
+이 값은 Buffer 전역객체가 아니라 `require('buffer')`에서 반환되는 버퍼모듈이나
 버퍼 인스턴스의 프로퍼티이다.
 
 ## Class: SlowBuffer
 
-이 클래스는 주로 내부에서 사용한다. 자바스크립트 프로그램은 SlowBuffer 대신 
+이 클래스는 주로 내부에서 사용한다. 자바스크립트 프로그램은 SlowBuffer 대신
 Buffer를 사용해야 한다.
 
 서버가 운영되는 동안 메모리의 작은 블럭에 많은 C++ Buffer 객체들을 할당하는 오버헤드를

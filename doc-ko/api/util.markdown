@@ -47,12 +47,12 @@
 
 ## util.puts([...])
 
-동기적인 출력함수. 프로세스를 블락할 것이고 각 아규먼트마다 새로운 라인으로 `stdout`에 
+동기적인 출력함수. 프로세스를 블락할 것이고 각 아규먼트마다 새로운 라인으로 `stdout`에
 모든 아규먼트를 출력할 것이다.
 
 ## util.print([...])
 
-동기적인 출력함수. 프로세스를 블락할 것이고 각 아규먼트를 문자열로 변환해서 `stdout`에 
+동기적인 출력함수. 프로세스를 블락할 것이고 각 아규먼트를 문자열로 변환해서 `stdout`에
 출력한다. 아규먼트마다 새로운 라인을 넣지 않는다.
 
 ## util.log(string)
@@ -62,25 +62,51 @@
     require('util').log('Timestamped message.');
 
 
-## util.inspect(object, [showHidden], [depth], [colors])
+## util.inspect(object, [options])
 
 디버깅에 유용한 `object`의 문자열 표현을 리턴한다.
 
-`showHidden`가 `true`이면 객체의 enumerable하지 않는 프로퍼티도 보여준다.
-기본값은 `false`이다.
+포매팅된 문자열의 형식을 바꾸기 위해서 선택적인 *options* 객체를 전달한다.
 
-`depth`는 객체를 포매팅할 때 `inspect`가 몇 번 재귀를 할 것인지를 지정한다.
-이 값은 크고 복잡한 객체를 검사할 때 유용하다.
+ - `showHidden` - `true`이면 객체의 enumerable하지 않는 프로퍼티도 보여준다.
+   기본값은 `false`이다.
 
-기본값은 딱 두번만 재귀한다. 무한대로 재귀하려면 `depth`에 `null`을 지정한다.
+ - `depth` - 객체를 포매팅할 때 `inspect`가 몇 번 재귀를 할 것인지를 지정한다.
+   이 값은 크고 복잡한 객체를 검사할 때 유용하다. 기본값은 `2`이다.
+   무한으로 재귀하려면 `null`를 전달해라.
 
-`colors`가 `true`이면 ANSI 색상코드로 스타일을 입혀서 출력한다.
+ - `colors` - `true`이면 ANSI 색상코드로 스타일을 입혀서 출력한다.
+   기본값은 `false`이다. 색상은 커스터마이징 할 수 있는데 자세한 내용은 하단을 참고해라.
+
+ - `customInspect` - `false`이면 검사하는 객체에 정의된 커스텀 `inspect()` 함수를
+   호출하지 않는다. 기본값은 `true`이다.
 
 다음은 `util`객체의 모든 프로퍼티를 검사하는 예제다:
 
     var util = require('util');
 
-    console.log(util.inspect(util, true, null));
+    console.log(util.inspect(util, { showHidden: true, depth: null }));
+
+### Customizing `util.inspect` colors
+
+`util.inspect`의 칼라 출력은 `util.inspect.styles`와 `util.inspect.colors`
+객체로 전역적으로 커스터마이징할 수 있다.
+
+`util.inspect.styles`는 `util.inspect.colors`에서 각 색상 스타일을 할당하는 맵이다.
+강조된 스타일과 그 기본값은 다음과 같다.
+ * `number` (yellow)
+ * `boolean` (yellow)
+ * `string` (green)
+ * `date` (magenta)
+ * `regexp` (red)
+ * `null` (bold)
+ * `undefined` (grey)
+ * `special` - 여기서 유일한 함수 (cyan)
+ * `name` (의도적으로 스타일이 없다)
+
+미리정의된 색상코드는 `white`, `grey`, `black`, `blue`, `cyan`,
+`green`, `magenta`, `red`, `yellow`이다.
+`bold`, `italic`, `underline`, `inverse`도 있다.
 
 객체들도 `util.inspect()`가 호출해서 객체를 건사한 결과를 사용하는 자신만의
 `inspect(depth)` 함수를 정의할 수 있다.
@@ -113,7 +139,7 @@
 
 ## util.isRegExp(object)
 
-주어진 "object"가 `RegExp`이면 `true`를 리턴하고 `RegExp`가 아니면 
+주어진 "object"가 `RegExp`이면 `true`를 리턴하고 `RegExp`가 아니면
 `false`를 리턴한다.
 
     var util = require('util');
@@ -128,7 +154,7 @@
 
 ## util.isDate(object)
 
-주어진 "object"가 `Date`이면 `true`를 리턴하고 `Date`가 아니면 
+주어진 "object"가 `Date`이면 `true`를 리턴하고 `Date`가 아니면
 `false`를 리턴한다.
 
     var util = require('util');
@@ -143,7 +169,7 @@
 
 ## util.isError(object)
 
-주어진 "object"가 `Error`이면 `true`를 리턴하고 `Error`가 아니면 
+주어진 "object"가 `Error`이면 `true`를 리턴하고 `Error`가 아니면
 `false`를 리턴한다.
 
     var util = require('util');
@@ -161,16 +187,16 @@
     Stability: 0 - Deprecated: readableStream.pipe(writableStream)를 사용해라
 
 `readableStream`에서 데이터를 읽어서 읽은 데이터를 `writableStream`으로 보낸다.
-`writableStream.write(data)`가 `false`를 리턴하면 `writableStream`에서 
+`writableStream.write(data)`가 `false`를 리턴하면 `writableStream`에서
 `drain`이벤트가 발생할 때까지 `readableStream`은 멈출 것이다. `callback`은 유일한
 아규먼트로 error를 받고 `writableStream`이 닫히거나 오류가 발생했을 때 호출된다.
 
 
 ## util.inherits(constructor, superConstructor)
 
-한 객체의 
+한 객체의
 [생성자](https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/constructor)
-에서 다른 객체로 프로토타입 메서드를 상속 받는다. `constructor`의 프로토타입은 
+에서 다른 객체로 프로토타입 메서드를 상속 받는다. `constructor`의 프로토타입은
 `superConstructor`에서 생성된 새로운 객체로 설정될 것이다.
 
 `superConstructor`는 `constructor.super_` 프로퍼티를

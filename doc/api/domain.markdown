@@ -1,6 +1,6 @@
 # Domain
 
-    Stability: 1 - Experimental
+    Stability: 2 - Unstable
 
 Domains provide a way to handle multiple different IO operations as a
 single group.  If any of the event emitters or callbacks registered to a
@@ -27,11 +27,11 @@ Any time an Error object is routed through a domain, a few extra fields
 are added to it.
 
 * `error.domain` The domain that first handled the error.
-* `error.domain_emitter` The event emitter that emitted an 'error' event
+* `error.domainEmitter` The event emitter that emitted an 'error' event
   with the error object.
-* `error.domain_bound` The callback function which was bound to the
+* `error.domainBound` The callback function which was bound to the
   domain, and passed an error as its first argument.
-* `error.domain_thrown` A boolean indicating whether the error was
+* `error.domainThrown` A boolean indicating whether the error was
   thrown, emitted, or passed to a bound callback function.
 
 ## Implicit Binding

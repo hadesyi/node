@@ -1,6 +1,6 @@
 # Domain
 
-    Stability: 1 - Experimental
+    Stability: 2 - Unstable
 
 도메인은 하나의 그룹으로 여러 가지 다른 IO 작업을 다룰 수 있는 방법을 제공한다.
 도메인에 등록된 이벤트 이미터나 콜백 등에서 `error` 이벤트가 발생하거나 오류를
@@ -22,10 +22,10 @@
 도데인으로 오류객체가 전달될 때 몇가지 추가적인 필드가 추가된다.
 
 * `error.domain` 최초에 오류를 다루는 도메인.
-* `error.domain_emitter` 오류 객체와 함게 'error' 이벤트를 발생시킨 이벤트 이미터. 
-* `error.domain_bound` 도메인에 바인딩된 콜백함수로 첫 아규먼트로 오류객체를
+* `error.domainEmitter` 오류 객체와 함게 'error' 이벤트를 발생시킨 이벤트 이미터.
+* `error.domainBound` 도메인에 바인딩된 콜백함수로 첫 아규먼트로 오류객체를
   전달한다.
-* `error.domain_thrown` 오류가 던져졌는지 오류 이벤트가 발생했는지 바인딩된
+* `error.domainThrown` 오류가 던져졌는지 오류 이벤트가 발생했는지 바인딩된
   콜백함수로 전달되었는지를 나타내는 불리언 값.
 
 ## Implicit Binding
@@ -140,7 +140,7 @@ d.run(function() {
 });
 ```
 
-이 예제에서 프로그램이 멈추는 대신에 `d.on('error')` 핸들러가 실행될 것이다. 
+이 예제에서 프로그램이 멈추는 대신에 `d.on('error')` 핸들러가 실행될 것이다.
 
 ### domain.members
 
@@ -201,7 +201,7 @@ Timer나 EventEmitter가 도메인에 이미 바인딩되어 있으면 이전에
 이 함수는 `domain.bind(callback)`와 대부분 같지만 던져진 오류를 잡기 위해 함수의
 첫 아규먼트로 보낸 `Error`객체를 가로챈다
 
-이 방법을 통해 일반적인 `if (er) return callback(er);` 패턴을 하나의 오류 
+이 방법을 통해 일반적인 `if (er) return callback(er);` 패턴을 하나의 오류
 핸들러로 바꿀 수 있다.
 
 #### Example
@@ -210,8 +210,8 @@ Timer나 EventEmitter가 도메인에 이미 바인딩되어 있으면 이전에
 
     function readSomeFile(filename, cb) {
       fs.readFile(filename, 'utf8', d.intercept(function(data) {
-        // 첫 아규먼트를 'Error' 라고 가정하지만 도메인이 
-        // 가로챘기 때문에 첫 아규먼트는 콜백에 
+        // 첫 아규먼트를 'Error' 라고 가정하지만 도메인이
+        // 가로챘기 때문에 첫 아규먼트는 콜백에
         // 전달되지 않는다
 
         // 여기서 오류를 던지면 도메인으로 전달되기 때문에

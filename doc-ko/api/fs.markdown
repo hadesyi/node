@@ -4,14 +4,14 @@
 
 <!--name=fs-->
 
-파일 I/O는 표준 POSIX 함수의 랩퍼(wrapper)로 제공된다. 이 모듈을 사용하려면 
+파일 I/O는 표준 POSIX 함수의 랩퍼(wrapper)로 제공된다. 이 모듈을 사용하려면
 `require('fs')`를 사용해라. 모든 함수는 비동기 방식과 동기방식이 있다.
 
-비동기 방식은 항상 마지막 파라미터로 완료 콜백함수를 받는다. 완료 콜백에 전달되는 함수는 
+비동기 방식은 항상 마지막 파라미터로 완료 콜백함수를 받는다. 완료 콜백에 전달되는 함수는
 메서드에 따라 다르지만 첫 아규먼트는 항상 예외로 사용한다. 작업이 성공적으로 완료되면
 첫 아규먼트는 `null`이나 `undefined`가 될 것이다.
 
-동기형식을 사용할 때는 모든 예외가 즉시 던져진다. try/catch를 사용해서 예외를 
+동기형식을 사용할 때는 모든 예외가 즉시 던져진다. try/catch를 사용해서 예외를
 다루거나 위로 버블링할 수 있다.
 
 다음은 비동기 버전의 예제다.
@@ -30,7 +30,7 @@
     fs.unlinkSync('/tmp/hello')
     console.log('successfully deleted /tmp/hello');
 
-비동기 메서드를 사용할 때는 순서대로 실행된다는 보장을 하지 않는다. 그래서 다음 
+비동기 메서드를 사용할 때는 순서대로 실행된다는 보장을 하지 않는다. 그래서 다음
 예제는 오류가 날 수 있다.
 
     fs.rename('/tmp/hello', '/tmp/world', function (err) {
@@ -53,12 +53,34 @@
       });
     });
 
-프로세스가 바쁜 경우 프로그래머는 이러한 호출을 비동기 방식으로 사용하기를 
+프로세스가 바쁜 경우 프로그래머는 이러한 호출을 비동기 방식으로 사용하기를
 _강력히 추천한다_. 동기방식은 모든 연결을 멈추고 작업이 완료될 때까지
 전체 프로세스를 블락킹할 것이다.
 
-파일명에 상대경로를 사용할 수 있지만 이 상대 경로는 `process.cwd()`이 대한 
+파일명에 상대경로를 사용할 수 있지만 이 상대 경로는 `process.cwd()`이 대한
 상대경로가 될 것이다.
+
+대부분의 fs함수는 callback인자를 생략할 수 있게 한다. callback인자를 생략하면 오류를 다시
+던지는 기본 콜백을 사용한다. 원래 호출했던 지점을 추적하려면 NODE_DEBUG 환경변수를 설정해라.
+
+    $ cat script.js
+    function bad() {
+      require('fs').readFile('/');
+    }
+    bad();
+
+    $ env NODE_DEBUG=fs node script.js
+    fs.js:66
+            throw err;
+                  ^
+    Error: EISDIR, read
+        at rethrow (fs.js:61:21)
+        at maybeCallback (fs.js:79:42)
+        at Object.fs.readFile (fs.js:153:18)
+        at bad (/path/to/script.js:2:17)
+        at Object.<anonymous> (/path/to/script.js:5:1)
+        <etc.>
+
 
 ## fs.rename(oldPath, newPath, [callback])
 
@@ -68,13 +90,21 @@ _강력히 추천한다_. 동기방식은 모든 연결을 멈추고 작업이 �
 
 동기 rename(2).
 
-## fs.truncate(fd, len, [callback])
+## fs.ftruncate(fd, len, [callback])
 
 동기 ftruncate(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
-## fs.truncateSync(fd, len)
+## fs.ftruncateSync(fd, len)
 
 동기 ftruncate(2).
+
+## fs.truncate(path, len, [callback])
+
+비동기 truncate(2). 발생할 수 있는 오류인자 외에 완료 콜백에 전달되는 인자는 없다.
+
+## fs.truncateSync(path, len)
+
+동기 truncate(2).
 
 ## fs.chown(path, uid, gid, [callback])
 
@@ -128,20 +158,20 @@ Mac OS X에서만 사용할 수 있다.
 
 ## fs.stat(path, [callback])
 
-비동기 stat(2). 콜백은 두 아규먼트 `(err, stats)`를 받고 `stats`은 
-[fs.Stats](#fs_class_fs_stats) 객체이다. 더 자세한 내용은 아래의 
+비동기 stat(2). 콜백은 두 아규먼트 `(err, stats)`를 받고 `stats`은
+[fs.Stats](#fs_class_fs_stats) 객체이다. 더 자세한 내용은 아래의
 [fs.Stats](#fs_class_fs_stats)부분을 봐라.
 
 ## fs.lstat(path, [callback])
 
 동기 lstat(2). 콜백은 두 아규먼트 `(err, stats)`를 받고 `stats`은 `fs.Stats` 객체다.
-`lstat()`은 `path`가 심볼릭 링크일 경우 참조하는 파일이 아닌 심볼릭 링크 자체의 상태라는 
+`lstat()`은 `path`가 심볼릭 링크일 경우 참조하는 파일이 아닌 심볼릭 링크 자체의 상태라는
 점만 빼면 `stat()`와 같다.
 
 ## fs.fstat(fd, [callback])
 
 비동기 fstat(2). 콜백은 두 아규먼트 `(err, stats)`를 받고 `stats`은 `fs.Stats` 객체다.
-`fstat()`은 상태를 확인하는 파일이 파일 디스크립터 `fd`가 지정한 파일이라는 점만 빼면 
+`fstat()`은 상태를 확인하는 파일이 파일 디스크립터 `fd`가 지정한 파일이라는 점만 빼면
 `stat()`와 같다.
 
 ## fs.statSync(path)
@@ -167,9 +197,9 @@ Mac OS X에서만 사용할 수 있다.
 ## fs.symlink(srcpath, dstpath, [type], [callback])
 
 비동기 symlink(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
-`type` 아규먼트는 `'dir'`이나 `'file'`, `'junction'`이 가능하다.(기본값은 `'file'`이다) 이 옵션은 
+`type` 아규먼트는 `'dir'`이나 `'file'`, `'junction'`이 가능하다.(기본값은 `'file'`이다) 이 옵션은
 윈도우에서만 사용된다.(다른 플랫폼에서는 무시한다.)
-Windows의 junction에서는 목적지경로가 절대경로여야 한다. `'junction'`을 사용하면 `destination` 
+Windows의 junction에서는 목적지경로가 절대경로여야 한다. `'junction'`을 사용하면 `destination`
 아규먼트를 절대경로로 자동으로 정규화한다.
 
 ## fs.symlinkSync(srcpath, dstpath, [type])
@@ -187,8 +217,8 @@ Windows의 junction에서는 목적지경로가 절대경로여야 한다. `'jun
 ## fs.realpath(path, [cache], callback)
 
 비동기 realpath(2). `callback`은 두 개의 아규먼트 `(err, resolvedPath)`를 받는다.
-상대경로를 처리하려면 `process.cwd`를 사용해야 할 것이다. `cache`는 실제 경로를 알기 
-위해 지정한 경로 처리를 강제하거나 추가적인 `fs.stat` 호출을 피하기 위해 사용할 수 있는 
+상대경로를 처리하려면 `process.cwd`를 사용해야 할 것이다. `cache`는 실제 경로를 알기
+위해 지정한 경로 처리를 강제하거나 추가적인 `fs.stat` 호출을 피하기 위해 사용할 수 있는
 매핑된 경로의 객체리터럴이다.
 
 예제:
@@ -231,7 +261,7 @@ Windows의 junction에서는 목적지경로가 절대경로여야 한다. `'jun
 ## fs.readdir(path, [callback])
 
 비동기 readdir(3). 디렉토리의 내용을 읽는다.
-콜백은 두 아규먼트 `(err, files)`를 받고 `files`는 디렉토리에서 `'.'`와 `'..'`를 
+콜백은 두 아규먼트 `(err, files)`를 받고 `files`는 디렉토리에서 `'.'`와 `'..'`를
 제외한 파일명들의 배열이다.
 
 ## fs.readdirSync(path)
@@ -256,17 +286,17 @@ Windows의 junction에서는 목적지경로가 절대경로여야 한다. `'jun
 * `'r+'` - 읽기와 쓰기모드로 파일을 연다.
 (파일이 존재하지 않으면) 파일을 생성하거나 (파일이 존재하면) 새로 쓴다.
 
-* `'rs'` - 동기방식으로 읽는 파일을 연다. 운영체제가 로컬 파일시스템 캐시를 우회하도록 
+* `'rs'` - 동기방식으로 읽는 파일을 연다. 운영체제가 로컬 파일시스템 캐시를 우회하도록
   한다.
 
   오래됐을 수도 있는 로컬 캐시를 무시하고 NFS 마운트에서 파일을 열 때 주고 유용하다.
-  이 모드는 I/O 성능에 실제로 큰 영향을 주기 때문에 필요한 경우가 아니면 사용하지 말아야 
+  이 모드는 I/O 성능에 실제로 큰 영향을 주기 때문에 필요한 경우가 아니면 사용하지 말아야
   한다.
 
   이 모드는 `fs.open()`를 동기적인 블락킹 호출로 바꾸지 않는다.
   동기적인 블락킹 호출이 필요하다면 `fs.openSync()`를 사용해야 한다.
 
-* `'rs+'` - 운영체제가 동기방식으로 일기와 쓰기모드로 파일을 열도록 한다. 이 모드를 
+* `'rs+'` - 운영체제가 동기방식으로 일기와 쓰기모드로 파일을 열도록 한다. 이 모드를
   사용할 때의 주의점은 `'rs'`를 봐라.
 
 * `'w'` - 쓰기모드로 파일을 연다.
@@ -289,7 +319,7 @@ Windows의 junction에서는 목적지경로가 절대경로여야 한다. `'jun
 
 `mode`와 기본값은 `0666`이다. 콜백은 두 아규먼트 `(err, fd)`를 받는다.
 
-독점 모드(`O_EXCL`)는 새로 `path`를 생성한다는 것을 보장한다. 해당 파일명이 이미 
+독점 모드(`O_EXCL`)는 새로 `path`를 생성한다는 것을 보장한다. 해당 파일명이 이미
 존재하는 경우 `fs.open()`는 실패한다. POSIX 시스템에서 심볼릭링크는 포함되지 않는다.
 네트워크 파일 시스템에서 독점 모드는 동작할 수도 있고 동작하지 않을 수도 있다.
 
@@ -321,14 +351,14 @@ Windows의 junction에서는 목적지경로가 절대경로여야 한다. `'jun
 
 `offset`과 `length`는 작성할 버퍼의 부분을 결정한다.
 
-`position`은 이 데이터를 작성해야할 파일의 시작 위치부터의 오프셋을 참조한다. `position`이 
+`position`은 이 데이터를 작성해야할 파일의 시작 위치부터의 오프셋을 참조한다. `position`이
 `null`이면 데이터는 현재 위치에 작성할 것이다.
 pwrite(2)를 봐라.
 
-콜백은 세 아규먼트 `(err, written, buffer)`를 받고 `written`는 `buffer`에서 
+콜백은 세 아규먼트 `(err, written, buffer)`를 받고 `written`는 `buffer`에서
 얼마나 많은 _바이트_가 작성되었는 지를 가리킨다.
 
-콜백을 기다리지 않고 같은 파일에 여러번 `fs.write`를 사용하는 것은 안전하지 않다. 이 경우에 
+콜백을 기다리지 않고 같은 파일에 여러번 `fs.write`를 사용하는 것은 안전하지 않다. 이 경우에
 `fs.createWriteStream`를 사용하기를 강력하게 추천한다.
 
 ## fs.writeSync(fd, buffer, offset, length, position)
@@ -346,7 +376,7 @@ pwrite(2)를 봐라.
 `length`는 읽어들일 바이트 수를 지정하는 정수이다.
 
 `position`은 파일에서 읽어들이기 시작하는 위치를 지정하는 정수이다.
-`position`가 `null`이면 데이터는 파일의 현재 위치에서 읽을 것이다. 
+`position`가 `null`이면 데이터는 파일의 현재 위치에서 읽을 것이다.
 
 콜백은 세 아규먼트 `(err, bytesRead, buffer)`를 받는다.
 
@@ -354,7 +384,12 @@ pwrite(2)를 봐라.
 
 `fs.read`의 동기 버전이다. `bytesRead`의 수를 반환한다.
 
-## fs.readFile(filename, [encoding], [callback])
+## fs.readFile(filename, [options], [callback])
+
+* `filename` {String}
+* `options` {Object}
+  * `encoding` {String | Null} default = `null`
+  * `flag` {String} default = `'r'`
 
 파일의 전체 내용을 비동기로 읽는다. 예제:
 
@@ -368,19 +403,28 @@ pwrite(2)를 봐라.
 인코딩을 지정하지 않으면 로우(raw) 버퍼를 반환한다.
 
 
-## fs.readFileSync(filename, [encoding])
+## fs.readFileSync(filename, [options])
 
 `fs.readFile`의 동기버전이다. `filename`의 내용을 반환한다.
 
-`encoding`을 지정하면 이 함수는 문자열을 반환하고 `encoding`을 지정하지 않으면 
+`encoding`옵션을 지정하면 이 함수는 문자열을 반환하고 `encoding`을 지정하지 않으면
 버퍼를 반환한다.
 
 
-## fs.writeFile(filename, data, [encoding], [callback])
+## fs.writeFile(filename, data, [options], [callback])
+
+* `filename` {String}
+* `data` {String | Buffer}
+* `options` {Object}
+  * `encoding` {String | Null} default = `'utf8'`
+  * `mode` {Number} default = `438` (aka `0666` in Octal)
+  * `flag` {String} default = `'w'`
 
 비동기로 파일에 데이터를 작성하고 파일이 이미 존재하는 경우에는 파일을 대체한다.
-`data`는 문자열이나 버퍼가 될 수 있다. `data`가 버퍼일 경우 `encoding`  아규먼트는 
-무시된다. `encoding`의 기본값은 `'utf8'`이다. 
+`data`는 문자열이나 버퍼가 될 수 있다.
+
+`data`가 버퍼일 경우 `encoding` 옵션은 무시한다. `encoding`의
+기본값은 `'utf8'`이다.
 
 예제:
 
@@ -389,14 +433,21 @@ pwrite(2)를 봐라.
       console.log('It\'s saved!');
     });
 
-## fs.writeFileSync(filename, data, [encoding])
+## fs.writeFileSync(filename, data, [options])
 
 `fs.writeFile`의 동기버전이다.
 
-## fs.appendFile(filename, data, encoding='utf8', [callback])
+## fs.appendFile(filename, data, [options], [callback])
+
+* `filename` {String}
+* `data` {String | Buffer}
+* `options` {Object}
+  * `encoding` {String | Null} default = `'utf8'`
+  * `mode` {Number} default = `438` (aka `0666` in Octal)
+  * `flag` {String} default = `'a'`
 
 비동기로 파일에 데이터를 추가하고 파일이 존재하지 않는 경우 파일을 생성한다.
-`data`는 문자열이거나 버퍼다. `data`가 버퍼인 경우 `encoding` 아규먼트는 무시한다.
+`data`는 문자열이거나 버퍼다.
 
 예제:
 
@@ -405,7 +456,7 @@ pwrite(2)를 봐라.
       console.log('The "data to append" was appended to file!');
     });
 
-## fs.appendFileSync(filename, data, encoding='utf8')
+## fs.appendFileSync(filename, data, [options])
 
 `fs.appendFile`의 동기버전이다.
 
@@ -413,13 +464,13 @@ pwrite(2)를 봐라.
 
     Stability: 2 - Unstable.  가능하다면 대신 fs.watch를 사용해라.
 
-`filename`의 변경사항을 감시한다. 콜백 `listener`는 파일이 접근될 때마다 호출될 
+`filename`의 변경사항을 감시한다. 콜백 `listener`는 파일이 접근될 때마다 호출될
 것이다.
 
-두번째 아규먼트는 선택사항이다. `options`을 전달하는 경우 `options`은 두 불리언값의 
-멤버변수 `persistent`와 `interval`을 담고 있는 객체가 될 것이다. `persistent`는 
-파일을 감사하는 동안 계속해서 프로세스가 실행되어야 하는지를 나타낸다. `interval`은 
-얼마나 자주 대상을 확인해야 하는지를 밀리초로 나타낸다. 
+두번째 아규먼트는 선택사항이다. `options`을 전달하는 경우 `options`은 두 불리언값의
+멤버변수 `persistent`와 `interval`을 담고 있는 객체가 될 것이다. `persistent`는
+파일을 감사하는 동안 계속해서 프로세스가 실행되어야 하는지를 나타낸다. `interval`은
+얼마나 자주 대상을 확인해야 하는지를 밀리초로 나타낸다.
 기본값은 `{ persistent: true, interval: 5007 }`이다.
 
 `listener`는 두 아규먼트 현재의 stat 객체와 이전의 stat 객체를 받는다.
@@ -431,7 +482,7 @@ pwrite(2)를 봐라.
 
 이 stat 객체들은 `fs.Stat` 인스턴스다.
 
-그냥 파일에 접근만 했을 때가 아니라 파일이 수정되었을 때 알림을 받고 싶다면 
+그냥 파일에 접근만 했을 때가 아니라 파일이 수정되었을 때 알림을 받고 싶다면
 `curr.mtime`와 `prev.mtime`를 비교해야 한다.
 
 
@@ -449,21 +500,21 @@ pwrite(2)를 봐라.
 
     Stability: 2 - Unstable.
 
-`filename`의 변경사항을 감시하고 `filename`은 파일이나 디렉토리가 될 수 있다. 
+`filename`의 변경사항을 감시하고 `filename`은 파일이나 디렉토리가 될 수 있다.
 반환객체는 [fs.FSWatcher](#fs_class_fs_fswatcher)이다.
 
-두번째 아규먼트는 선택사항이다. `options`을 전달한다면 `options`은 불리언값의 멤버변수 
-`persistent`를 담고 있는 객체여야 한다. `persistent`는 파일을 감사하는 동안 계속해서 
+두번째 아규먼트는 선택사항이다. `options`을 전달한다면 `options`은 불리언값의 멤버변수
+`persistent`를 담고 있는 객체여야 한다. `persistent`는 파일을 감사하는 동안 계속해서
 프로세스가 실행되어야 하는지를 나타낸다. 기본값은 `{ persistent: true }`이다.
 
-리스너 콜백은 두 아규먼트 `(event, filename)`를 받는다. `event`는 'rename'나 'change'이고 
+리스너 콜백은 두 아규먼트 `(event, filename)`를 받는다. `event`는 'rename'나 'change'이고
 `filename`은 이벤트를 발생시킨 파일의 이름이다.
 
 ### Caveats
 
 <!--type=misc-->
 
-`fs.watch` API는 모든 플랫폼에서 100% 일치하지 않고 몇몇 상황에서는 
+`fs.watch` API는 모든 플랫폼에서 100% 일치하지 않고 몇몇 상황에서는
 사용할 수 없다.
 
 #### Availability
@@ -481,16 +532,16 @@ pwrite(2)를 봐라.
 예를 들어 네트워크 파일시스템(NFS, SMB 등)에서 파일이나 디렉토리를 감시하면 종종 신뢰할 수
 있을만큼 동작하지 않거나 전혀 작동하지 않는다.
 
-stat 폴링(polling)을 사용하지만 더 느리고 덜 신뢰적인 `fs.watchFile`는 여전히 
+stat 폴링(polling)을 사용하지만 더 느리고 덜 신뢰적인 `fs.watchFile`는 여전히
 사용할 수 있다.
 
 #### Filename Argument
 
 <!--type=misc-->
 
-모든 클랫폼에서 `filename` 아규먼트를 콜백에 전달하는 것은 아니다. (현재는 Linux와 
-Windows에서만 지원한다.) 이를 지원하는 플랫폼에서 조차도 `filename`을 항상 제공한다고 
-보장하는 것은 아니다. 그러므로 콜백에 `filename` 아규먼트가 항상 전달된다고 가정하지 말고 
+모든 클랫폼에서 `filename` 아규먼트를 콜백에 전달하는 것은 아니다. (현재는 Linux와
+Windows에서만 지원한다.) 이를 지원하는 플랫폼에서 조차도 `filename`을 항상 제공한다고
+보장하는 것은 아니다. 그러므로 콜백에 `filename` 아규먼트가 항상 전달된다고 가정하지 말고
 null 일 경우를 위한 대체(fallback) 로직을 가지고 있어야 한다.
 
     fs.watch('somedir', function (event, filename) {
@@ -518,7 +569,7 @@ null 일 경우를 위한 대체(fallback) 로직을 가지고 있어야 한다.
 
 ## Class: fs.Stats
 
-`fs.stat()`, `fs.lstat()`, `fs.fstat()`가 리턴하는 객체고 이 함수들의 동기함수들도 
+`fs.stat()`, `fs.lstat()`, `fs.fstat()`가 리턴하는 객체고 이 함수들의 동기함수들도
 이 타입을 리턴한다.
 
  - `stats.isFile()`
@@ -529,7 +580,7 @@ null 일 경우를 위한 대체(fallback) 로직을 가지고 있어야 한다.
  - `stats.isFIFO()`
  - `stats.isSocket()`
 
-정규 파일에 대한 `util.inspect(stats)`는 다음과 유사한 문자열을 리턴할 
+정규 파일에 대한 `util.inspect(stats)`는 다음과 유사한 문자열을 리턴할
 것이다.
 
     { dev: 2114,
@@ -546,11 +597,11 @@ null 일 경우를 위한 대체(fallback) 로직을 가지고 있어야 한다.
       mtime: Mon, 10 Oct 2011 23:24:11 GMT,
       ctime: Mon, 10 Oct 2011 23:24:11 GMT }
 
-`atime`, `mtime`, `ctime`는 [Date][MDN-Date] 객체의 인스턴스이고 
-이 객체의 값들을 비교하려면 적절한 메서드를 사용해야한다. 대부분의 경우 
-[getTime()][MDN-Date-getTime]는 1980년 1월 _1일부터 경과된 
-밀리초를 반환할 것이고 이 정수값은 비교하기에 충분하다. 하지만 명확하지 
-않은 정보를 보여주는데 사용할 수 있는 추가적인 메서드들이 있다. 더 자세한 
+`atime`, `mtime`, `ctime`는 [Date][MDN-Date] 객체의 인스턴스이고
+이 객체의 값들을 비교하려면 적절한 메서드를 사용해야한다. 대부분의 경우
+[getTime()][MDN-Date-getTime]는 1980년 1월 _1일부터 경과된
+밀리초를 반환할 것이고 이 정수값은 비교하기에 충분하다. 하지만 명확하지
+않은 정보를 보여주는데 사용할 수 있는 추가적인 메서드들이 있다. 더 자세한
 내용은 [MDN JavaScript Reference][MDN-Date] 페이지에 있다.
 
 [MDN-Date]: https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Date
@@ -567,12 +618,17 @@ null 일 경우를 위한 대체(fallback) 로직을 가지고 있어야 한다.
       encoding: null,
       fd: null,
       mode: 0666,
-      bufferSize: 64 * 1024
+      bufferSize: 64 * 1024,
+      autoClose: true
     }
 
 `options`는 전체 파일대신 읽어드릴 파일의 범위인 `start`와 `end`를 포함할 수 있다.
-`start`와 `end` 둘 다 포함하고 0 부터 시작한다. `encoding`은 `'utf8'`, 
+`start`와 `end` 둘 다 포함하고 0 부터 시작한다. `encoding`은 `'utf8'`,
 `'ascii'`, `'base64'`가 될 수 있다.
+
+`autoClose`가 false이면 오류가 발생하더라도 파일 디스크립터를 닫지 않는다. 파일 디스크립터를
+닫고 파일 디스크립터가 새는 문제가 없도록 하는 것은 개발자의 책임이다. `autoClose`를 true로
+설정하면(기본 동작) `error`나 `end`에서 파일 디스크립터를 자동으로 닫을 것이다.
 
 100 바이트 길이인 파일의 마지막 10 바이트를 읽는 예제.
 
@@ -600,8 +656,8 @@ ReadStream의 파일이 열렸을 때 발생한다.
       encoding: null,
       mode: 0666 }
 
-`options`도 파일의 시작위치가 아닌 다른 위치에 데이터를 작성하도록 `start` 옵션을 
-포함할 수도 있다. 파일을 교체하는 대신에 파일을 수정하려면 `flags` 모드를 기본값인 
+`options`도 파일의 시작위치가 아닌 다른 위치에 데이터를 작성하도록 `start` 옵션을
+포함할 수도 있다. 파일을 교체하는 대신에 파일을 수정하려면 `flags` 모드를 기본값인
 `w` 대신에 `r+`를 사용해야 한다.
 
 ## fs.WriteStream
