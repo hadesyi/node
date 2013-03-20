@@ -114,7 +114,6 @@ abbr {
 p {
   margin: 0 0 1.4667em 0;
   position: relative;
-  text-rendering: optimizeLegibility;
 }
 
 .apidoc #apicontent p,
@@ -163,7 +162,6 @@ dd + dt.pre {
 h1, h2, h3, h4, h5, h6 {
   font-family: Helvetica, Arial, sans-serif;
   color: #000;
-  text-rendering: optimizeLegibility;
   position: relative;
 }
 
