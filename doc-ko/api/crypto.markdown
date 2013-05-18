@@ -21,7 +21,7 @@ OpenSSL의 hash, hmac, cipher, decipher, sign, verify 메서드의 랩퍼(wrappe
 예제:
 
     var ciphers = crypto.getCiphers();
-    console.log(ciphers); // ['AES128-SHA', 'AES256-SHA', ...]
+    console.log(ciphers); // ['AES-128-CBC', 'AES-128-CBC-HMAC-SHA1', ...]
 
 
 ## crypto.getHashes()

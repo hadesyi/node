@@ -60,29 +60,13 @@ _강력히 추천한다_. 동기방식은 모든 연결을 멈추고 작업이 �
 파일명에 상대경로를 사용할 수 있지만 이 상대 경로는 `process.cwd()`이 대한
 상대경로가 될 것이다.
 
-대부분의 fs함수는 callback인자를 생략할 수 있게 한다. callback인자를 생략하면 오류를 다시
-던지는 기본 콜백을 사용한다. 원래 호출했던 지점을 추적하려면 NODE_DEBUG 환경변수를 설정해라.
+대부분의 fs함수는 callback인자를 생략할 수 있게 한다. callback인자를 생략하면
+오류는 무시하지만 폐기(deprecation) 경고는 출력하는 기본 콜백을 사용한다.
 
-    $ cat script.js
-    function bad() {
-      require('fs').readFile('/');
-    }
-    bad();
-
-    $ env NODE_DEBUG=fs node script.js
-    fs.js:66
-            throw err;
-                  ^
-    Error: EISDIR, read
-        at rethrow (fs.js:61:21)
-        at maybeCallback (fs.js:79:42)
-        at Object.fs.readFile (fs.js:153:18)
-        at bad (/path/to/script.js:2:17)
-        at Object.<anonymous> (/path/to/script.js:5:1)
-        <etc.>
+**IMPORTANT**: 콜백 생략은 폐기되었다. v0.12는 기대하는대로 오류를 던질 것이다.
 
 
-## fs.rename(oldPath, newPath, [callback])
+## fs.rename(oldPath, newPath, callback)
 
 비동기 rename(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
@@ -90,7 +74,7 @@ _강력히 추천한다_. 동기방식은 모든 연결을 멈추고 작업이 �
 
 동기 rename(2).
 
-## fs.ftruncate(fd, len, [callback])
+## fs.ftruncate(fd, len, callback)
 
 동기 ftruncate(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
@@ -98,7 +82,7 @@ _강력히 추천한다_. 동기방식은 모든 연결을 멈추고 작업이 �
 
 동기 ftruncate(2).
 
-## fs.truncate(path, len, [callback])
+## fs.truncate(path, len, callback)
 
 비동기 truncate(2). 발생할 수 있는 오류인자 외에 완료 콜백에 전달되는 인자는 없다.
 
@@ -106,7 +90,7 @@ _강력히 추천한다_. 동기방식은 모든 연결을 멈추고 작업이 �
 
 동기 truncate(2).
 
-## fs.chown(path, uid, gid, [callback])
+## fs.chown(path, uid, gid, callback)
 
 비동기 chown(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
@@ -114,7 +98,7 @@ _강력히 추천한다_. 동기방식은 모든 연결을 멈추고 작업이 �
 
 동기 chown(2).
 
-## fs.fchown(fd, uid, gid, [callback])
+## fs.fchown(fd, uid, gid, callback)
 
 비동기 fchown(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
@@ -122,7 +106,7 @@ _강력히 추천한다_. 동기방식은 모든 연결을 멈추고 작업이 �
 
 동기 fchown(2).
 
-## fs.lchown(path, uid, gid, [callback])
+## fs.lchown(path, uid, gid, callback)
 
 비동기 lchown(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
@@ -130,7 +114,7 @@ _강력히 추천한다_. 동기방식은 모든 연결을 멈추고 작업이 �
 
 동기 lchown(2).
 
-## fs.chmod(path, mode, [callback])
+## fs.chmod(path, mode, callback)
 
 비동기 chmod(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
@@ -138,7 +122,7 @@ _강력히 추천한다_. 동기방식은 모든 연결을 멈추고 작업이 �
 
 동기 chmod(2).
 
-## fs.fchmod(fd, mode, [callback])
+## fs.fchmod(fd, mode, callback)
 
 비동기 fchmod(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
@@ -146,7 +130,7 @@ _강력히 추천한다_. 동기방식은 모든 연결을 멈추고 작업이 �
 
 동기 fchmod(2).
 
-## fs.lchmod(path, mode, [callback])
+## fs.lchmod(path, mode, callback)
 
 비동기 lchmod(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
@@ -156,19 +140,19 @@ Mac OS X에서만 사용할 수 있다.
 
 동기 lchmod(2).
 
-## fs.stat(path, [callback])
+## fs.stat(path, callback)
 
 비동기 stat(2). 콜백은 두 아규먼트 `(err, stats)`를 받고 `stats`은
 [fs.Stats](#fs_class_fs_stats) 객체이다. 더 자세한 내용은 아래의
 [fs.Stats](#fs_class_fs_stats)부분을 봐라.
 
-## fs.lstat(path, [callback])
+## fs.lstat(path, callback)
 
 동기 lstat(2). 콜백은 두 아규먼트 `(err, stats)`를 받고 `stats`은 `fs.Stats` 객체다.
 `lstat()`은 `path`가 심볼릭 링크일 경우 참조하는 파일이 아닌 심볼릭 링크 자체의 상태라는
 점만 빼면 `stat()`와 같다.
 
-## fs.fstat(fd, [callback])
+## fs.fstat(fd, callback)
 
 비동기 fstat(2). 콜백은 두 아규먼트 `(err, stats)`를 받고 `stats`은 `fs.Stats` 객체다.
 `fstat()`은 상태를 확인하는 파일이 파일 디스크립터 `fd`가 지정한 파일이라는 점만 빼면
@@ -186,7 +170,7 @@ Mac OS X에서만 사용할 수 있다.
 
 동기 fstat(2). `fs.Stats` 인스턴스를 반환한다.
 
-## fs.link(srcpath, dstpath, [callback])
+## fs.link(srcpath, dstpath, callback)
 
 비동기 link(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
@@ -194,7 +178,7 @@ Mac OS X에서만 사용할 수 있다.
 
 동기 link(2).
 
-## fs.symlink(srcpath, dstpath, [type], [callback])
+## fs.symlink(srcpath, dstpath, [type], callback)
 
 비동기 symlink(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 `type` 아규먼트는 `'dir'`이나 `'file'`, `'junction'`이 가능하다.(기본값은 `'file'`이다) 이 옵션은
@@ -206,7 +190,7 @@ Windows의 junction에서는 목적지경로가 절대경로여야 한다. `'jun
 
 동기 symlink(2).
 
-## fs.readlink(path, [callback])
+## fs.readlink(path, callback)
 
 비동기 readlink(2). 콜백은 두 아규먼트 `(err, linkString)`를 받는다.
 
@@ -233,7 +217,7 @@ Windows의 junction에서는 목적지경로가 절대경로여야 한다. `'jun
 
 동기 realpath(2). 처리된 경로를 반환한다.
 
-## fs.unlink(path, [callback])
+## fs.unlink(path, callback)
 
 비동기 unlink(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
@@ -241,7 +225,7 @@ Windows의 junction에서는 목적지경로가 절대경로여야 한다. `'jun
 
 동기 unlink(2).
 
-## fs.rmdir(path, [callback])
+## fs.rmdir(path, callback)
 
 비동기 rmdir(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
@@ -249,7 +233,7 @@ Windows의 junction에서는 목적지경로가 절대경로여야 한다. `'jun
 
 동기 rmdir(2).
 
-## fs.mkdir(path, [mode], [callback])
+## fs.mkdir(path, [mode], callback)
 
 비동기 mkdir(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 `mode`의 기본값은 `0777`이다.
@@ -258,7 +242,7 @@ Windows의 junction에서는 목적지경로가 절대경로여야 한다. `'jun
 
 동기 mkdir(2).
 
-## fs.readdir(path, [callback])
+## fs.readdir(path, callback)
 
 비동기 readdir(3). 디렉토리의 내용을 읽는다.
 콜백은 두 아규먼트 `(err, files)`를 받고 `files`는 디렉토리에서 `'.'`와 `'..'`를
@@ -268,7 +252,7 @@ Windows의 junction에서는 목적지경로가 절대경로여야 한다. `'jun
 
 동기 readdir(3). `'.'`와 `'..'`를 제외한 파일명들의 배열을 반환한다.
 
-## fs.close(fd, [callback])
+## fs.close(fd, callback)
 
 비동기 close(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
@@ -276,7 +260,7 @@ Windows의 junction에서는 목적지경로가 절대경로여야 한다. `'jun
 
 동기 close(2).
 
-## fs.open(path, flags, [mode], [callback])
+## fs.open(path, flags, [mode], callback)
 
 비동기 파일 열기. open(2).를 봐라. `flags`는 다음의 값이 될 수 있다.
 
@@ -323,21 +307,24 @@ Windows의 junction에서는 목적지경로가 절대경로여야 한다. `'jun
 존재하는 경우 `fs.open()`는 실패한다. POSIX 시스템에서 심볼릭링크는 포함되지 않는다.
 네트워크 파일 시스템에서 독점 모드는 동작할 수도 있고 동작하지 않을 수도 있다.
 
+리눅스에서는 추가(append) 모드로 파일을 열었을 경우 위치 쓰기(positional write)가 동작하지
+않는다. 커널이 위치 인자를 무시하고 항상 파일 끝에 데이터를 추가한다.
+
 ## fs.openSync(path, flags, [mode])
 
 동기 open(2).
 
-## fs.utimes(path, atime, mtime, [callback])
+## fs.utimes(path, atime, mtime, callback)
 ## fs.utimesSync(path, atime, mtime)
 
 전달한 경로가 참조하는 파일의 타임스탬프를 변경한다.
 
-## fs.futimes(fd, atime, mtime, [callback])
+## fs.futimes(fd, atime, mtime, callback)
 ## fs.futimesSync(fd, atime, mtime)
 
 전달한 파일 디스크립터가 참조하는 파일의 타임스탬프를 변경한다.
 
-## fs.fsync(fd, [callback])
+## fs.fsync(fd, callback)
 
 비동기 fsync(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 
@@ -345,7 +332,7 @@ Windows의 junction에서는 목적지경로가 절대경로여야 한다. `'jun
 
 동기 fsync(2).
 
-## fs.write(fd, buffer, offset, length, position, [callback])
+## fs.write(fd, buffer, offset, length, position, callback)
 
 `fd`가 지정한 파일에 `buffer`를 작성한다.
 
@@ -361,11 +348,14 @@ pwrite(2)를 봐라.
 콜백을 기다리지 않고 같은 파일에 여러번 `fs.write`를 사용하는 것은 안전하지 않다. 이 경우에
 `fs.createWriteStream`를 사용하기를 강력하게 추천한다.
 
+리눅스에서는 추가(append) 모드로 파일을 열었을 경우 위치 쓰기(positional write)가 동작하지
+않는다. 커널이 위치 인자를 무시하고 항상 파일 끝에 데이터를 추가한다.
+
 ## fs.writeSync(fd, buffer, offset, length, position)
 
 `fs.write()`의 동기 버전. 작성한 바이트 수를 반환한다.
 
-## fs.read(fd, buffer, offset, length, position, [callback])
+## fs.read(fd, buffer, offset, length, position, callback)
 
 `fd`가 지정한 파일에서 데이터를 읽는다.
 
@@ -384,12 +374,13 @@ pwrite(2)를 봐라.
 
 `fs.read`의 동기 버전이다. `bytesRead`의 수를 반환한다.
 
-## fs.readFile(filename, [options], [callback])
+## fs.readFile(filename, [options], callback)
 
 * `filename` {String}
 * `options` {Object}
   * `encoding` {String | Null} default = `null`
   * `flag` {String} default = `'r'`
+* `callback` {Function}
 
 파일의 전체 내용을 비동기로 읽는다. 예제:
 
@@ -411,7 +402,7 @@ pwrite(2)를 봐라.
 버퍼를 반환한다.
 
 
-## fs.writeFile(filename, data, [options], [callback])
+## fs.writeFile(filename, data, [options], callback)
 
 * `filename` {String}
 * `data` {String | Buffer}
@@ -419,6 +410,7 @@ pwrite(2)를 봐라.
   * `encoding` {String | Null} default = `'utf8'`
   * `mode` {Number} default = `438` (aka `0666` in Octal)
   * `flag` {String} default = `'w'`
+* `callback` {Function}
 
 비동기로 파일에 데이터를 작성하고 파일이 이미 존재하는 경우에는 파일을 대체한다.
 `data`는 문자열이나 버퍼가 될 수 있다.
@@ -437,7 +429,7 @@ pwrite(2)를 봐라.
 
 `fs.writeFile`의 동기버전이다.
 
-## fs.appendFile(filename, data, [options], [callback])
+## fs.appendFile(filename, data, [options], callback)
 
 * `filename` {String}
 * `data` {String | Buffer}
@@ -445,6 +437,7 @@ pwrite(2)를 봐라.
   * `encoding` {String | Null} default = `'utf8'`
   * `mode` {Number} default = `438` (aka `0666` in Octal)
   * `flag` {String} default = `'a'`
+* `callback` {Function}
 
 비동기로 파일에 데이터를 추가하고 파일이 존재하지 않는 경우 파일을 생성한다.
 `data`는 문자열이거나 버퍼다.
@@ -553,7 +546,7 @@ null 일 경우를 위한 대체(fallback) 로직을 가지고 있어야 한다.
       }
     });
 
-## fs.exists(path, [callback])
+## fs.exists(path, callback)
 
 파일시스템을 확인해서 전달한 경로가 존재하는지 검사한다.
 존재여부fmf true나 false로 `callback`을 호출한다. 예제:
@@ -637,7 +630,7 @@ null 일 경우를 위한 대체(fallback) 로직을 가지고 있어야 한다.
 
 ## Class: fs.ReadStream
 
-`ReadStream`는 [Readable Stream](stream.html#stream_readable_stream)이다.
+`ReadStream`는 [Readable Stream](stream.html#stream_class_stream_readable)이다.
 
 ### Event: 'open'
 
@@ -660,9 +653,9 @@ ReadStream의 파일이 열렸을 때 발생한다.
 포함할 수도 있다. 파일을 교체하는 대신에 파일을 수정하려면 `flags` 모드를 기본값인
 `w` 대신에 `r+`를 사용해야 한다.
 
-## fs.WriteStream
+## Class: fs.WriteStream
 
-`WriteStream`는 [Writable Stream](stream.html#stream_writable_stream)이다.
+`WriteStream`는 [Writable Stream](stream.html#stream_class_stream_writable)이다.
 
 ### Event: 'open'
 

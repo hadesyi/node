@@ -5,15 +5,151 @@
 도메인은 하나의 그룹으로 여러 가지 다른 IO 작업을 다룰 수 있는 방법을 제공한다.
 도메인에 등록된 이벤트 이미터나 콜백 등에서 `error` 이벤트가 발생하거나 오류를
 던졌을 때 `process.on('uncaughtException')`에서 오류의 컨텍스트를 읽어버리거나
-오류 코드로 프로그램이 종료되는 대신 도메인 객체가 이를 인지할 수 있다.
+오류 코드로 프로그램이 즉시 종료되는 대신 도메인 객체가 이를 인지할 수 있다.
 
-이 기능은 Node 0.8버전에서 새롭게 추가된 기능이다. 처음 도입된 것이고 차후 버전에서
-꽤 많은 변경이 있을 것이다. 사용해보고 개발팀에 피드백을 주기 바란다.
+## Warning: Don't Ignore Errors!
 
-아직 실험적인 기능이기 때문에 최소 한번이라도 `domain` 모듈을 로드하지 않는한
-도메인 기능은 사용하지 않도록 되어 있다. 기본적으로 도메인은 생성되거나 등록되지
-않는다. 이는 현재 프로그램에 좋지 않은 영향을 주지 않으려는 설계적인 의도이다.
-차후 Node.js 버전에서는 기본적으로 활성화되기를 기대한다.
+<!-- type=misc -->
+
+도메인 오류 핸들러는 오류 발생시 프로세스를 종료하는 것을 대체하지는 않는다.
+
+JavaScript에서 `throw` 동작방식의 기본적인 특성으로 인해 참조를 누출하거나
+undefined같은 류의 깨지기 쉬운 상태를 생성하지 않은 채로 안전하게 "벗어난 곳이 어디인지를 찾아내는"
+방법이 거의 없다.
+
+오류가 던져졌을 때 가장 안정한 반응은 프로세스를 종료하는 것이다. 물론 일반적인 웹서버에서
+다수의 연결을 얼어놓고 있을 것인데 어디선가 오류가 발생해서 갑자기 종료시켜버리는 것은
+합당하지는 않다.
+
+더 좋은 접근방법은 오류를 발생시킨 요청에 오류 응답을 보내면서 다른 요청들은 정상적으로
+종료해고 해당 워커는 새로운 요청을 받아들이지 않도록 하는 것이다.
+
+이 접근에서 워커가 오류를 만났을 때 마스터 프로세스가 새로운 워커를 만들 수 있으므로 `domain`은
+클러스터 모듈과 친하다. 다중 머신으로 확장하는 node 프로그램에서 프록시나 서비스 등록을 종료하는 것은
+실패를 관리하고 적절하게 대응할 수 있다.
+
+예를 들어 다음은 좋은 생각이 아니다.
+
+```javascript
+// XXX WARNING!  BAD IDEA!
+
+var d = require('domain').create();
+d.on('error', function(er) {
+  // This is no better than process.on('uncaughtException')!
+  // 오류는 프로세스를 깨뜨리지는 않지만 오류가 하는하는 일은 더 좋지 않다!
+  // 갑작스러운 프로세스의 재시작을 막더라도 이런 일이 발생하면 리소스를 노출하게 된다.
+  // 이는 process.on('uncaughtException')보다 나을게 없다!
+  console.log('error, but oh well', er.message);
+});
+d.run(function() {
+  require('http').createServer(function(req, res) {
+    handleRequest(req, res);
+  }).listen(PORT);
+});
+```
+
+도메인의 컨텍스트와 프로그램을 다중 워커 프로세스로 분리하는 강력함을 사용해서
+적절하게 대응하고 훨신 더 안전하게 오류를 다룰 수 있다.
+
+```javascript
+// 훨씬 좋다!
+
+var cluster = require('cluster');
+var PORT = +process.env.PORT || 1337;
+
+if (cluster.isMaster) {
+  // 실환경에서는 2개 이상의 워커를 사용할 것이고 마스터와 워커를 같은 파일에
+  // 두지 않을 것이다.
+  //
+  // 물론 DoS 공격이나 다른 공격행위를 차단하기 위해서 필요한 커스텀 로직을 구현하고
+  // 로깅을 더 깔끔하게 할 수도 있다.
+  //
+  // 클러스터 문서의 옵션을 찾고해라.
+  //
+  // 중요한 점은 의도치않은 오류의 복구능력을 높히면서 마스터가 하는 일은
+  // 아주 적다는 것이다.
+
+  cluster.fork();
+  cluster.fork();
+
+  cluster.on('disconnect', function(worker) {
+    console.error('disconnect!');
+    cluster.fork();
+  });
+
+} else {
+  // 워커
+  //
+  // 버그를 넣을 곳이다!
+
+  var domain = require('domain');
+
+  // 요청을 처리하는 워커 프로세스를 사용하는 자세한 방법은 클러스터 문서를 참고해라.
+  // 동작하는 방법이나 경고 등등
+
+  var server = require('http').createServer(function(req, res) {
+    var d = domain.create();
+    d.on('error', function(er) {
+      console.error('error', er.stack);
+
+      // Note: 위험지역이다.
+      // 당연히 원치않은 일이 일어난다.
+      // 이제 어떤 일이든 발생할 수 있다! 조심해라!
+
+      try {
+        // 30초 내에 종료되었는지 확인한다
+        var killtimer = setTimeout(function() {
+          process.exit(1);
+        }, 30000);
+        // 하지만 이를 위해 프로세스를 열어둔 채 유지하지 말아라!
+        killtimer.unref();
+
+        // 새로운 요청을 받아들이는 것을 멈춘다.
+        server.close();
+
+        // 워커가 죽은 것을 마스터가 알도록 한다. 이는 클러스터 마스터에 'disconnect'를
+        // 발생시키고 마스터가 새로운 워커를 포크할 것이다.
+        cluster.worker.disconnect();
+
+        // 문제을 일으킨 요청에 오류전송을 시도한다.
+        res.statusCode = 500;
+        res.setHeader('content-type', 'text/plain');
+        res.end('Oops, there was a problem!\n');
+      } catch (er2) {
+        // 여기서 할 수 있는 일은 많지 않다.
+        console.error('Error sending 500!', er2.stack);
+      }
+    });
+
+    // req와 res는 이 도메인이 존재하기 전에 생성되므로 명시적으로 req와 res를
+    // 추가해야 한다. 아래의 암시적/명시적 바인딩의 설명을 참고해라.
+    d.add(req);
+    d.add(res);
+
+    // 이제 도메인에서 핸들러 함수를 실행한다.
+    d.run(function() {
+      handleRequest(req, res);
+    });
+  });
+  server.listen(PORT);
+}
+
+// 이 부분은 중요하지는 않다.그냥 라우팅 예제일 뿐이다.
+// 세련된 어플리케이션 로직을 여기에 둘 수 있다.
+function handleRequest(req, res) {
+  switch(req.url) {
+    case '/error':
+      // 비동기 작업을 수행하고...
+      setTimeout(function() {
+        // Whoops!
+        flerb.bark();
+      });
+      break;
+    default:
+      res.end('ok');
+  }
+}
+```
 
 ## Additions to Error objects
 
@@ -32,7 +168,7 @@
 
 <!--type=misc-->
 
-도메인을 사용하면 새로 생성되는 모든 EventEmitter 객체(스트림 객체, 요청, 응답등을
+도메인을 사용하면 **새로 생성되는** 모든 EventEmitter 객체(스트림 객체, 요청, 응답등을
 포함해서)는 생성되면서 암묵적으로 활성화된 도메인에 바인딩 될 것이다.
 
 게다가 저수준 이벤트 루프 요청(fs.open나 콜백을 받는 메서드같은)에 전달한 콜백은
@@ -44,7 +180,7 @@
 가비지 컬렉트되지 않도록 하는 것은 아주 쉽다.
 
 부모 도메인의 자식처럼 중첩된 도메인 객체가 *필요하다면* 반드시 명시적으로
-추가한 뒤 나중에 정리해야 한다.
+추가해야 한다.
 
 암묵적인 바인딩은 던져진 오류나 `'error'` 이벤트를 도메인의 `error` 이벤트로
 보내지만 도메인에 EventEmitter를 등록하지는 않기 때문에 `domain.dispose()`를
@@ -84,14 +220,8 @@ serverDomain.run(function() {
       try {
         res.writeHead(500);
         res.end('Error occurred, sorry.');
-        res.on('close', function() {
-          // 이 도메인에 추가한 다른 것들도 강제적으로 종료한다.
-          reqd.dispose();
-        });
       } catch (er) {
         console.error('Error sending 500', er, req.url);
-        // 최선을 다했다. 남아있는 모든 것을 정리한다.
-        reqd.dispose();
       }
     });
   }).listen(1337);

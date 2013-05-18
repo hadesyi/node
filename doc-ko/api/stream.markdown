@@ -113,12 +113,14 @@ Note: **이 함수는 직접 호출하지 말아야 한다.**  이 자식 프로
 `stream.push(chunk)`를 호출하기 전 `size` 바이트를 사용할 수 있을 때까지
 "기다릴" 필요가 없다.
 
-### readable.push(chunk)
+### readable.push(chunk, [encoding])
 
 * `chunk` {Buffer | null | String} 읽기 큐에 넣을 데이터의 청크
+* `encoding` {String} 문자열 청크의 인코딩. `'utf8'`이나 `'ascii'`처럼
+  유효한 Buffer 인코딩이어야 한다
 * return {Boolean} 추가적인 push를 수행해야 하는지 여부
 
-Note: **이 함수는 Readable 하위클래스의 컨슈머가 아닌 Readable 구현체가 호출해야 한다.**
+Note: **이 함수는 Readable 스트림의 컨슈머가 아닌 Readable 구현체가 호출해야 한다.**
 최소 하나의 `push(chunk)` 호출이 이뤄질 때까지 `_read()` 함수를 다시 호출하지 않을 것이다.
 사용할 수 있는 데이터가 없다면 큐에 데이터를 추가히자 않고 차후의 `_read`를 호출할 수 있도록
 `push('')`(빈 문자열)를 호출할 것이다.
@@ -161,17 +163,25 @@ stream._read = function(n) {
 * `chunk` {Buffer | null | String} 읽기 큐로 unshift하는 데이터의 청크
 * return {Boolean} 추가적인 push를 수행해야 하는지 여부
 
+Note: **이 함수는 보통 Readable 하위클래스의 구현체가 아니라 Readable 컨슈머가 호출할
+것이다.** 이는 `readable.push(chunk)`가 하는 방법으로 `_read()` 트랜잭션의 끝을 나타내지
+않는다. Readable 클래스에서 `this.unshift(chunk)`를 호출해야 하는지 찾는다면
+[stream.Transform](#stream_class_stream_transform) 클래스를 대신 사용해야하는
+좋은 기회이다.
+
 이 메서드는 `readable.push(chunk)` 계열이다. 읽기 큐의 *끝*에 데이터를 두기 보다는
 읽기 큐의 *앞*에 데이터를 둔다.
 
 이는 소스에서 낙관적으로 가져온 "소비하지 않는" 일부 데이터가 필요한 파서가 스트림을 소비하는
-경우 유용하다.
+경우 유용하므로 스트림을 다른 파티(party)로 전달할 수 있다.
 
 ```javascript
 // 간단한 데이터 프로토콜에 대한 파서.
 // "header"는 JSON 객체이고 이어서 두개의 \n 문자가 오로고 이어서 메시지 바디가 온다.
 //
-// Note: 이는 Transform 스트림으로 훨씬 간단히 할 수 있다. 아래를 참고해라.
+// Note: 이는 Transform 스트림으로 훨씬 간단히 할 수 있다!
+// 이를 위해 Readable를 직접 사용하는 것이 차선책이다. 이에 대한 예제은 아래의
+// Transform 부분을 참고해라.
 
 function SimpleProtocol(source, options) {
   if (!(this instanceof SimpleProtocol))
@@ -470,6 +480,9 @@ Note: **이 함수는 절대로 직접 호출하지 말아야 한다.**  이는 
 스트림의 쓰기 큐가 비워지고 다시 버퍼링하지 않고 안전하게 쓸 수 있게 되었을 때 발생한다.
 `stream.write()`이 `false`를 반환했을 때 리스닝한다.
 
+### Event: 'error'
+
+데이터를 받는데 오류가 있으면 발생한다.
 
 ### Event: 'close'
 
@@ -647,11 +660,11 @@ SimpleProtocol.prototype._transform = function(chunk, encoding, done) {
       this.emit('header', this.header);
 
       // 일부 추가적인 데이터를 얻었으므로 이를 먼저 발생시킨다.
-      this.push(b);
+      this.push(chunk.slice(split));
     }
   } else {
     // 여기서 기존처럼 컨슈머에 데이터를 제공한다.
-    this.push(b);
+    this.push(chunk);
   }
   done();
 };

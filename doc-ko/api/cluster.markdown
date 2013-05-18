@@ -374,7 +374,7 @@ Disconnect시키고 2초 후에 서버를 죽인다(destroy). 대신 2초 후에
 
       process.on('message', function(msg) {
         if (msg === 'force kill') {
-          server.destroy();
+          server.close();
         }
       });
     }

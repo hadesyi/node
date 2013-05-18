@@ -93,7 +93,7 @@ function install (args, cb_) {
       var tree = treeify(installed || [])
         , pretty = prettify(tree, installed).trim()
 
-      if (pretty) console.log(pretty)
+      if (pretty) log.write(pretty)
       save(where, installed, tree, pretty, cb_)
     })
   }
@@ -679,7 +679,7 @@ function targetResolver (where, context, deps) {
 
       if (data && !data._from) data._from = what
 
-      return cb(er, data)
+      return cb(er, data || [])
     })
   }
 }

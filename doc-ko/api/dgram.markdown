@@ -37,7 +37,7 @@
 그 다음 `socket.address().address`와 `socket.address().port`로 주소와 포트를
 획득할 수 있다.
 
-## Class: Socket
+## Class: dgram.Socket
 
 dgram Socket 클래스는 데이터그램 기능을 은닉화한다. 이 클래스는
 `dgram.createSocket(type, [callback])`를 통해서 생성되어야 한다.
@@ -64,7 +64,7 @@ dgram Socket 클래스는 데이터그램 기능을 은닉화한다. 이 클래�
 
 오류가 생겼을 때 발생한다.
 
-### dgram.send(buf, offset, length, port, address, [callback])
+### socket.send(buf, offset, length, port, address, [callback])
 
 * `buf` Buffer 객체.  보내는 메시지다
 * `offset` 정수. 버퍼에서 메시지가 시작되는 오프셋.
@@ -116,7 +116,7 @@ UDP 소켓에서 목적지 포트와 IP 주소는 반드시 지정해야 한다.
 데이터그램을 전송하는 것은 동작하지 않는다. (데이터가 의도된 수신자에게 도달하지 않았다는
 것을 소스에 알리지 않고 패킷을 경고없이 버린다.)
 
-### dgram.bind(port, [address], [callback])
+### socket.bind(port, [address], [callback])
 
 * `port` 정수
 * `address` 문자열, 선택사항
@@ -147,23 +147,23 @@ UDP 서버가 41234 포트에서 받는 예제:
     // server listening 0.0.0.0:41234
 
 
-### dgram.close()
+### socket.close()
 
 의존하는 소켓을 닫고 소켓에서 데이터를 받는 것을 멈춘다.
 
-### dgram.address()
+### socket.address()
 
 소켓에 대한 주소 정보를 담고 있는 객체를 반환한다. UDP 소켓에서 이 객체는
 `address`와 `family`와 `port`를 담고 있을 것이다.
 
-### dgram.setBroadcast(flag)
+### socket.setBroadcast(flag)
 
 * `flag` 불리언
 
 `SO_BROADCAST` 소켓 옵션을 설정하거나 없앤다. 이 옵션을 설정하면 로컬 인터페이스의 브로드캐스트
 주소로 UDP 패킷을 보낼 것이다.
 
-### dgram.setTTL(ttl)
+### socket.setTTL(ttl)
 
 * `ttl` 정수
 
@@ -174,7 +174,7 @@ UDP 서버가 41234 포트에서 받는 예제:
 
 `setTTL()`의 아규먼트는 1부터 255사이의 홉 수이다. 대부분의 시스템에서 기본값은 64이다.
 
-### dgram.setMulticastTTL(ttl)
+### socket.setMulticastTTL(ttl)
 
 * `ttl` 정수
 
@@ -185,14 +185,14 @@ UDP 서버가 41234 포트에서 받는 예제:
 
 `setMulticastTTL()`의 아규먼트는 0부터 255사이의 홉(hop) 수이다. 대부분의 시스템에서 기본값은 1이다.
 
-### dgram.setMulticastLoopback(flag)
+### socket.setMulticastLoopback(flag)
 
 * `flag` 불리언
 
 `IP_MULTICAST_LOOP` 소켓 옵션을 설정하거나 제거한다. 이 옵셩을 설정하면 멀티캐스트 패킷도 로컬
 인터페이스에서 받을 것이다.
 
-### dgram.addMembership(multicastAddress, [multicastInterface])
+### socket.addMembership(multicastAddress, [multicastInterface])
 
 * `multicastAddress` 문자열
 * `multicastInterface` 문자열, 선택사항
@@ -202,7 +202,7 @@ UDP 서버가 41234 포트에서 받는 예제:
 `multicastInterface`를 지정하지 않으면 운영체제는 회원을 유효한 모든 인터페이스에 추가하려고
 할 것이다.
 
-### dgram.dropMembership(multicastAddress, [multicastInterface])
+### socket.dropMembership(multicastAddress, [multicastInterface])
 
 * `multicastAddress` 문자열
 * `multicastInterface` 문자열, 선택사항
@@ -214,13 +214,13 @@ UDP 서버가 41234 포트에서 받는 예제:
 `multicastInterface`를 지정하지 않으면 운영체제는 회원을 유효한 모든 인터페이스에서 버리려고
 할 것이다.
 
-### dgram.unref()
+### socket.unref()
 
 소켓에서 `unref`를 호출하는 것은 해당 소켓이 이벤트 시스템에서 유일하게 활성화된 소켓인 경우
 프로그램이 종료될 수 있게 할 것이다. 소켓에 이미 `unref`가 호출됐다면 다시 `unref`를 호출해도
 아무런 영향이 없을 것이다.
 
-### dgram.ref()
+### socket.ref()
 
 `unref`과는 반대로 이전에 `unref`된 소켓에 `ref`를 호출하면 해당 소켓이 유일하게 남아있는
 소켓인 경우 프로그램이 종료되지 *않도록* 할 것이다.(기본 동작) 소켓에 이미 `ref`를 호출했다면

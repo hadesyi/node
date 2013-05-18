@@ -24,7 +24,9 @@ windows에서는 역슬래시를 사용한다.
 ## path.join([path1], [path2], [...])
 
 모든 아규먼트를 합쳐서 최종 경로로 정규화한다.
-문자열이 아닌 아규먼트는 무시한다.
+
+아규먼트는 문자열이어야 한다. v0.8에서 문자열이 아닌 아규먼트는 경고없이 무시한다.
+v0.10이상에서는 예외를 던진다.
 
 예제:
 
@@ -33,8 +35,8 @@ windows에서는 역슬래시를 사용한다.
     '/foo/bar/baz/asdf'
 
     path.join('foo', {}, 'bar')
-    // returns
-    'foo/bar'
+    // throws exception
+    TypeError: Arguments to path.join must be strings
 
 ## path.resolve([from ...], to)
 

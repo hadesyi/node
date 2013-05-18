@@ -90,6 +90,20 @@
 다른 스크림과는 다르다. 이 둘은 보통의 파일이나 TTY 파일 디스크립터를 참조할 때
 블락킹된다. 파이프를 참조하는 경우에는 다른 스크림처럼 넌블락킹이다.
 
+Node가 TTY 컨텐스트로 실행되는지 확인하려면 `process.stderr`, `process.stdout`,
+`process.stdin`의 `isTTY` 프로퍼티를 읽어라.
+
+    $ node -p "Boolean(process.stdin.isTTY)"
+    true
+    $ echo "foo" | node -p "Boolean(process.stdin.isTTY)"
+    false
+
+    $ node -p "Boolean(process.stdout.isTTY)"
+    true
+    $ node -p "Boolean(process.stdout.isTTY)" | cat
+    false
+
+자세한 내용은 [the tty docs](tty.html#tty_tty)를 참고해라.
 
 ## process.stderr
 
@@ -307,11 +321,14 @@ node와 의존성에 대한 버전 문자열을 노출하는 프로퍼티이다.
 
 다음과 같이 출력될 것이다:
 
-    { node: '0.4.12',
-      v8: '3.1.8.26',
-      ares: '1.7.4',
-      ev: '4.4',
-      openssl: '1.0.0e-fips' }
+    { http_parser: '1.0',
+      node: '0.10.4',
+      v8: '3.14.5.8',
+      ares: '1.9.0-DEV',
+      uv: '0.10.3',
+      zlib: '1.2.3',
+      modules: '11',
+      openssl: '1.0.1e' }
 
 ## process.config
 
@@ -371,9 +388,18 @@ node와 의존성에 대한 버전 문자열을 노출하는 프로퍼티이다.
 
     console.log('This process is pid ' + process.pid);
 
+
 ## process.title
 
 'ps'에서 표시될 어떻게 표시되는 지에 대한 Getter와 Setter
+
+setter로 사용하는 경우 최대 길이는 플랫폼에 의존적이고 아마도 길지 않을 것이다.
+
+리눅스나 OS X에서는 argv 메모리를 덮어쓰기 때문에 바이너리 명의 크기에 명령행 인자의 길이를
+더한 크기로 제한될 것이다.
+
+v0.8은 environ 메모리를 덮어써서 프로세스 타이틀 문자열을 더 길게 처리할 수 있지만
+몇몇 (명확하지 않은)경우에는 잠재적으로 보안에 취약하거나 혼란스러울 수 있다.
 
 
 ## process.arch

@@ -1,4 +1,175 @@
-2013.03.11, Version 0.10.0 (Stable)
+2013.05.17, Version 0.10.7 (Stable)
+
+* uv: upgrade to v0.10.7
+
+* npm: Upgrade to 1.2.21
+
+* crypto: Don't ignore verify encoding argument (isaacs)
+
+* buffer, crypto: fix default encoding regression (Ben Noordhuis)
+
+* timers: fix setInterval() assert (Ben Noordhuis)
+
+
+2013.05.14, Version 0.10.6 (Stable), 5deb1672f2b5794f8be19498a425ea4dc0b0711f
+
+* module: Deprecate require.extensions (isaacs)
+
+* stream: make Readable.wrap support objectMode, empty streams (Daniel Moore)
+
+* child_process: fix handle delivery (Ben Noordhuis)
+
+* crypto: Fix performance regression (isaacs)
+
+* src: DRY string encoding/decoding (isaacs)
+
+
+2013.04.23, Version 0.10.5 (Stable), deeaf8fab978e3cadb364e46fb32dafdebe5f095
+
+* uv: Upgrade to 0.10.5 (isaacs)
+
+* build: added support for Visual Studio 2012 (Miroslav Bajtoš)
+
+* http: Don't try to destroy nonexistent sockets (isaacs)
+
+* crypto: LazyTransform on properties, not methods (isaacs)
+
+* assert: put info in err.message, not err.name (Ryan Doenges)
+
+* dgram: fix no address bind() (Ben Noordhuis)
+
+* handle_wrap: fix NULL pointer dereference (Ben Noordhuis)
+
+* os: fix unlikely buffer overflow in os.type() (Ben Noordhuis)
+
+* stream: Fix unshift() race conditions (isaacs)
+
+
+2013.04.11, Version 0.10.4 (Stable), 9712aa9f76073c30850b20a188b1ed12ffb74d17
+
+* uv: Upgrade to 0.10.4
+
+* npm: Upgrade to 1.2.18
+
+* v8: Avoid excessive memory growth in JSON.parse (Fedor Indutny)
+
+* child_process, cluster: fix O(n*m) scan of cmd string (Ben Noordhuis)
+
+* net: fix socket.bytesWritten Buffers support (Fedor Indutny)
+
+* buffer: fix offset checks (Łukasz Walukiewicz)
+
+* stream: call write cb before finish event (isaacs)
+
+* http: Support write(data, 'hex') (isaacs)
+
+* crypto: dh secret should be left-padded (Fedor Indutny)
+
+* process: expose NODE_MODULE_VERSION in process.versions (Rod Vagg)
+
+* crypto: fix constructor call in crypto streams (Andreas Madsen)
+
+* net: account for encoding in .byteLength (Fedor Indutny)
+
+* net: fix buffer iteration in bytesWritten (Fedor Indutny)
+
+* crypto: zero is not an error if writing 0 bytes (Fedor Indutny)
+
+* tls: Re-enable check of CN-ID in cert verification (Tobias Müllerleile)
+
+
+2013.04.03, Version 0.10.3 (Stable), d4982f6f5e4a9a703127489a553b8d782997ea43
+
+* npm: Upgrade to 1.2.17
+
+* child_process: acknowledge sent handles (Fedor Indutny)
+
+* etw: update prototypes to match dtrace provider (Timothy J Fontaine)
+
+* dtrace: pass more arguments to probes (Dave Pacheco)
+
+* build: allow building with dtrace on osx (Dave Pacheco)
+
+* http: Remove legacy ECONNRESET workaround code (isaacs)
+
+* http: Ensure socket cleanup on client response end (isaacs)
+
+* tls: Destroy socket when encrypted side closes (isaacs)
+
+* repl: isSyntaxError() catches "strict mode" errors (Nathan Rajlich)
+
+* crypto: Pass options to ctor calls (isaacs)
+
+* src: tie process.versions.uv to uv_version_string() (Ben Noordhuis)
+
+
+2013.03.28, Version 0.10.2 (Stable)
+
+* npm: Upgrade to 1.2.15
+
+* uv: Upgrade to 0.10.3
+
+* tls: handle SSL_ERROR_ZERO_RETURN (Fedor Indutny)
+
+* tls: handle errors before calling C++ methods (Fedor Indutny)
+
+* tls: remove harmful unnecessary bounds checking (Marcel Laverdet)
+
+* crypto: make getCiphers() return non-SSL ciphers (Ben Noordhuis)
+
+* crypto: check randomBytes() size argument (Ben Noordhuis)
+
+* timers: do not calculate Timeout._when property (Alexey Kupershtokh)
+
+* timers: fix off-by-one ms error (Alexey Kupershtokh)
+
+* timers: handle signed int32 overflow in enroll() (Fedor Indutny)
+
+* stream: Fix stall in Transform under very specific conditions (Gil Pedersen)
+
+* stream: Handle late 'readable' event listeners (isaacs)
+
+* stream: Fix early end in Writables on zero-length writes (isaacs)
+
+* domain: fix domain callback from MakeCallback (Trevor Norris)
+
+* child_process: don't emit same handle twice (Ben Noordhuis)
+
+* child_process: fix sending utf-8 to child process (Ben Noordhuis)
+
+
+2013.03.21, Version 0.10.1 (Stable), c274d1643589bf104122674a8c3fd147527a667d
+
+* npm: upgrade to 1.2.15
+
+* crypto: Improve performance of non-stream APIs (Fedor Indutny)
+
+* tls: always reset this.ssl.error after handling (Fedor Indutny)
+
+* tls: Prevent mid-stream hangs (Fedor Indutny, isaacs)
+
+* net: improve arbitrary tcp socket support (Ben Noordhuis)
+
+* net: handle 'finish' event only after 'connect' (Fedor Indutny)
+
+* http: Don't hot-path end() for large buffers (isaacs)
+
+* fs: Missing cb errors are deprecated, not a throw (isaacs)
+
+* fs: make write/appendFileSync correctly set file mode (Raymond Feng)
+
+* stream: Return self from readable.wrap (isaacs)
+
+* stream: Never call decoder.end() multiple times (Gil Pedersen)
+
+* windows: enable watching signals with process.on('SIGXYZ') (Bert Belder)
+
+* node: revert removal of MakeCallback (Trevor Norris)
+
+* node: Unwrap without aborting in handle fd getter (isaacs)
+
+
+2013.03.11, Version 0.10.0 (Stable), 163ca274230fce536afe76c64676c332693ad7c1
 
 * npm: Upgrade to 1.2.14
 
@@ -496,6 +667,23 @@
 * readline: Use one history item for reentered line (Vladimir Beloborodov)
 
 * Fix #3521 Make process.env more like a regular Object (isaacs)
+
+
+2013.04.09, Version 0.8.23 (maintenance), c67f8d0500fe15637a623eb759d2ad7eb9fb3b0b
+
+* npm: Upgrade to v1.2.18
+
+* http: Avoid EE warning on ECONNREFUSED handling (isaacs)
+
+* tls: Re-enable check of CN-ID in cert verification (Tobias Müllerleile)
+
+* child_process: fix sending utf-8 to child process (Ben Noordhuis)
+
+* crypto: check key type in GetPeerCertificate() (Ben Noordhuis)
+
+* win/openssl: mark assembled object files as seh safe (Bert Belder)
+
+* windows/msi: fix msi build issue with WiX 3.7/3.8 (Raymond Feng)
 
 
 2013.03.07, Version 0.8.22 (Stable), 67a4cb4fe8c2346e30ffb83f7178e205cc2dab33

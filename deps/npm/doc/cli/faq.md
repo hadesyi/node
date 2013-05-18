@@ -77,7 +77,7 @@ npm will not help you do something that is known to be a bad idea.
 No.  This will never happen.  This question comes up sometimes,
 because it seems silly from the outside that npm couldn't just be
 configured to put stuff somewhere else, and then npm could load them
-from there.  It's an arbitrary spelling choice, right?  What's the bg
+from there.  It's an arbitrary spelling choice, right?  What's the big
 deal?
 
 At the time of this writing, the string `'node_modules'` appears 151
@@ -221,11 +221,18 @@ an argument to `git checkout`.  The default is `master`.
 
 ## How do I install node with npm?
 
-You don't.  Try one of these:
+You don't.  Try one of these node version managers:
 
-* <https://github.com/isaacs/nave>
-* <https://github.com/visionmedia/n>
-* <https://github.com/creationix/nvm>
+Unix:
+
+* <http://github.com/isaacs/nave>
+* <http://github.com/visionmedia/n>
+* <http://github.com/creationix/nvm>
+
+Windows:
+
+* <http://github.com/marcelklehr/nodist>
+* <https://github.com/hakobera/nvmw>
 
 ## How can I use npm for development?
 
