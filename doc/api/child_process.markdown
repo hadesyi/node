@@ -26,6 +26,19 @@ which can be piped to and from.
 The ChildProcess class is not intended to be used directly.  Use the
 `spawn()` or `fork()` methods to create a Child Process instance.
 
+### Event:  'error'
+
+* `err` {Error Object} the error.
+
+Emitted when:
+
+1. The process could not be spawned, or
+2. The process could not be killed, or
+3. Sending a message to the child process failed for whatever reason.
+
+See also [`ChildProcess#kill()`](#child_process_child_kill_signal) and
+[`ChildProcess#send()`](#child_process_child_send_message_sendhandle).
+
 ### Event:  'exit'
 
 * `code` {Number} the exit code, if it exited normally.
@@ -125,8 +138,15 @@ be sent `'SIGTERM'`. See `signal(7)` for a list of available signals.
     // send SIGHUP to process
     grep.kill('SIGHUP');
 
-Note that while the function is called `kill`, the signal delivered to the child
-process may not actually kill it.  `kill` really just sends a signal to a process.
+May emit an `'error'` event when the signal cannot be delivered. Sending a
+signal to a child process that has already exited is not an error but may
+have unforeseen consequences: if the PID (the process ID) has been reassigned
+to another process, the signal will be delivered to that process instead.
+What happens next is anyone's guess.
+
+Note that while the function is called `kill`, the signal delivered to the
+child process may not actually kill it.  `kill` really just sends a signal
+to a process.
 
 See `kill(2)`
 
@@ -171,6 +191,9 @@ should by all means avoid using this feature, it is subject to change without no
 The `sendHandle` option to `child.send()` is for sending a TCP server or
 socket object to another process. The child will receive the object as its
 second argument to the `message` event.
+
+Emits an `'error'` event if the message cannot be sent, for example because
+the child process has already exited.
 
 #### Example: sending server object
 
@@ -443,11 +466,6 @@ See also: `child_process.exec()` and `child_process.fork()`
 * `command` {String} The command to run, with space-separated arguments
 * `options` {Object}
   * `cwd` {String} Current working directory of the child process
-  * `stdio` {Array|String} Child's stdio configuration. (See above)
-    Only stdin is configurable, anything else will lead to unpredictable
-    results.
-  * `customFds` {Array} **Deprecated** File descriptors for the child to use
-    for stdio.  (See above)
   * `env` {Object} Environment key-value pairs
   * `encoding` {String} (Default: 'utf8')
   * `timeout` {Number} (Default: 0)
@@ -501,9 +519,6 @@ the child process is killed.
 * `args` {Array} List of string arguments
 * `options` {Object}
   * `cwd` {String} Current working directory of the child process
-  * `stdio` {Array|String} Child's stdio configuration. (See above)
-  * `customFds` {Array} **Deprecated** File descriptors for the child to use
-    for stdio.  (See above)
   * `env` {Object} Environment key-value pairs
   * `encoding` {String} (Default: 'utf8')
   * `timeout` {Number} (Default: 0)

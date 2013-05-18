@@ -22,6 +22,7 @@
 #include "node.h"
 #include "req_wrap.h"
 #include "handle_wrap.h"
+#include "string_bytes.h"
 
 #include "ares.h"
 #include "uv.h"
@@ -102,7 +103,6 @@ Persistent<String> domain_symbol;
 // declared in node_internals.h
 Persistent<Object> process;
 
-static Persistent<Function> process_tickDomainCallback;
 static Persistent<Function> process_tickFromSpinner;
 static Persistent<Function> process_tickCallback;
 
@@ -134,6 +134,7 @@ static bool use_debug_agent = false;
 static bool debug_wait_connect = false;
 static int debug_port=5858;
 static int max_stack_size = 0;
+static bool using_domains = false;
 
 // used by C++ modules as well
 bool no_deprecation = false;
@@ -899,21 +900,36 @@ Handle<Value> FromConstructorTemplate(Persistent<FunctionTemplate> t,
 }
 
 
+Handle<Value> UsingDomains(const Arguments& args) {
+  HandleScope scope;
+  if (using_domains)
+    return scope.Close(Undefined());
+  using_domains = true;
+  Local<Value> tdc_v = process->Get(String::New("_tickDomainCallback"));
+  Local<Value> ndt_v = process->Get(String::New("_nextDomainTick"));
+  if (!tdc_v->IsFunction()) {
+    fprintf(stderr, "process._tickDomainCallback assigned to non-function\n");
+    abort();
+  }
+  if (!ndt_v->IsFunction()) {
+    fprintf(stderr, "process._nextDomainTick assigned to non-function\n");
+    abort();
+  }
+  Local<Function> tdc = tdc_v.As<Function>();
+  Local<Function> ndt = ndt_v.As<Function>();
+  process->Set(String::New("_tickCallback"), tdc);
+  process->Set(String::New("nextTick"), ndt);
+  process_tickCallback = Persistent<Function>::New(tdc);
+  return Undefined();
+}
+
+
 Handle<Value>
 MakeDomainCallback(const Handle<Object> object,
-             const Handle<Function> callback,
-             int argc,
-             Handle<Value> argv[]) {
-  // lazy load _tickDomainCallback
-  if (process_tickDomainCallback.IsEmpty()) {
-    Local<Value> cb_v = process->Get(String::New("_tickDomainCallback"));
-    if (!cb_v->IsFunction()) {
-      fprintf(stderr, "process._tickDomainCallback assigned to non-function\n");
-      abort();
-    }
-    Local<Function> cb = cb_v.As<Function>();
-    process_tickDomainCallback = Persistent<Function>::New(cb);
-  }
+                   const Handle<Function> callback,
+                   int argc,
+                   Handle<Value> argv[]) {
+  // TODO Hook for long stack traces to be made here.
 
   // lazy load domain specific symbols
   if (enter_symbol.IsEmpty()) {
@@ -929,19 +945,22 @@ MakeDomainCallback(const Handle<Object> object,
 
   TryCatch try_catch;
 
-  domain = domain_v->ToObject();
-  assert(!domain.IsEmpty());
-  if (domain->Get(disposed_symbol)->IsTrue()) {
-    // domain has been disposed of.
-    return Undefined();
-  }
-  enter = Local<Function>::Cast(domain->Get(enter_symbol));
-  assert(!enter.IsEmpty());
-  enter->Call(domain, 0, NULL);
+  bool has_domain = domain_v->IsObject();
+  if (has_domain) {
+    domain = domain_v->ToObject();
+    assert(!domain.IsEmpty());
+    if (domain->Get(disposed_symbol)->IsTrue()) {
+      // domain has been disposed of.
+      return Undefined();
+    }
+    enter = Local<Function>::Cast(domain->Get(enter_symbol));
+    assert(!enter.IsEmpty());
+    enter->Call(domain, 0, NULL);
 
-  if (try_catch.HasCaught()) {
-    FatalException(try_catch);
-    return Undefined();
+    if (try_catch.HasCaught()) {
+      FatalException(try_catch);
+      return Undefined();
+    }
   }
 
   Local<Value> ret = callback->Call(object, argc, argv);
@@ -951,13 +970,15 @@ MakeDomainCallback(const Handle<Object> object,
     return Undefined();
   }
 
-  exit = Local<Function>::Cast(domain->Get(exit_symbol));
-  assert(!exit.IsEmpty());
-  exit->Call(domain, 0, NULL);
+  if (has_domain) {
+    exit = Local<Function>::Cast(domain->Get(exit_symbol));
+    assert(!exit.IsEmpty());
+    exit->Call(domain, 0, NULL);
 
-  if (try_catch.HasCaught()) {
-    FatalException(try_catch);
-    return Undefined();
+    if (try_catch.HasCaught()) {
+      FatalException(try_catch);
+      return Undefined();
+    }
   }
 
   if (tick_infobox.length == 0) {
@@ -967,7 +988,7 @@ MakeDomainCallback(const Handle<Object> object,
   }
 
   // process nextTicks after call
-  process_tickDomainCallback->Call(process, 0, NULL);
+  process_tickCallback->Call(process, 0, NULL);
 
   if (try_catch.HasCaught()) {
     FatalException(try_catch);
@@ -980,19 +1001,10 @@ MakeDomainCallback(const Handle<Object> object,
 
 Handle<Value>
 MakeCallback(const Handle<Object> object,
-             const Handle<String> symbol,
+             const Handle<Function> callback,
              int argc,
              Handle<Value> argv[]) {
-  HandleScope scope;
-
-  Local<Function> callback = object->Get(symbol).As<Function>();
-  Local<Value> domain = object->Get(domain_symbol);
-
   // TODO Hook for long stack traces to be made here.
-
-  // has domain, off with you
-  if (!domain->IsNull() && !domain->IsUndefined())
-    return scope.Close(MakeDomainCallback(object, callback, argc, argv));
 
   // lazy load no domain next tick callbacks
   if (process_tickCallback.IsEmpty()) {
@@ -1017,7 +1029,7 @@ MakeCallback(const Handle<Object> object,
   if (tick_infobox.length == 0) {
     tick_infobox.index = 0;
     tick_infobox.depth = 0;
-    return scope.Close(ret);
+    return ret;
   }
 
   // process nextTicks after call
@@ -1028,7 +1040,22 @@ MakeCallback(const Handle<Object> object,
     return Undefined();
   }
 
-  return scope.Close(ret);
+  return ret;
+}
+
+
+Handle<Value>
+MakeCallback(const Handle<Object> object,
+             const Handle<String> symbol,
+             int argc,
+             Handle<Value> argv[]) {
+  HandleScope scope;
+
+  Local<Function> callback = object->Get(symbol).As<Function>();
+
+  if (using_domains)
+    return scope.Close(MakeDomainCallback(object, callback, argc, argv));
+  return scope.Close(MakeCallback(object, callback, argc, argv));
 }
 
 
@@ -1111,30 +1138,9 @@ enum encoding ParseEncoding(Handle<Value> encoding_v, enum encoding _default) {
 }
 
 Local<Value> Encode(const void *buf, size_t len, enum encoding encoding) {
-  HandleScope scope;
-
-  if (encoding == BUFFER) {
-    return scope.Close(
-        Buffer::New(static_cast<const char*>(buf), len)->handle_);
-  }
-
-  if (!len) return scope.Close(String::Empty());
-
-  if (encoding == BINARY) {
-    const unsigned char *cbuf = static_cast<const unsigned char*>(buf);
-    uint16_t * twobytebuf = new uint16_t[len];
-    for (size_t i = 0; i < len; i++) {
-      // XXX is the following line platform independent?
-      twobytebuf[i] = cbuf[i];
-    }
-    Local<String> chunk = String::New(twobytebuf, len);
-    delete [] twobytebuf; // TODO use ExternalTwoByteString?
-    return scope.Close(chunk);
-  }
-
-  // utf8 or ascii encoding
-  Local<String> chunk = String::New((const char*)buf, len);
-  return scope.Close(chunk);
+  return StringBytes::Encode(static_cast<const char*>(buf),
+                             len,
+                             encoding);
 }
 
 // Returns -1 if the handle was not valid for decoding
@@ -1148,17 +1154,7 @@ ssize_t DecodeBytes(v8::Handle<v8::Value> val, enum encoding encoding) {
     return -1;
   }
 
-  if ((encoding == BUFFER || encoding == BINARY) && Buffer::HasInstance(val)) {
-    return Buffer::Length(val->ToObject());
-  }
-
-  Local<String> str = val->ToString();
-
-  if (encoding == UTF8) return str->Utf8Length();
-  else if (encoding == UCS2) return str->Length() * 2;
-  else if (encoding == HEX) return str->Length() / 2;
-
-  return str->Length();
+  return StringBytes::Size(val, encoding);
 }
 
 #ifndef MIN
@@ -1172,66 +1168,13 @@ ssize_t DecodeWrite(char *buf,
                     enum encoding encoding) {
   HandleScope scope;
 
-  // XXX
-  // A lot of improvement can be made here. See:
-  // http://code.google.com/p/v8/issues/detail?id=270
-  // http://groups.google.com/group/v8-dev/browse_thread/thread/dba28a81d9215291/ece2b50a3b4022c
-  // http://groups.google.com/group/v8-users/browse_thread/thread/1f83b0ba1f0a611
-
   if (val->IsArray()) {
-    fprintf(stderr, "'raw' encoding (array of integers) has been removed. "
-                    "Use 'binary'.\n");
+    fprintf(stderr, "'raw' encoding (array of integers) has been removed.\n");
     assert(0);
     return -1;
   }
 
-  bool is_buffer = Buffer::HasInstance(val);
-
-  if (is_buffer && (encoding == BINARY || encoding == BUFFER)) {
-    // fast path, copy buffer data
-    const char* data = Buffer::Data(val.As<Object>());
-    size_t size = Buffer::Length(val.As<Object>());
-    size_t len = size < buflen ? size : buflen;
-    memcpy(buf, data, len);
-    return len;
-  }
-
-  Local<String> str;
-
-  if (is_buffer) { // slow path, convert to binary string
-    Local<Value> arg = String::New("binary");
-    str = MakeCallback(val.As<Object>(), "toString", 1, &arg)->ToString();
-  }
-  else {
-    str = val->ToString();
-  }
-
-  if (encoding == UTF8) {
-    str->WriteUtf8(buf, buflen, NULL, String::HINT_MANY_WRITES_EXPECTED);
-    return buflen;
-  }
-
-  if (encoding == ASCII) {
-    str->WriteAscii(buf, 0, buflen, String::HINT_MANY_WRITES_EXPECTED);
-    return buflen;
-  }
-
-  // THIS IS AWFUL!!! FIXME
-
-  assert(encoding == BINARY);
-
-  uint16_t * twobytebuf = new uint16_t[buflen];
-
-  str->Write(twobytebuf, 0, buflen, String::HINT_MANY_WRITES_EXPECTED);
-
-  for (size_t i = 0; i < buflen; i++) {
-    unsigned char *b = reinterpret_cast<unsigned char*>(&twobytebuf[i]);
-    buf[i] = b[0];
-  }
-
-  delete [] twobytebuf;
-
-  return buflen;
+  return StringBytes::Write(buf, buflen, val, encoding, NULL);
 }
 
 void DisplayExceptionLine (TryCatch &try_catch) {
@@ -1487,12 +1430,11 @@ static uid_t uid_by_name(const char* name) {
   struct passwd pwd;
   struct passwd* pp;
   char buf[8192];
-  int rc;
 
   errno = 0;
   pp = NULL;
 
-  if ((rc = getpwnam_r(name, &pwd, buf, sizeof(buf), &pp)) == 0 && pp != NULL) {
+  if (getpwnam_r(name, &pwd, buf, sizeof(buf), &pp) == 0 && pp != NULL) {
     return pp->pw_uid;
   }
 
@@ -1525,12 +1467,11 @@ static gid_t gid_by_name(const char* name) {
   struct group pwd;
   struct group* pp;
   char buf[8192];
-  int rc;
 
   errno = 0;
   pp = NULL;
 
-  if ((rc = getgrnam_r(name, &pwd, buf, sizeof(buf), &pp)) == 0 && pp != NULL) {
+  if (getgrnam_r(name, &pwd, buf, sizeof(buf), &pp) == 0 && pp != NULL) {
     return pp->gr_gid;
   }
 
@@ -2330,10 +2271,10 @@ Handle<Object> SetupProcessObject(int argc, char *argv[]) {
   versions->Set(String::NewSymbol("node"), String::New(NODE_VERSION+1));
   versions->Set(String::NewSymbol("v8"), String::New(V8::GetVersion()));
   versions->Set(String::NewSymbol("ares"), String::New(ARES_VERSION_STR));
-  versions->Set(String::NewSymbol("uv"), String::New(
-               NODE_STRINGIFY(UV_VERSION_MAJOR) "."
-               NODE_STRINGIFY(UV_VERSION_MINOR)));
+  versions->Set(String::NewSymbol("uv"), String::New(uv_version_string()));
   versions->Set(String::NewSymbol("zlib"), String::New(ZLIB_VERSION));
+  versions->Set(String::NewSymbol("modules"),
+                String::New(NODE_STRINGIFY(NODE_MODULE_VERSION)));
 #if HAVE_OPENSSL
   // Stupid code to slice out the version string.
   int c, l = strlen(OPENSSL_VERSION_TEXT);
@@ -2477,6 +2418,8 @@ Handle<Object> SetupProcessObject(int argc, char *argv[]) {
   NODE_SET_METHOD(process, "memoryUsage", MemoryUsage);
 
   NODE_SET_METHOD(process, "binding", Binding);
+
+  NODE_SET_METHOD(process, "_usingDomains", UsingDomains);
 
   // values use to cross communicate with processNextTick
   Local<Object> info_box = Object::New();

@@ -58,8 +58,8 @@ cache.lock = lock
 cache.unlock = unlock
 
 var mkdir = require("mkdirp")
-  , exec = require("./utils/exec.js")
   , spawn = require("child_process").spawn
+  , exec = require("child_process").execFile
   , once = require("once")
   , fetch = require("./utils/fetch.js")
   , npm = require("./npm.js")
@@ -69,7 +69,7 @@ var mkdir = require("mkdirp")
   , registry = npm.registry
   , log = require("npmlog")
   , path = require("path")
-  , sha = require("./utils/sha.js")
+  , sha = require("sha")
   , asyncMap = require("slide").asyncMap
   , semver = require("semver")
   , tar = require("./utils/tar.js")
@@ -81,6 +81,7 @@ var mkdir = require("mkdirp")
   , retry = require("retry")
   , zlib = require("zlib")
   , chmodr = require("chmodr")
+  , which = require("which")
 
 cache.usage = "npm cache add <tarball file>"
             + "\nnpm cache add <folder>"
@@ -140,6 +141,7 @@ function read (name, ver, forceBypass, cb) {
   }
 
   readJson(jsonFile, function (er, data) {
+    er = needName(er, data)
     er = needVersion(er, data)
     if (er && er.code !== "ENOENT" && er.code !== "ENOTDIR") return cb(er)
     if (er) return addNamed(name, ver, c)
@@ -266,7 +268,7 @@ function add (args, cb) {
     case "git+ftp:":
     case "git+ssh:":
       //p.protocol = p.protocol.replace(/^git([^:])/, "$1")
-      return addRemoteGit(spec, p, name, cb)
+      return addRemoteGit(spec, p, name, false, cb)
     default:
       // if we have a name and a spec, then try name@spec
       // if not, then try just spec (which may try name@"" if not found)
@@ -365,7 +367,8 @@ function addRemoteTarball_(u, tmp, shasum, cb) {
 // 4. cd cacheDir && git fetch -a origin
 // 5. git archive /tmp/random.tgz
 // 6. addLocalTarball(/tmp/random.tgz) <gitref> --format=tar --prefix=package/
-function addRemoteGit (u, parsed, name, cb_) {
+// silent flag is used if this should error quietly
+function addRemoteGit (u, parsed, name, silent, cb_) {
   if (typeof cb_ !== "function") cb_ = name, name = null
 
   if (!inFlightURLs[u]) inFlightURLs[u] = []
@@ -409,7 +412,7 @@ function addRemoteGit (u, parsed, name, cb_) {
 
     p = path.join(npm.config.get("cache"), "_git-remotes", v)
 
-    checkGitDir(p, u, co, origUrl, function(er, data) {
+    checkGitDir(p, u, co, origUrl, silent, function(er, data) {
       chmodr(p, npm.modes.file, function(erChmod) {
         if (er) return cb(er, data)
         return cb(erChmod, data)
@@ -418,54 +421,76 @@ function addRemoteGit (u, parsed, name, cb_) {
   })
 }
 
-function checkGitDir (p, u, co, origUrl, cb) {
+function checkGitDir (p, u, co, origUrl, silent, cb) {
   fs.stat(p, function (er, s) {
-    if (er) return cloneGitRemote(p, u, co, origUrl, cb)
+    if (er) return cloneGitRemote(p, u, co, origUrl, silent, cb)
     if (!s.isDirectory()) return rm(p, function (er){
       if (er) return cb(er)
-      cloneGitRemote(p, u, co, origUrl, cb)
+      cloneGitRemote(p, u, co, origUrl, silent, cb)
     })
 
     var git = npm.config.get("git")
-    var args = ["config", "--get", "remote.origin.url"]
+    var args = [ "config", "--get", "remote.origin.url" ]
     var env = gitEnv()
 
-    exec(git, args, env, false, p, function (er, code, stdout, stderr) {
-      stdoutTrimmed = (stdout + "\n" + stderr).trim()
-      if (er || u !== stdout.trim()) {
-        log.warn( "`git config --get remote.origin.url` returned "
-                + "wrong result ("+u+")", stdoutTrimmed )
-        return rm(p, function (er){
-          if (er) return cb(er)
-          cloneGitRemote(p, u, co, origUrl, cb)
-        })
+    // check for git
+    which(git, function (err) {
+      if (err) {
+        err.code = "ENOGIT"
+        return cb(err)
       }
-      log.verbose("git remote.origin.url", stdoutTrimmed)
-      archiveGitRemote(p, u, co, origUrl, cb)
+      exec(git, args, {cwd: p, env: env}, function (er, stdout, stderr) {
+        stdoutTrimmed = (stdout + "\n" + stderr).trim()
+        if (er || u !== stdout.trim()) {
+          log.warn( "`git config --get remote.origin.url` returned "
+                  + "wrong result ("+u+")", stdoutTrimmed )
+          return rm(p, function (er){
+            if (er) return cb(er)
+            cloneGitRemote(p, u, co, origUrl, silent, cb)
+          })
+        }
+        log.verbose("git remote.origin.url", stdoutTrimmed)
+        archiveGitRemote(p, u, co, origUrl, cb)
+      })
     })
   })
 }
 
-function cloneGitRemote (p, u, co, origUrl, cb) {
+function cloneGitRemote (p, u, co, origUrl, silent, cb) {
   mkdir(p, function (er) {
     if (er) return cb(er)
-    exec( npm.config.get("git"), ["clone", "--mirror", u, p], gitEnv(), false
-        , function (er, code, stdout, stderr) {
-      stdout = (stdout + "\n" + stderr).trim()
-      if (er) {
-        log.error("git clone " + u, stdout)
-        return cb(er)
+
+    var git = npm.config.get("git")
+    var args = [ "clone", "--mirror", u, p ]
+    var env = gitEnv()
+
+    // check for git
+    which(git, function (err) {
+      if (err) {
+        err.code = "ENOGIT"
+        return cb(err)
       }
-      log.verbose("git clone " + u, stdout)
-      archiveGitRemote(p, u, co, origUrl, cb)
+      exec(git, args, {cwd: p, env: env}, function (er, stdout, stderr) {
+        stdout = (stdout + "\n" + stderr).trim()
+        if (er) {
+          if (silent) {
+            log.verbose("git clone " + u, stdout)
+          } else {
+            log.error("git clone " + u, stdout)
+          }
+          return cb(er)
+        }
+        log.verbose("git clone " + u, stdout)
+        archiveGitRemote(p, u, co, origUrl, cb)
+      })
     })
   })
 }
 
 function archiveGitRemote (p, u, co, origUrl, cb) {
   var git = npm.config.get("git")
-  var archive = ["fetch", "-a", "origin"]
-  var resolve = ["rev-list", "-n1", co]
+  var archive = [ "fetch", "-a", "origin" ]
+  var resolve = [ "rev-list", "-n1", co ]
   var env = gitEnv()
 
   var errState = null
@@ -473,7 +498,7 @@ function archiveGitRemote (p, u, co, origUrl, cb) {
   var resolved = null
   var tmp
 
-  exec(git, archive, env, false, p, function (er, code, stdout, stderr) {
+  exec(git, archive, {cwd: p, env: env}, function (er, stdout, stderr) {
     stdout = (stdout + "\n" + stderr).trim()
     if (er) {
       log.error("git fetch -a origin ("+u+")", stdout)
@@ -485,7 +510,7 @@ function archiveGitRemote (p, u, co, origUrl, cb) {
   })
 
   function resolveHead () {
-    exec(git, resolve, env, false, p, function (er, code, stdout, stderr) {
+    exec(git, resolve, {cwd: p, env: env}, function (er, stdout, stderr) {
       stdout = (stdout + "\n" + stderr).trim()
       if (er) {
         log.error("Failed resolving git HEAD (" + u + ")", stderr)
@@ -573,13 +598,22 @@ function addNamed (name, x, data, cb_) {
   })
 }
 
-function addNameTag (name, tag, data, cb) {
-  if (typeof cb !== "function") cb = data, data = null
+function addNameTag (name, tag, data, cb_) {
+  if (typeof cb_ !== "function") cb_ = data, data = null
   log.info("addNameTag", [name, tag])
   var explicit = true
   if (!tag) {
     explicit = false
     tag = npm.config.get("tag")
+  }
+
+  function cb(er, data) {
+    // might be username/project
+    // in that case, try it as a github url.
+    if (er && tag.split("/").length === 2) {
+      return maybeGithub(tag, name, er, cb_)
+    }
+    return cb_(er, data)
   }
 
   registry.get(name, function (er, data, json, response) {
@@ -595,13 +629,6 @@ function addNameTag (name, tag, data, cb) {
     }
 
     er = installTargetsError(tag, data)
-
-    // might be username/project
-    // in that case, try it as a github url.
-    if (tag.split("/").length === 2) {
-      return maybeGithub(tag, name, er, cb)
-    }
-
     return cb(er)
   })
 }
@@ -720,6 +747,7 @@ function addNameVersion (name, ver, data, cb) {
       if (!er) readJson( path.join( npm.cache, name, ver
                                   , "package", "package.json" )
                        , function (er, data) {
+          er = needName(er, data)
           er = needVersion(er, data)
           if (er && er.code !== "ENOENT" && er.code !== "ENOTDIR") return cb(er)
           if (er) return fetchit()
@@ -793,14 +821,28 @@ function addLocal (p, name, cb_) {
 function maybeGithub (p, name, er, cb) {
   var u = "git://github.com/" + p
     , up = url.parse(u)
-  log.info("maybeGithub", "Attempting to fetch %s from %s", p, u)
+  log.info("maybeGithub", "Attempting %s from %s", p, u)
 
-  return addRemoteGit(u, up, name, function (er2, data) {
-    if (er2) return cb(er)
+  return addRemoteGit(u, up, name, true, function (er2, data) {
+    if (er2) {
+      var upriv = "git+ssh://git@github.com:" + p
+        , uppriv = url.parse(upriv)
+
+      log.info("maybeGithub", "Attempting %s from %s", p, upriv)
+
+      return addRemoteGit(upriv, uppriv, false, name, function (er3, data) {
+        if (er3) return cb(er)
+        success(upriv, data)
+      })
+    }
+    success(u, data)
+  })
+
+  function success (u, data) {
     data._from = u
     data._fromGithub = true
     return cb(null, data)
-  })
+  }
 }
 
 function addLocalTarball (p, name, shasum, cb_) {
@@ -1009,6 +1051,7 @@ function addPlacedTarball_ (p, name, uid, gid, resolvedSum, cb) {
           return cb(er)
         }
         readJson(path.join(folder, "package.json"), function (er, data) {
+          er = needName(er, data)
           er = needVersion(er, data)
           if (er) {
             log.error("addPlacedTarball", "Couldn't read json in %j"
@@ -1055,6 +1098,7 @@ function addLocalDirectory (p, name, shasum, cb) {
   if (p.indexOf(npm.cache) === 0) return cb(new Error(
     "Adding a cache directory to the cache will make the world implode."))
   readJson(path.join(p, "package.json"), function (er, data) {
+    er = needName(er, data)
     er = needVersion(er, data)
     if (er) return cb(er)
     deprCheck(data)
@@ -1179,6 +1223,12 @@ function unlock (u, cb) {
   if (!myLocks[lf]) return process.nextTick(cb)
   myLocks[lf] = false
   lockFile.unlock(lockFileName(u), cb)
+}
+
+function needName(er, data) {
+  return er ? er
+       : (data && !data.name) ? new Error("No name provided")
+       : null
 }
 
 function needVersion(er, data) {

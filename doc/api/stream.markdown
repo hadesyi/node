@@ -131,13 +131,15 @@ TLS, may ignore this argument, and simply provide data whenever it
 becomes available.  There is no need, for example to "wait" until
 `size` bytes are available before calling `stream.push(chunk)`.
 
-### readable.push(chunk)
+### readable.push(chunk, [encoding])
 
 * `chunk` {Buffer | null | String} Chunk of data to push into the read queue
+* `encoding` {String} Encoding of String chunks.  Must be a valid
+  Buffer encoding, such as `'utf8'` or `'ascii'`
 * return {Boolean} Whether or not more pushes should be performed
 
 Note: **This function should be called by Readable implementors, NOT
-by consumers of Readable subclasses.**  The `_read()` function will not
+by consumers of Readable streams.**  The `_read()` function will not
 be called again until at least one `push(chunk)` call is made.  If no
 data is available, then you MAY call `push('')` (an empty string) to
 allow a future `_read` call, without adding any data to the queue.
@@ -184,20 +186,31 @@ stream._read = function(n) {
 * `chunk` {Buffer | null | String} Chunk of data to unshift onto the read queue
 * return {Boolean} Whether or not more pushes should be performed
 
+Note: **This function should usually be called by Readable consumers,
+NOT by implementors of Readable subclasses.**  It does not indicate
+the end of a `_read()` transaction in the way that
+`readable.push(chunk)` does.  If you find that you have to call
+`this.unshift(chunk)` in your Readable class, then there's a good
+chance you ought to be using the
+[stream.Transform](#stream_class_stream_transform) class instead.
+
 This is the corollary of `readable.push(chunk)`.  Rather than putting
 the data at the *end* of the read queue, it puts it at the *front* of
 the read queue.
 
-This is useful in certain use-cases where a stream is being consumed
-by a parser, which needs to "un-consume" some data that it has
-optimistically pulled out of the source.
+This is useful in certain cases where a stream is being consumed by a
+parser, which needs to "un-consume" some data that it has
+optimistically pulled out of the source, so that the stream can be
+passed on to some other party.
 
 ```javascript
 // A parser for a simple data protocol.
 // The "header" is a JSON object, followed by 2 \n characters, and
 // then a message body.
 //
-// Note: This can be done more simply as a Transform stream.  See below.
+// NOTE: This can be done more simply as a Transform stream!
+// Using Readable directly for this is sub-optimal.  See the
+// alternative example below under the Transform section.
 
 function SimpleProtocol(source, options) {
   if (!(this instanceof SimpleProtocol))
@@ -518,6 +531,10 @@ Emitted when the stream's write queue empties and it's safe to write
 without buffering again. Listen for it when `stream.write()` returns
 `false`.
 
+### Event: 'error'
+
+Emitted if there was an error receiving data.
+
 ### Event: 'close'
 
 Emitted when the underlying resource (for example, the backing file
@@ -717,11 +734,11 @@ SimpleProtocol.prototype._transform = function(chunk, encoding, done) {
       this.emit('header', this.header);
 
       // now, because we got some extra data, emit this first.
-      this.push(b);
+      this.push(chunk.slice(split));
     }
   } else {
     // from there on, just provide the data to our consumer as-is.
-    this.push(b);
+    this.push(chunk);
   }
   done();
 };
