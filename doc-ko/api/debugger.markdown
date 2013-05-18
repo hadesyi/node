@@ -94,6 +94,29 @@ V8에는 확장 가능한 디버거가 들어 있다. 이 디버거는 간단한
 * `setBreakpoint('script.js', 1)`, `sb(...)` - script.js의 첫 라인에 breakpoint를 설정한다.
 * `clearBreakpoint`, `cb(...)` - breakpoint를 제거
 
+아직 로딩되지 않은 파일(모듈)에 breakpoint를 설정할 수도 있다.
+
+    % ./node debug test/fixtures/break-in-module/main.js
+    < debugger listening on port 5858
+    connecting to port 5858... ok
+    break in test/fixtures/break-in-module/main.js:1
+      1 var mod = require('./mod.js');
+      2 mod.hello();
+      3 mod.hello();
+    debug> setBreakpoint('mod.js', 23)
+    Warning: script 'mod.js' was not loaded yet.
+      1 var mod = require('./mod.js');
+      2 mod.hello();
+      3 mod.hello();
+    debug> c
+    break in test/fixtures/break-in-module/mod.js:23
+     21
+     22 exports.hello = function() {
+     23   return 'hello from module';
+     24 };
+     25
+    debug>
+
 ### Info
 
 * `backtrace`, `bt` - 현 execution의 backtrace를 출력한다.

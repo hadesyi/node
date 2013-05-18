@@ -62,13 +62,22 @@ stdout와 stderr에 출력하는 데 사용한다. [stdio][]부분을 봐라.
 
 ### require.extensions
 
-* {Array}
+    Stability: 0 - Deprecated
+
+* {Object}
 
 특정 파일 확장자를 어떻게 다룰지를 `require`에 지시한다.
 
 `.sjs` 확장자의 파일을 `.js`처럼 처리한다.
 
     require.extensions['.sjs'] = require.extensions['.js'];
+
+**Deprecated**  과거에 이 항목은 요청에 따라 컴파일해서 Node에 자바스크립트가 아닌 모듈을
+로드하는데 사용했다. 하지만 실제로 다른 몇몇 Node 프로그램을 통해서 모듈을 로딩하거나
+ahead of time으로 자바스크립트로 컴파일하는 등의 이를 위한 훨씬 더 좋은 방법이 존재한다.
+
+Module 시스템이 locked 상태이므로 이 기능은 없어지지 않을 것이다. 하지만 미묘한 버그나
+건드릴 수 없는 복잡성을 가질 수 있다.
 
 ## __filename
 
@@ -118,8 +127,9 @@ stdout와 stderr에 출력하는 데 사용한다. [stdio][]부분을 봐라.
 
 <!-- type=var -->
 
-현재 모듈과 `require()`로 접근가능하게 된 모듈의 모든 인스턴스 사이에서 공유되는 객체다.
-`exports`는 `module.exports`객체와 동일하다.
+현재 모듈과 `require()`로 접근가능하게 된 모듈의 모든 인스턴스 사이에서 공유되는
+`module.exports` 객체에 대한 참조. 언제 `exports`를 사용하고 언제 `module.exports`를
+사용하는 지에 대한 자세한 내용은 [module system documentation][]를 참고해라.
 `exports`는 실제로 전역이 아니라 각 모듈의 지역범위이다.
 
 더 자세한 내용은 [module system documentation][]를 봐라.

@@ -60,8 +60,9 @@ HTTP 어플리케이션이 가능한 전체 범위를 다 지원하기 위해서
 `function (socket) { }`
 
  새로운 TCP 스트림이 생성되었을 때 발생한다. `socket`은 `net.Socket` 타입의
- 객체다. 보통 사용자들은 이 이벤트에 접근하지 않을 것이다. `socket`은
- `request.connection`에서도 접근할 수 있다.
+ 객체다. 보통 사용자들은 이 이벤트에 접근하지 않을 것이다. 특히 프로토콜 파서가 소켓에 연결되는
+ 방법 때문에 소켓이 `readable` 이벤트를 발생시키지 않을 것이다. `socket`도
+ `request.connection`에서 접근할 수 있다.
 
 ### Event: 'close'
 
@@ -509,26 +510,12 @@ _처리중인_ 요청을 나타낸다. `setHeader(name, value)`, `getHeader(name
 `http.IncomingMessage` 인스턴스를 아규먼트로 받아서 실행된다.
 
 `'response'` 이벤트 가운데 응답 객체에 리스너들을 추가할 수 있다. 특히 `'data'`
-이벤트를 받기 위해 추가할 수 있다. `'response'` 이벤트는 응답 바디를 받기 전에
-실행되므로 바디의 첫 부분을 받기 위해 경쟁하는 것은 걱정할 필요가 없다. `'response'`
-이벤트 가운데 `'data'`에 대한 리스너가 추가되면 전체 바디를 받을 것이다.
+이벤트를 받기 위해 추가할 수 있다.
 
-
-    // 좋은 사례
-    request.on('response', function (response) {
-      response.on('data', function (chunk) {
-        console.log('BODY: ' + chunk);
-      });
-    });
-
-    // 나쁜 사례 - 바디 전체나 일부를 놓친다
-    request.on('response', function (response) {
-      setTimeout(function () {
-        response.on('data', function (chunk) {
-          console.log('BODY: ' + chunk);
-        });
-      }, 10);
-    });
+`'response'` 핸들러를 추가하지 않았다면 응답을 완전히 버릴 것이다. 하지만 `'response'` 이벤트
+핸들러를 추가했다면 `'readable'` 이벤트가 발생할 때마다 `response.read()`를 호출하거나
+`'data'` 핸들러를 추가하거나 `.resume()` 메서드를 호출해서 응답객체의 데이터를 **반드시**
+소비해야 한다. 데이터가 소비될 때까지 `'end'` 이벤트는 발생하지 않을 것이다.
 
 Note: Node는 Content-Length와 전송된 바디의 길이가 같은지 같지 않은지 확인하지
 않는다.
@@ -719,25 +706,8 @@ CONNECT 메서드를 받는 클라이언트의 연결을 닫힐 것이다.
 `'request'`와 `'response'` 이벤트에 각각 첫 번째 인자로 전달된다. 응답 상태,
 헤더, 데이터에 접근할 때 사용한다.
 
-이는 [Readable Stream][] 인터페이스를 구현했다. `http.IncomingMessage`는
-다음의 이벤트를 가진 [EventEmitter][]이다.
-
-### Event: 'data'
-
-`function (chunk) { }`
-
-메시지 바디의 일부를 받았을 때 발생한다. `message.setEncoding()`로 인코딩을 설정했다면
-청크는 문자열이고 설정하지 않았다면 [Buffer][]이다.
-
-`IncomingMessage`가 `'data'` 이벤트를 발생시켰을 때 리스너가 없으면
-__데이터를 잃을 수 있다__는 것을 명심해라.
-
-### Event: 'end'
-
-`function () { }`
-
-각 메시지마다 정확히 한번만 발생한다. 아규먼트는 없다.
-이 이벤트가 발생한 후에는 어떤 메시지도 응답에 발생시키지 않을 것이다.
+이는 [Readable Stream][] 인터페이스를 구현했고 다음의 추가적인 이벤트, 메서드,
+프로퍼티를 구현했다.
 
 ### Event: 'close'
 
@@ -746,9 +716,8 @@ __데이터를 잃을 수 있다__는 것을 명심해라.
 `response.end()`가 호출되거나 플러시할 수 있기 전에 의존하는 연결이 종료되었다는
 것을 나타낸다.
 
-`'end'`처럼 이 이벤트는 응답마다 딱 한번만 발생하고 그 뒤에는 더이상 `'data'` 이벤트가
-발생하지 않을 것이다. 자세한 내용은 [http.ServerResponse][]의 `'close'` 이벤트를
-봐라.
+`'end'`처럼 이 이벤트는 응답마다 딱 한번만 발생한다.
+자세한 내용은 [http.ServerResponse][]의 `'close'` 이벤트를 봐라.
 
 ### message.httpVersion
 
@@ -782,21 +751,6 @@ HTTP 버전이다. 아마 `'1.1'`나 `'1.0'` 둘 중 하나일 것이다.
 * `callback` {Function}
 
 `message.connection.setTimeout(msecs, callback)`를 호출한다.
-
-### message.setEncoding([encoding])
-
-`'data'` 이벤트가 발생시킨 데이터의 인코딩을 설정한다.
-더 자세한 내용은 [stream.setEncoding()][]를 봐라.
-
-어떤 `'data'` 이벤트도 발생하기 전에 설정해야 한다.
-
-### message.pause()
-
-발생한 이벤트에서 요청/응답을 멈춘다. 다움로드 트래픽을 조절하는데 유용하다.
-
-### message.resume()
-
-멈췄던 요청/응답을 복구한다.
 
 ### message.method
 

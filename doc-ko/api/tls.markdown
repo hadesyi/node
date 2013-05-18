@@ -71,6 +71,16 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
   * SNI - 다른 종류의 SSL 인증서의 다중 호스트네임의 TLS 서버에 사용한다.
 
 
+## tls.getCiphers()
+
+지원하는 SSL 암호 이름의 배열을 반환한다.
+
+예제:
+
+    var ciphers = tls.getCiphers();
+    console.log(ciphers); // ['AES128-SHA', 'AES256-SHA', ...]
+
+
 ## tls.createServer(options, [secureConnectionListener])
 
 새로운 [tls.Server][]를 생성한다.
