@@ -63,16 +63,15 @@ static inline size_t base64_decoded_size_fast(size_t size) {
 }
 
 static inline size_t base64_decoded_size(const char* src, size_t size) {
-  size = base64_decoded_size_fast(size);
+  if (size == 0)
+    return 0;
 
-  const char* end = src + size;
-  // check for trailing padding (1 or 2 bytes)
-  if (size > 0) {
-    if (end[-1] == '=') size--;
-    if (size > 0 && end[-2] == '=') size--;
-  }
+  if (src[size - 1] == '=')
+    size--;
+  if (size > 0 && src[size - 1] == '=')
+    size--;
 
-  return size;
+  return base64_decoded_size_fast(size);
 }
 
 
@@ -258,6 +257,13 @@ size_t StringBytes::Write(char* buf,
 }
 
 
+bool StringBytes::IsValidString(Handle<String> string, enum encoding enc) {
+  if (enc == HEX && string->Length() % 2 != 0) return false;
+  // TODO(bnoordhuis) Add BASE64 check?
+  return true;
+}
+
+
 // Quick and dirty size calculation
 // Will always be at least big enough, but may have some extra
 // UTF8 can be as much as 3x the size, Base64 can have 1-2 extra bytes
@@ -388,7 +394,7 @@ static bool contains_non_ascii(const char* src, size_t len) {
   }
 
 
-#if BITS_PER_LONG == 64
+#if defined(__x86_64__) || defined(_WIN64)
   const uintptr_t mask = 0x8080808080808080ll;
 #else
   const uintptr_t mask = 0x80808080l;
@@ -441,7 +447,7 @@ static void force_ascii(const char* src, char* dst, size_t len) {
     }
   }
 
-#if BITS_PER_LONG == 64
+#if defined(__x86_64__) || defined(_WIN64)
   const uintptr_t mask = ~0x8080808080808080ll;
 #else
   const uintptr_t mask = ~0x80808080l;
@@ -556,8 +562,7 @@ Local<Value> StringBytes::Encode(const char* buf,
   Local<String> val;
   switch (encoding) {
     case BUFFER:
-      return scope.Close(
-          Buffer::New(static_cast<const char*>(buf), buflen)->handle_);
+      return scope.Close(Buffer::New(buf, buflen)->handle_);
 
     case ASCII:
       if (contains_non_ascii(buf, buflen)) {

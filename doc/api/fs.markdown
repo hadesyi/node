@@ -296,7 +296,7 @@ An exception occurs if the file does not exist.
 
   This is primarily useful for opening files on NFS mounts as it allows you to
   skip the potentially stale local cache. It has a very real impact on I/O
-  performance so don't use this mode unless you need it.
+  performance so don't use this flag unless you need it.
 
   Note that this doesn't turn `fs.open()` into a synchronous blocking call.
   If that's what you want then you should be using `fs.openSync()`
@@ -307,28 +307,32 @@ An exception occurs if the file does not exist.
 * `'w'` - Open file for writing.
 The file is created (if it does not exist) or truncated (if it exists).
 
-* `'wx'` - Like `'w'` but opens the file in exclusive mode.
+* `'wx'` - Like `'w'` but fails if `path` exists.
 
 * `'w+'` - Open file for reading and writing.
 The file is created (if it does not exist) or truncated (if it exists).
 
-* `'wx+'` - Like `'w+'` but opens the file in exclusive mode.
+* `'wx+'` - Like `'w+'` but fails if `path` exists.
 
 * `'a'` - Open file for appending.
 The file is created if it does not exist.
 
-* `'ax'` - Like `'a'` but opens the file in exclusive mode.
+* `'ax'` - Like `'a'` but fails if `path` exists.
 
 * `'a+'` - Open file for reading and appending.
 The file is created if it does not exist.
 
-* `'ax+'` - Like `'a+'` but opens the file in exclusive mode.
+* `'ax+'` - Like `'a+'` but fails if `path` exists.
 
-`mode` defaults to `0666`. The callback gets two arguments `(err, fd)`.
+`mode` sets the file mode (permission and sticky bits), but only if the file was
+created. It defaults to `0666`, readable and writeable.
 
-Exclusive mode (`O_EXCL`) ensures that `path` is newly created. `fs.open()`
-fails if a file by that name already exists. On POSIX systems, symlinks are
-not followed. Exclusive mode may or may not work with network file systems.
+The callback gets two arguments `(err, fd)`.
+
+The exclusive flag `'x'` (`O_EXCL` flag in open(2)) ensures that `path` is newly
+created. On POSIX systems, `path` is considered to exist even if it is a symlink
+to a non-existent file. The exclusive flag may or may not work with network file
+systems.
 
 On Linux, positional writes don't work when the file is opened in append mode.
 The kernel ignores the position argument and always appends the data to
@@ -336,7 +340,7 @@ the end of the file.
 
 ## fs.openSync(path, flags, [mode])
 
-Synchronous open(2).
+Synchronous version of `fs.open()`.
 
 ## fs.utimes(path, atime, mtime, callback)
 ## fs.utimesSync(path, atime, mtime)
@@ -390,7 +394,7 @@ Read data from the file specified by `fd`.
 
 `buffer` is the buffer that the data will be written to.
 
-`offset` is offset within the buffer where reading will start.
+`offset` is the offset in the buffer to start writing at.
 
 `length` is an integer specifying the number of bytes to read.
 
@@ -511,7 +515,7 @@ you need to compare `curr.mtime` and `prev.mtime`.
 
 ## fs.unwatchFile(filename, [listener])
 
-    Stability: 2 - Unstable.  Use fs.watch instead, if available.
+    Stability: 2 - Unstable.  Use fs.watch instead, if possible.
 
 Stop watching for changes on `filename`. If `listener` is specified, only that
 particular listener is removed. Otherwise, *all* listeners are removed and you
@@ -650,7 +654,6 @@ Returns a new ReadStream object (See `Readable Stream`).
       encoding: null,
       fd: null,
       mode: 0666,
-      bufferSize: 64 * 1024,
       autoClose: true
     }
 

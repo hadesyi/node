@@ -123,7 +123,7 @@ function error_test() {
     { client: client_unix, send: '.1234',
       expect: '0.1234' },
     // Floating point expressions are not interpreted as REPL commands
-		{ client: client_unix, send: '.1+.1',
+    { client: client_unix, send: '.1+.1',
       expect: '0.2' },
     // Can parse valid JSON
     { client: client_unix, send: 'JSON.parse(\'{"valid": "json"}\');',
@@ -133,6 +133,9 @@ function error_test() {
     { client: client_unix, send: 'JSON.parse(\'{invalid: \\\'json\\\'}\');',
       expect: /^SyntaxError: Unexpected token i/ },
     // end of input to JSON.parse error is special case of syntax error,
+    // should throw
+    { client: client_unix, send: 'JSON.parse(\'066\');',
+      expect: /^SyntaxError: Unexpected number/ },
     // should throw
     { client: client_unix, send: 'JSON.parse(\'{\');',
       expect: /^SyntaxError: Unexpected end of input/ },
