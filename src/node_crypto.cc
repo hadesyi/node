@@ -67,6 +67,14 @@ namespace crypto {
 
 using namespace v8;
 
+// Forcibly clear OpenSSL's error stack on return. This stops stale errors
+// from popping up later in the lifecycle of crypto operations where they
+// would cause spurious failures. It's a rather blunt method, though.
+// ERR_clear_error() isn't necessarily cheap either.
+struct ClearErrorOnReturn {
+  ~ClearErrorOnReturn() { ERR_clear_error(); }
+};
+
 static Persistent<String> errno_symbol;
 static Persistent<String> syscall_symbol;
 static Persistent<String> subject_symbol;
@@ -702,6 +710,7 @@ Handle<Value> SecureContext::LoadPKCS12(const Arguments& args) {
 
       X509_STORE_add_cert(sc->ca_store_, x509);
       SSL_CTX_add_client_CA(sc->ctx_, x509);
+      X509_free(x509);
     }
 
     EVP_PKEY_free(pkey);
@@ -907,14 +916,10 @@ int Connection::HandleBIOError(BIO *bio, const char* func, int rv) {
 }
 
 
-int Connection::HandleSSLError(const char* func, int rv, ZeroStatus zs) {
-  // Forcibly clear OpenSSL's error stack on return. This stops stale errors
-  // from popping up later in the lifecycle of the SSL connection where they
-  // would cause spurious failures. It's a rather blunt method, though.
-  // ERR_clear_error() isn't necessarily cheap either.
-  struct ClearErrorOnReturn {
-    ~ClearErrorOnReturn() { ERR_clear_error(); }
-  };
+int Connection::HandleSSLError(const char* func,
+                               int rv,
+                               ZeroStatus zs,
+                               SyscallStatus ss) {
   ClearErrorOnReturn clear_error_on_return;
   (void) &clear_error_on_return;  // Silence unused variable warning.
 
@@ -938,6 +943,9 @@ int Connection::HandleSSLError(const char* func, int rv, ZeroStatus zs) {
     handle_->Set(String::New("error"),
                  Exception::Error(String::New("ZERO_RETURN")));
     return rv;
+
+  } else if ((err == SSL_ERROR_SYSCALL) && (ss == kIgnoreSyscall)) {
+    return 0;
 
   } else {
     HandleScope scope;
@@ -1371,17 +1379,26 @@ Handle<Value> Connection::ClearOut(const Arguments& args) {
 
     if (ss->is_server_) {
       rv = SSL_accept(ss->ssl_);
-      ss->HandleSSLError("SSL_accept:ClearOut", rv, kZeroIsAnError);
+      ss->HandleSSLError("SSL_accept:ClearOut",
+                         rv,
+                         kZeroIsAnError,
+                         kSyscallError);
     } else {
       rv = SSL_connect(ss->ssl_);
-      ss->HandleSSLError("SSL_connect:ClearOut", rv, kZeroIsAnError);
+      ss->HandleSSLError("SSL_connect:ClearOut",
+                         rv,
+                         kZeroIsAnError,
+                         kSyscallError);
     }
 
     if (rv < 0) return scope.Close(Integer::New(rv));
   }
 
   int bytes_read = SSL_read(ss->ssl_, buffer_data + off, len);
-  ss->HandleSSLError("SSL_read:ClearOut", bytes_read, kZeroIsNotAnError);
+  ss->HandleSSLError("SSL_read:ClearOut",
+                     bytes_read,
+                     kZeroIsNotAnError,
+                     kSyscallError);
   ss->SetShutdownFlags();
 
   return scope.Close(Integer::New(bytes_read));
@@ -1471,10 +1488,16 @@ Handle<Value> Connection::ClearIn(const Arguments& args) {
     int rv;
     if (ss->is_server_) {
       rv = SSL_accept(ss->ssl_);
-      ss->HandleSSLError("SSL_accept:ClearIn", rv, kZeroIsAnError);
+      ss->HandleSSLError("SSL_accept:ClearIn",
+                         rv,
+                         kZeroIsAnError,
+                         kSyscallError);
     } else {
       rv = SSL_connect(ss->ssl_);
-      ss->HandleSSLError("SSL_connect:ClearIn", rv, kZeroIsAnError);
+      ss->HandleSSLError("SSL_connect:ClearIn",
+                         rv,
+                         kZeroIsAnError,
+                         kSyscallError);
     }
 
     if (rv < 0) return scope.Close(Integer::New(rv));
@@ -1484,7 +1507,8 @@ Handle<Value> Connection::ClearIn(const Arguments& args) {
 
   ss->HandleSSLError("SSL_write:ClearIn",
                      bytes_written,
-                     len == 0 ? kZeroIsNotAnError : kZeroIsAnError);
+                     len == 0 ? kZeroIsNotAnError : kZeroIsAnError,
+                     kSyscallError);
   ss->SetShutdownFlags();
 
   return scope.Close(Integer::New(bytes_written));
@@ -1724,10 +1748,13 @@ Handle<Value> Connection::Start(const Arguments& args) {
     int rv;
     if (ss->is_server_) {
       rv = SSL_accept(ss->ssl_);
-      ss->HandleSSLError("SSL_accept:Start", rv, kZeroIsAnError);
+      ss->HandleSSLError("SSL_accept:Start", rv, kZeroIsAnError, kSyscallError);
     } else {
       rv = SSL_connect(ss->ssl_);
-      ss->HandleSSLError("SSL_connect:Start", rv, kZeroIsAnError);
+      ss->HandleSSLError("SSL_connect:Start",
+                         rv,
+                         kZeroIsAnError,
+                         kSyscallError);
     }
 
     return scope.Close(Integer::New(rv));
@@ -1744,7 +1771,7 @@ Handle<Value> Connection::Shutdown(const Arguments& args) {
 
   if (ss->ssl_ == NULL) return False();
   int rv = SSL_shutdown(ss->ssl_);
-  ss->HandleSSLError("SSL_shutdown", rv, kZeroIsNotAnError);
+  ss->HandleSSLError("SSL_shutdown", rv, kZeroIsNotAnError, kIgnoreSyscall);
   ss->SetShutdownFlags();
 
   return scope.Close(Integer::New(rv));
@@ -2238,10 +2265,13 @@ class Cipher : public ObjectWrap {
     unsigned char* out = 0;
     int out_len = 0, r;
     if (args[0]->IsString()) {
+      Local<String> string = args[0].As<String>();
       enum encoding encoding = ParseEncoding(args[1], BINARY);
-      size_t buflen = StringBytes::StorageSize(args[0], encoding);
+      if (!StringBytes::IsValidString(string, encoding))
+        return ThrowTypeError("Bad input string");
+      size_t buflen = StringBytes::StorageSize(string, encoding);
       char* buf = new char[buflen];
-      size_t written = StringBytes::Write(buf, buflen, args[0], encoding);
+      size_t written = StringBytes::Write(buf, buflen, string, encoding);
       r = cipher->CipherUpdate(buf, written, &out, &out_len);
       delete[] buf;
     } else {
@@ -2547,10 +2577,13 @@ class Decipher : public ObjectWrap {
     unsigned char* out = 0;
     int out_len = 0, r;
     if (args[0]->IsString()) {
+      Local<String> string = args[0].As<String>();
       enum encoding encoding = ParseEncoding(args[1], BINARY);
-      size_t buflen = StringBytes::StorageSize(args[0], encoding);
+      if (!StringBytes::IsValidString(string, encoding))
+        return ThrowTypeError("Bad input string");
+      size_t buflen = StringBytes::StorageSize(string, encoding);
       char* buf = new char[buflen];
-      size_t written = StringBytes::Write(buf, buflen, args[0], encoding);
+      size_t written = StringBytes::Write(buf, buflen, string, encoding);
       r = cipher->DecipherUpdate(buf, written, &out, &out_len);
       delete[] buf;
     } else {
@@ -2736,10 +2769,13 @@ class Hmac : public ObjectWrap {
     // Only copy the data if we have to, because it's a string
     int r;
     if (args[0]->IsString()) {
+      Local<String> string = args[0].As<String>();
       enum encoding encoding = ParseEncoding(args[1], BINARY);
-      size_t buflen = StringBytes::StorageSize(args[0], encoding);
+      if (!StringBytes::IsValidString(string, encoding))
+        return ThrowTypeError("Bad input string");
+      size_t buflen = StringBytes::StorageSize(string, encoding);
       char* buf = new char[buflen];
-      size_t written = StringBytes::Write(buf, buflen, args[0], encoding);
+      size_t written = StringBytes::Write(buf, buflen, string, encoding);
       r = hmac->HmacUpdate(buf, written);
       delete[] buf;
     } else {
@@ -2865,10 +2901,13 @@ class Hash : public ObjectWrap {
     // Only copy the data if we have to, because it's a string
     int r;
     if (args[0]->IsString()) {
+      Local<String> string = args[0].As<String>();
       enum encoding encoding = ParseEncoding(args[1], BINARY);
-      size_t buflen = StringBytes::StorageSize(args[0], encoding);
+      if (!StringBytes::IsValidString(string, encoding))
+        return ThrowTypeError("Bad input string");
+      size_t buflen = StringBytes::StorageSize(string, encoding);
       char* buf = new char[buflen];
-      size_t written = StringBytes::Write(buf, buflen, args[0], encoding);
+      size_t written = StringBytes::Write(buf, buflen, string, encoding);
       r = hash->HashUpdate(buf, written);
       delete[] buf;
     } else {
@@ -3028,10 +3067,13 @@ class Sign : public ObjectWrap {
     // Only copy the data if we have to, because it's a string
     int r;
     if (args[0]->IsString()) {
+      Local<String> string = args[0].As<String>();
       enum encoding encoding = ParseEncoding(args[1], BINARY);
-      size_t buflen = StringBytes::StorageSize(args[0], encoding);
+      if (!StringBytes::IsValidString(string, encoding))
+        return ThrowTypeError("Bad input string");
+      size_t buflen = StringBytes::StorageSize(string, encoding);
       char* buf = new char[buflen];
-      size_t written = StringBytes::Write(buf, buflen, args[0], encoding);
+      size_t written = StringBytes::Write(buf, buflen, string, encoding);
       r = sign->SignUpdate(buf, written);
       delete[] buf;
     } else {
@@ -3253,10 +3295,13 @@ class Verify : public ObjectWrap {
     // Only copy the data if we have to, because it's a string
     int r;
     if (args[0]->IsString()) {
+      Local<String> string = args[0].As<String>();
       enum encoding encoding = ParseEncoding(args[1], BINARY);
-      size_t buflen = StringBytes::StorageSize(args[0], encoding);
+      if (!StringBytes::IsValidString(string, encoding))
+        return ThrowTypeError("Bad input string");
+      size_t buflen = StringBytes::StorageSize(string, encoding);
       char* buf = new char[buflen];
-      size_t written = StringBytes::Write(buf, buflen, args[0], encoding);
+      size_t written = StringBytes::Write(buf, buflen, string, encoding);
       r = verify->VerifyUpdate(buf, written);
       delete[] buf;
     } else {
@@ -3603,6 +3648,8 @@ class DiffieHellman : public ObjectWrap {
       return ThrowException(Exception::Error(String::New("Not initialized")));
     }
 
+    ClearErrorOnReturn clear_error_on_return;
+    (void) &clear_error_on_return;  // Silence compiler warning.
     BIGNUM* key = 0;
 
     if (args.Length() == 0) {
@@ -3964,7 +4011,9 @@ void RandomBytesCheck(RandomBytesRequest* req, Local<Value> argv[2]) {
     Buffer* buffer = Buffer::New(req->data_, req->size_, RandomBytesFree, NULL);
     argv[0] = Local<Value>::New(Null());
     argv[1] = Local<Object>::New(buffer->handle_);
+    req->data_ = NULL;
   }
+  free(req->data_);
 }
 
 

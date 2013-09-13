@@ -213,7 +213,8 @@ ChildProcess 클래스는 직접 사용하도록 만들어 진 것이 아니다.
 있다는 의미이다.
 
 `dgram` 서버에서 워크플로우는 완전히 동일하다. 여기서 `connection` 대신 `message` 이벤트를
-리스닝하고 `server.listen` 대신 `server.bind`를 사용한다.
+리스닝하고 `server.listen` 대신 `server.bind`를 사용한다. (현재는 UNIX 플랫폼에서만
+지원한다.)
 
 #### Example: sending socket object
 
@@ -429,10 +430,6 @@ spawn이 비어 있는 옵션 객체를 받으면 `process.env`를 사용하는 
 `customFds`를 사용해서 새로운 프로세스의 `[stdin, stdout, stderr]`를 존재하는
 스트림으로 후킹할 수 있다. `-1`은 새로운 스트림이 생성되어야 한다는 것을 의미한다.
 사용할 때는 위험을 감수해라.
-
-여러가지 내부 옵션이 존재한다. 특히 `stdinStream`, `stdoutStream`,
-`stderrStream`가 있다. 이 옵션들은 내부적으로만 사용된다. Node에서 문서화되지 않은
-모든 API는 사용하지 말아야 한다.
 
 `child_process.exec()`와 `child_process.fork()`도 참고해라.
 

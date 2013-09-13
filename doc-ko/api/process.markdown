@@ -163,6 +163,26 @@ stdin에 대한 `Readable Stream`이다. stdin 스트림은 기본적으로 멈�
     /usr/local/bin/node
 
 
+## process.execArgv
+
+이 값은 프로세스를 실행할 때 사용한 노드의 커맨드라인 옵션의 세트다. 이 옵션은
+`process.argv`에서는 보이지 않고 node 실행명령어, 스크립트 명, 스크립트 명 뒤에
+오는 옵션들은 포함하지 않는다. 이 옵션은 부모와 같은 실행환경으로 자식 프로세스를
+생성할때 유용하다.
+
+예제:
+
+    $ node --harmony script.js --version
+
+process.execArgv는 다음 값이 된다.
+
+    ['--harmony']
+
+process.argv는 다음과 같다.
+
+    ['/usr/local/bin/node', 'script.js', '--version']
+
+
 ## process.abort()
 
 이는 node가 abort를 발생시키게 한다. 즉 node가 종료되고 코어파일을 생성한다.

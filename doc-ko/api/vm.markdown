@@ -15,7 +15,7 @@
 `vm` 모듈은 많은 이슈와 엣지 케이스(edge cases)가 있다. 어떤 이슈나
 기대하지 않은 결과를 만난다면
 [the open issues on
-GitHub](https://github.com/joyent/node/search?q=vm+state%3Aopen&type=Issues)
+GitHub](https://github.com/joyent/node/issues?labels=vm&state=open)
 를 참고해라. 가장 큰 문제들은 아래에 설명했다.
 
 ### Sandboxes

@@ -106,7 +106,7 @@ event를 지정하지 않으면 모든 리스너를 제거하고 event를 지정
 * `listener` {Function} 이벤트 핸들러 함수
 
 이 이벤트를 새로운 리스너가 어딘가에 추가될 때마다 발생한다.
-
+`emitter.listeners(event)`가 반환한 리스트에 `listener`있는지는 알려주지 않는다.
 
 ### Event: 'removeListener'
 
@@ -114,3 +114,4 @@ event를 지정하지 않으면 모든 리스너를 제거하고 event를 지정
 * `listener` {Function} The event handler function
 
 이 이벤트는 리스너를 제거할 때마다 발생한다.
+`emitter.listeners(event)`가 반환한 리스트에 `listener`있는지는 알려주지 않는다.
