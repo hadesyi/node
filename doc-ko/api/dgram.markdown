@@ -120,17 +120,28 @@ UDP 소켓에서 목적지 포트와 IP 주소는 반드시 지정해야 한다.
 
 * `port` 정수
 * `address` 문자열, 선택사항
+* `callback` 함수이고 파라미터는 없다. 선택사항. 바인딩이 완료되었을 때 실행된다.
 
 UDP 소켓에서 `port`와 선택사항인 `address`에서 데이터그랩을 받는다. `address`를 지정하지
-않으면 운영체제는 모든 주소에서 받을 것이다.
+않으면 운영체제는 모든 주소에서 받을 것이다. 바인딩이 완료되면 "listening" 이벤트가 발생하고
+`callback`(지정한 경우)을 실행한다. "listening" 이벤트 리스너와 `callback`을 모두
+지정해도 문제는 없지만 별로 유용하지도 않다.
 
-`callback`을 제공하는 경우 `callback`은 1회성 `'listening'` 이벤트 리스너로 추가된다.
+바인딩된 데이터그램 소켓은 데이터그램을 받기 위해서 노드 프로세스가 계속 동작하도록 유지한다.
+
+바인딩이 실패하면 "error" 이벤트가 발생한다. 드문 경우이지만(예를 들면 닫힌 소켓을 바인딩하는
+경우) 이 메서드가 `Error`를 던질 수도 있다.
 
 UDP 서버가 41234 포트에서 받는 예제:
 
     var dgram = require("dgram");
 
     var server = dgram.createSocket("udp4");
+
+    server.on("error", function (err) {
+      console.log("server error:\n" + err.stack);
+      server.close();
+    });
 
     server.on("message", function (msg, rinfo) {
       console.log("server got: " + msg + " from " +

@@ -110,12 +110,12 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
     `honorCipherOrder`을 이 옵션과 함께 사용하기를 권장한다.
 
     기본값은
-    `ECDHE-RSA-AES128-SHA256:AES128-GCM-SHA256:RC4:HIGH:!MD5:!aNULL:!EDH`이다.
+    `AES128-GCM-SHA256:RC4:HIGH:!MD5:!aNULL:!EDH`이다.
     형식에 대해 자세히 알고 싶으면 [OpenSSL cipher list format documentation]를 참고해라.
+    ECDH (Elliptic Curve Diffie-Hellman) 암호화는 아직 지원하지 않는다.
 
-    node.js가 OpenSSL 1.0.1이나 그 상위 버전과 연결되었을 때 `ECDHE-RSA-AES128-SHA256`와
-    `AES128-GCM-SHA256`를 사용하고 클라이언트는 TLS 1.2, RC4을 안전한 폴백(fallback)으로
-    사용한다.
+    node.js가 OpenSSL 1.0.1이나 그 상위 버전과 연결되었을 때 `AES128-GCM-SHA256`를
+    사용하고 클라이언트는 TLS 1.2, RC4을 안전한 폴백(fallback)으로 사용한다.
 
     **NOTE**: 이 섹션의 이전 버전에서는 `AES256-SHA`를 괜찮은 암호문으로 제안했었다. 하지만
     `AES256-SHA`는 CBC 암호문이므로 BEAST attacks을 받기 쉽다. `AES256-SHA`를
@@ -153,7 +153,11 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
 
   - `sessionIdContext`: 세션 회수를 위한 불투명한 식별자를 담고 있는 문자열이다.
     `requestCert`가 `true`이면 기본값은 커맨드라인에서 생성한 MD5 해시값이다.
-    `requestCert`가 `true`가 아니면기반값은 제공하지 않는다.
+    `requestCert`가 `true`가 아니면 기본값은 제공하지 않는다.
+
+  - `secureProtocol`: 사용할 SSL 방식. 예를 들어 SSL 버전 3을 사용하려면
+    `SSLv3_method`이다. 사용가능한 값은 설치한 OpenSSL에 따라 다르고
+    상수 [SSL_METHODS][]에 정의되어 있다.
 
 간단한 에코(echo) 서버의 예제다.
 
@@ -255,6 +259,10 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
     길이이다.(배열을 전달하는 것이 보통 훨씬 간단할 것이다: `['hello', 'world']`)
 
   - `servername`: SNI (Server Name Indication) TLS 확장에 대한 Servername이다.
+
+  - `secureProtocol`: 사용할 SSL 방식. 예를 들어 SSL 버전 3을 사용하려면
+    `SSLv3_method`이다. 사용가능한 값은 설치한 OpenSSL에 따라 다르고
+    상수 [SSL_METHODS][]에 정의되어 있다.
 
 `callback` 파라미터는 ['secureConnect'][]
 이벤트의 리스너로 추가할 것이다.
@@ -526,4 +534,5 @@ SSL_CIPHER_get_name()와 SSL_CIPHER_get_version()를 봐라.
 ['secureConnect']: #tls_event_secureconnect
 [secureConnection]: #tls_event_secureconnection
 [Stream]: stream.html#stream_stream
+[SSL_METHODS]: http://www.openssl.org/docs/ssl/ssl.html#DEALING_WITH_PROTOCOL_METHODS
 [tls.Server]: #tls_class_tls_server

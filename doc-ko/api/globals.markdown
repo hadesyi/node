@@ -29,7 +29,7 @@ process 객체. [process object][]부분을 봐라.
 
 * {Object}
 
-stdout와 stderr에 출력하는 데 사용한다. [stdio][]부분을 봐라.
+stdout와 stderr에 출력하는 데 사용한다. [console][]부분을 봐라.
 
 ## Class: Buffer
 
@@ -173,5 +173,5 @@ timer 함수는 전역 변수이다. [timers][]부분을 봐라.
 [module system documentation]: modules.html
 [Modules]: modules.html#modules_modules
 [process object]: process.html#process_process
-[stdio]: stdio.html
+[console]: console.html
 [timers]: timers.html
