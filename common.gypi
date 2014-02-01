@@ -19,7 +19,14 @@
     'conditions': [
       ['OS != "win"', {
         'v8_postmortem_support': 'true'
-      }]
+      }],
+      ['GENERATOR == "ninja"', {
+        'OBJ_DIR': '<(PRODUCT_DIR)/obj',
+        'V8_BASE': '<(PRODUCT_DIR)/libv8_base.a',
+      }, {
+        'OBJ_DIR': '<(PRODUCT_DIR)/obj.target',
+        'V8_BASE': '<(PRODUCT_DIR)/obj.target/deps/v8/tools/gyp/libv8_base.a',
+      }],
     ],
   },
 
@@ -79,9 +86,11 @@
             ],
           }],
           ['OS=="solaris"', {
-            'cflags': [ '-fno-omit-frame-pointer' ],
             # pull in V8's postmortem metadata
             'ldflags': [ '-Wl,-z,allextract' ]
+          }],
+          ['OS!="mac" and OS!="win"', {
+            'cflags': [ '-fno-omit-frame-pointer' ],
           }],
         ],
         'msvs_settings': {

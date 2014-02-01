@@ -183,6 +183,7 @@ uint64_t uv__hrtime(void);
 int uv__kqueue_init(uv_loop_t* loop);
 int uv__platform_loop_init(uv_loop_t* loop, int default_loop);
 void uv__platform_loop_delete(uv_loop_t* loop);
+void uv__platform_invalidate_fd(uv_loop_t* loop, int fd);
 
 /* various */
 void uv__async_close(uv_async_t* handle);
@@ -216,10 +217,12 @@ int uv__make_socketpair(int fds[2], int flags);
 int uv__make_pipe(int fds[2], int flags);
 
 #if defined(__APPLE__)
+typedef void (*cf_loop_signal_cb)(void*);
+
+void uv__cf_loop_signal(uv_loop_t* loop, cf_loop_signal_cb cb, void* arg);
 
 int uv__fsevents_init(uv_fs_event_t* handle);
 int uv__fsevents_close(uv_fs_event_t* handle);
-void uv__fsevents_loop_delete(uv_loop_t* loop);
 
 /* OSX < 10.7 has no file events, polyfill them */
 #ifndef MAC_OS_X_VERSION_10_7
