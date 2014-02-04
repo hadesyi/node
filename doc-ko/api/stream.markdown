@@ -493,7 +493,7 @@ for (var i = 0; i < 100; i ++) {
   writer.write('hello, #' + i + '!\n');
 }
 writer.end('this is the end\n');
-write.on('finish', function() {
+writer.on('finish', function() {
   console.error('all writes are now complete.');
 });
 ```
@@ -532,6 +532,10 @@ writer.on('unpipe', function(src) {
 reader.pipe(writer);
 reader.unpipe(writer);
 ```
+
+#### Event: 'error'
+
+데이터를 쓰거나 파이프로 연결할 때 오류가 발생하면 이 이벤트가 발생한다.
 
 ### Class: stream.Duplex
 
@@ -698,7 +702,7 @@ util.inherits(SimpleProtocol, Readable);
 
 function SimpleProtocol(source, options) {
   if (!(this instanceof SimpleProtocol))
-    return new SimpleProtocol(options);
+    return new SimpleProtocol(source, options);
 
   Readable.call(this, options);
   this._inBody = false;
@@ -793,6 +797,7 @@ SimpleProtocol.prototype._read = function(n) {
     디코드한다. 기본값=null
   * `objectMode` {Boolean} 이 스트림이 객체의 스트림처럼 동작해야 하는지 여부.
     즉, stream.read(n)이 n 크기의 Buffer 대신 문자열 값을 반환한다는 것을 의미한다.
+    기본값=false
 
 Readable 클래스를 확장하는 클래스에서 버퍼링 설정을 적절하게 초기화할 수 있도록
 Readable 생성자를 꼭 호출해라.

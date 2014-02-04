@@ -145,4 +145,4 @@ V8에는 확장 가능한 디버거가 들어 있다. 이 디버거는 간단한
 문법은 다음과 같다.
 
 * `node debug -p <pid>` - `pid`로 프로세스에 연결한다
-* `node debug <URI> - localhost:5858같은 URI로 프로세스에 연결한다.
+* `node debug <URI>` - localhost:5858같은 URI로 프로세스에 연결한다.

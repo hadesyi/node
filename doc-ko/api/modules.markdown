@@ -25,27 +25,33 @@
       return 2 * PI * r;
     };
 
-`circle.js` 모듈은 `area()`와 `circumference()`를 Export했다.
-뭔가 Export하려면 해당 객체를 `exports` 객체에 할당한다. `exports`는
-Export하기 위해 사용하는 객체다.
+`circle.js` 모듈은 `area()`와 `circumference()`를 익스포트했다.
+모듈 루트에 함수와 객체를 추가하려면 `exports` 객체에 추가하면 된다.
 
-`exports`는 추가할 때만 사용할 수 있는 `module.exports`의 참조이다.
-생성자같은 단일 아이템을 익스포트한다면 `module.exports`를 직접 사용해야 한다.
+모듈내의 로컬 변수는 모듈이 함수로 감싸진 것처럼 외부에 노출되지 않는다.(private)
+이 예제에서 `PI` 변수는 `circle.js`의 private이다.
 
-    function MyConstructor (opts) {
-      //...
+모듈 전채가 하나의 함수로 익스포트하고 싶거나(생성자 처럼) 한번에 하나의 프로퍼티를 구성하는
+대신 한번의 할당으로 전체 객체르 익스포트하고 싶다면 `exports`말고 `module.exports`에 할당해라.
+
+아래 `bar.js`는 생성자를 익스포트하는 `square` 모듈을 사용하고 있다.
+
+    var square = require('./square.js');
+    var mySquare = square(2);
+    console.log('The area of my square is ' + mySquare.area());
+
+`square` 모듈은 `square.js`에 정의되어 있다.
+
+    // exports에 할당하는 것이 모듈을 수정하지 않는다. 반드시 module.exports를 사용해라.
+    module.exports = function(width) {
+      return {
+        area: function() {
+          return width * width;
+        }
+      };
     }
 
-    // BROKEN: exports를 수정하지 않는다
-    exports = MyConstructor;
-
-    // 생성자를 제대로 익스포트한다
-    module.exports = MyConstructor;
-
-로컬 변수는 모듈 외부에 노출되지 않는다(private). 이 예제에서 `PI`는 `circle.js`에서만
-사용할 수 있는 private 변수다.
-
-이 모듈 시스템은 `module`이라는 모듈에 구현했다.
+이 모듈 시스템은 `require("module")` 모듈에 구현되어 있다.
 
 ## Cycles
 
@@ -204,8 +210,8 @@ package.json 파일이 없으면 `require('./some-library')`는 다음과 같은
 
 * {Object}
 
-모듈에서 `module` 변수는 해당 모듈 객체를 가리킨다. 특히 `module.exports`는
-`exports` 전역모듈(module-global)로 접근할 수 있다. `module`은 글로벌 변수가
+모듈에서 `module` 변수는 해당 모듈 객체를 가리킨다. `module.exports`는
+`exports` 전역모듈(module-global)로 편리하게 접근할 수 있다. `module`은 글로벌 변수가
 아니라 모듈마다 다른 객체를 가리키는 로컬 변수다.
 
 ### module.exports
@@ -213,7 +219,9 @@ package.json 파일이 없으면 `require('./some-library')`는 다음과 같은
 * {Object}
 
 `module.exports` 객체는 Module 시스템이 자동으로 만들어 준다. Export하려는 객체를
-`module.exports`에 할당해서 직접 만든 객체가 반환되게 할 수도 있다.
+`module.exports`에 할당해서 직접 만든 객체가 반환되게 할 수도 있다. 원하는 객체를
+`exports`에 할당하면 원하는 것과는 달리 로컬 `exports` 변수가 다시 바인딩 될 것이다.
+
 `.js`라는 모듈을 만들어 보자:
 
     var EventEmitter = require('events').EventEmitter;
@@ -247,6 +255,26 @@ y.js:
     var x = require('./x');
     console.log(x.a);
 
+#### exports alias
+
+모듈내에서 사용가능한 `exports` 변수는 처음에는 `module.exports`에 대한 참조이다. 일반적인
+변수와 마찬가지로 새로운 값을 `exports`에 할당하면 이전 값에 대한 바인딩을 사라진다.
+
+이 동작을 설명하기 위해 다음의 `require()`에 대한 가상 구현체를 생각해 보자.
+
+    function require(...) {
+      // ...
+      function (module, exports) {
+        // Your module code here
+        exports = some_func;        // exports를 재할당한다. exports는 더이상 단축키가
+                                    // 아니고 아무것도 익스포트하지 않는다.
+        module.exports = some_func; // 모듈이 0을 익스포트하게 한다.
+      } (module, module.exports);
+      return module;
+    }
+
+`exports`와 `module.exports`의 관계가 어렵게 느껴진다면 그냥 `exports`는 무시하고
+`module.exports`만 사용해라.
 
 ### module.require(id)
 

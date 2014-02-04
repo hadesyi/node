@@ -5,7 +5,7 @@
 Node 프로세스 하나는 쓰레드 하나로 동작한다. 멀티 코어 시스템을 이용해서 부하를 처리하려면
 Node 프로세스를 여러 개 띄울 필요가 있다.
 
-이 cluster 모듈은 서버 포트를 공유하는 프로세스 다발을 쉽게 만들 수 있게 해준다.
+이 cluster 모듈은 서버 포트를 공유하는 프로세스들의 네트워크를 쉽게 만들 수 있게 해준다.
 
     var cluster = require('cluster');
     var http = require('http');
@@ -51,7 +51,7 @@ Windows에서는 네임드 파이프 서버를 만들 수 없으므로 주의해
 
 워커에서 `server.listen(...)`를 호출하면 아규먼트를 직열화하고 요청을 마스터 프로세스에 보낸다.
 마스터 프로세스에 있는 리스닝 서버가 워커의 요구사항에 맞으면 그 핸들을 워커에 넘긴다. 만약 워커에
-필요한 리스닝 서버가 없으면 하나 만들어서 자식 프로세스에 핸들을 넘긴다.
+필요한 리스닝 서버가 없으면 하나 만들어서 워커에 핸들을 넘긴다.
 
 그래서 극단적인 상황에서(edge case) 다음과 같은 행동을 보인다.:
 
@@ -77,13 +77,16 @@ Windows에서는 네임드 파이프 서버를 만들 수 없으므로 주의해
 ## cluster.settings
 
 * {Object}
-* `exec` {String} 워커 파일의 경로.  (Default=`__filename`)
+* `execArgv` {Array} 노드 실행파일에 전달할 문자열 인자 목록
+  (Default=`process.execArgv`)
+* `exec` {String} 워커 파일의 경로.  (Default=`process.argv[1]`)
   * `args` {Array} 워커에 넘겨지는 스트링 아규먼트.
     (Default=`process.argv.slice(2)`)
   * `silent` {Boolean} 워커의 output을 부모의 stdio로 보낼지 말지.
     (Default=`false`)
 
-`.setupMaster()` 메소드로 설정하면 이 settings 객체에 저장된다.
+`.setupMaster()`를 한번만 호출할 수 있으므로 설정된 뒤에는 효과적으로 값이 고정된다.
+
 이 객체를 직접 수정하지 말아야 한다.
 
 ## cluster.isMaster
@@ -97,15 +100,14 @@ Windows에서는 네임드 파이프 서버를 만들 수 없으므로 주의해
 
 * {Boolean}
 
-해당 프로세스가 워커면 true를 리턴한다. 이 프로퍼티는 `process.env.NODE_UNIQUE_ID` 값을
-이용하는데 `process.env.NODE_UNIQUE_ID` 프로퍼티에 값이 할당돼 있으면 true이다.
+프로세스가 마스터가 아니면 true이다.(`cluster.isMaster`의 반대다.)
 
 ## Event: 'fork'
 
 * `worker` {Worker 객체}
 
 워커가 하나 새로 포크되면 cluster 모듈은 'fork' 이벤트를 발생(emit)시킨다. 워커의 액티비티
-로그를 남기거나 타임아웃을 생성하는 데 활용된다.
+로그를 남기거나 자신만의 타임아웃을 생성하는 데 활용된다.
 
     var timeouts = [];
     function errorMsg() {
@@ -129,7 +131,7 @@ Windows에서는 네임드 파이프 서버를 만들 수 없으므로 주의해
 
 워커를 포크하면 워커는 '온라인' 메시지를 보낸다. 마스터가 그 '온라인' 메시지를 받으면 이 이벤트를
 발생한다. 'fork' 이벤트와 'online' 이벤트의 차이는 간단하다. 'fork' 이벤트는 마스터가
-워커 프로세스를 포크할 때 발생하는 것이고 'online' 이벤트는 워커가 실행되면 발생한다.
+워커 프로세스를 포크할 때 발생하는 것이고 'online' 이벤트는 워커가 실행중일때 발생한다.
 
     cluster.on('online', function(worker) {
       console.log("Yay, the worker responded after it was forked");
@@ -140,8 +142,8 @@ Windows에서는 네임드 파이프 서버를 만들 수 없으므로 주의해
 * `worker` {Worker 객체}
 * `address` {Object}
 
-워커에서 `listen()`을 호출하면 자동으로 'listening' 이벤트가 서버 인스턴스에 발생한다.
-서버가 listening 중이면 listening' 이벤트가 발생한 마스터는 메시지를 하나 받는다.
+워커에서 `listen()`을 호출한 뒤에 서버에서 'listening' 이벤트가 발생한 경우 마스터의
+`cluster`에서 listening 이벤드도 발생할 것이다.
 
 이벤트 핸들러의 아규먼트는 두 개다. `worker`에는 해당 워커 객체가 넘어오고 `address`에는
 `address`, `port`, `addressType` 프로퍼티가 있는 `address` 객체가 넘어온다.
@@ -151,15 +153,22 @@ Windows에서는 네임드 파이프 서버를 만들 수 없으므로 주의해
       console.log("A worker is now connected to " + address.address + ":" + address.port);
     });
 
+`addressType`는 다음 값 중 하나이다.
+
+* `4` (TCPv4)
+* `6` (TCPv6)
+* `-1` (유닉스 도메인 소켓)
+* `"udp4"`, `"udp6"` (UDP v4, v6)
+
 ## Event: 'disconnect'
 
 * `worker` {Worker 객체}
 
-워커의 IPC 채널이 끊기면 이 이벤트가 발생한다. 워커가 죽을 때도 이 이벤트가 발생한다.
-`.kill()`를 호출해서 워커가 죽을 때도 발생한다.
+워커의 IPC 채널의 연결이 끊긴 뒤에 발생한다. 이 이벤트는 워커거 안전하게 종료되거나 죽거나 수동으로
+연결이 끊긴(`worker.disconnect()`등으로) 경우에 발생할 수 있다.
 
-`.disconnect()`를 호출하면 `disconnect`와 `exit` 이벤트 사이에 약간의 딜레이가 있을 수
-있다. 이 이벤트는 아직 살아있는 연결이 있는지 확인하거나 프로세스가 소거 중인지 확인할 때 유용하다:
+`disconnect`와 `exit`이벤트 사이에는 약간의 지연이 있을 수 있다. 프로세스를 정리하면서 멈췄는지
+아니면 오래 살아있는 연결이 있는지 검사할 때 이러한 이벤트를 사용할 수 있다.
 
     cluster.on('disconnect', function(worker) {
       console.log('The worker #' + worker.id + ' has disconnected');
@@ -171,34 +180,40 @@ Windows에서는 네임드 파이프 서버를 만들 수 없으므로 주의해
 * `code` {Number} 워커의 exit 코드
 * `signal` {String} 프로세스를 죽게 만든 시그널의 이름(eg. `'SIGHUP'`)
 
-워커가 죽으면 cluster 모듈에 'exit' 이벤트가 발생한다. 그래서 워커가 죽으면 `fork()`를
-호출해서 워커를 다시 띄울 수 있다.
+워커가 죽으면 cluster 모듈에 'exit' 이벤트가 발생한다.
+
+그래서 워커가 죽으면 `fork()`를 호출해서 워커를 다시 띄울 수 있다.
 
     cluster.on('exit', function(worker, code, signal) {
-      var exitCode = worker.process.exitCode;
-      console.log('worker ' + worker.process.pid + ' died ('+exitCode+'). restarting...');
+      console.log('worker %d died (%s). restarting...',
+        worker.process.pid, signal || code);
       cluster.fork();
     });
 
+[child_process event: 'exit'](child_process.html#child_process_event_exit)를 봐라.
+
 ## Event: 'setup'
 
-* `worker` {Worker 객체}
-
-`.setupMaster()` 함수를 실행하면 이 이벤트가 발생한다. `fork()`를 호출하기 전에
-`.setupMaster()`가 한 번도 실행된 적이 없으면 `fork()`를 실행할 때 아규먼트 없이
-`.setupMaster()`가 한번 호출된다.
+`.setupMaster()`가 처음 호출될 때 발생한다.
 
 ## cluster.setupMaster([settings])
 
 * `settings` {Object}
-  * `exec` {String} 워커 파일의 경로.  (Default=`__filename`)
+  * `exec` {String} 워커 파일의 경로.  (Default=`process.argv[1]`)
   * `args` {Array} 워커에 넘겨지는 스트링 아규먼트.
     (Default=`process.argv.slice(2)`)
   * `silent` {Boolean} 워커의 output을 부모의 stdio로 보낼지 말지.
     (Default=`false`)
 
-`setupMaster`는 'fork'의 기본 행동을 수정하는데 사용한다. 사실상 새로운 설정은 즉각적이고
-영구적이라서 나중에 이를 수정할 수 없다.
+`setupMaster`는 'fork'의 기본 행동을 수정하는데 사용한다. 일당 호출되면
+`cluster.settings`에서 설정정보가 유지될 것이다.
+
+Note that:
+
+* `.setupMaster()`를 처음 호출할 때만 효과가 있고 이어진 `.setupMaster()` 호출은 무시된다.
+* 위의 이유때문에 워커마다 커스터마이징하는 *유일한* 속성은 `.fork()`함수에서 `env`로 전달해야 한다.
+* 기본값을 구성하기 위해서 `.fork()`는 내부적으로 `.setupMaster()`를 호출하므로 반드시
+  `.fork()`를 호출하기 *전에* `.setupMaster()`를 호출해야 적용된다.
 
 예제:
 
@@ -210,21 +225,29 @@ Windows에서는 네임드 파이프 서버를 만들 수 없으므로 주의해
     });
     cluster.fork();
 
+이 함수는 마스터 프로세스에서만 호출할 수 있다.
+
 ## cluster.fork([env])
 
-* `env` {Object} 자식 프로세스의 환경변수, Key/value
+* `env` {Object} 워커 프로세스의 환경변수에 추가할 키/값 쌍.
 * return {Worker 객체}
 
-워커 프로세스를 하나 만든다(spawn). 이 함수는 마스터 프로세스에서만 호출할 수 있다.
+워커 프로세스를 하나 만든다(spawn).
+
+이 함수는 마스터 프로세스에서만 호출할 수 있다.
 
 ## cluster.disconnect([callback])
 
 * `callback` {Function} 모든 워커가 Disconnect되고 핸들러가 닫히면 호출되는 함수
 
-이 메소드를 호출하면 워커가 전부 정상(graceful) 종료한다. 워커가 종료하면서 내부 핸들러도
-닫힌다. 그래서 마스터 프로세스는 이벤트를 기다리는 것 없이 정상(graceful) 종료될 수 있다.
+`cluster.workers`의 각 워커마다 `.disconnect()`를 호출한다.
 
-콜백을 아규먼트로 넘기면 끝날 때 호출된다.
+워커의 연결이 끊길 때 내부의 모든 핸들이 닫으면서 대기중인 다른 이벤트가 없다면
+마스터 프로세스를 안전하게 종료할 수 있게 한다.
+
+콜백을 인자로 넘기면 끝날 때 호출된다.
+
+이 함수는 마스터 프로세스에서만 호출할 수 있다.
 
 ## cluster.worker
 
@@ -248,6 +271,9 @@ Windows에서는 네임드 파이프 서버를 만들 수 없으므로 주의해
 
 살아있는 워커 객체가 저장되는 해쉬로 `id`필드가 키다. 모든 워커를 쉽게 순회할 수 있다.
 이는 마스터 프로세스에서만 사용할 수 있다.
+
+`'disconnect'`나 `'exit'` 이벤트가 발생하기 바로 직전에 cluster.workers에서 워커를
+제거한다.
 
     // 모든 워커에 적용한다.
     function eachWorker(callback) {
@@ -283,14 +309,32 @@ Windows에서는 네임드 파이프 서버를 만들 수 없으므로 주의해
 
 * {ChildProcess 객체}
 
-워커 프로세스는 `child_process.fork()`로 생성하는 데 이 함수가 리턴한 객체가
-process 프로퍼티에 저장된다.
+워커 프로세스는 `child_process.fork()`로 생성하는 데 이 함수가 리턴한 객체는
+`.process`에 저장된다. 워커에서 전역 `process`를 저장한다.
 
-See: [Child Process module](child_process.html)
+참고: [Child Process module](
+child_process.html#child_process_child_process_fork_modulepath_args_options)
+
+`process`에서 `'disconnect'`이벤트가 발생하거나 `.suicide`가 `true`가 아니면 해당 워커는
+`process.exit(0)`를 호출할 것이다. 이는 의도치않은 연결종료를 막아준다.
 
 ### worker.suicide
 
 * {Boolean}
+
+`.kill()`나 `.disconnect()`를 호출해서 설정한다. 설정되기 전에는 `undefined`다.
+
+불리언 값인 `worker.suicide`는 의도적인 종료와 실수로 종료하는 걸 구분해 준다.
+마스터는 이 값에 기반해서 워커를 다시 생성하지 않을지를 선택할 것이다.
+
+    cluster.on('exit', function(worker, code, signal) {
+      if (worker.suicide === true) {
+        console.log('Oh, it was just suicide\' – no need to worry').
+      }
+    });
+
+    // 워커를 죽인다
+    worker.kill();
 
 `.kill()`를 호출하고 나서 해당 워커가 죽으면 true가 할당되고 `.disconnect()`를 호출하면
 즉시 true가 할당된다. 그때까지는 `undefined`이다.
@@ -300,9 +344,10 @@ See: [Child Process module](child_process.html)
 * `message` {Object}
 * `sendHandle` {Handle 객체}
 
-이 함수는 `child_process.fork()`로 생기는 send 메소드와 동일하다. 마스터에서 워커에
-메시지를 보낼 때는 이 함수로 보내고 워커에서는 `process.send(message)`로 보내지만,
-이 둘은 같은 함수다.
+이 함수는 `child_process.fork()`로 생기는 send 메소드와 동일하다. 마스터에서 특정 워커에
+메시지를 보낼 때는 이 함수를 사용한다.
+
+워커에서 `process.send(message)`를 사용할 수도 있지만 사실 같은 함수다.
 
 다음은 마스터가 워커에 보낸 매시지를 다시 그대로 리턴하는 echo 예제다:
 
@@ -320,39 +365,48 @@ See: [Child Process module](child_process.html)
 
 * `signal` {String} 워커 프로세스에 보내는 kill 신호의 이름.
 
-이 함수로 워커를 죽이고 워커를 다시 생성하지 말라고 마스터에게 알릴 수 있다.
-`suicide` 프로퍼티를 이용하면 워커가 죽은 게 계획적인지 예외적인지 구분할 수 있다.
+이 함수로 워커를 죽인다. 마스터에서는 `worker.process`의 연결을 종료해서 이를 수행하고 일단
+연결이 종료되면 `signal`로 죽인다. 워커에서는 채널의 연결이 종료되고 `0` 코드와 함께 죽는다.
 
-    cluster.on('exit', function(worker, code, signal) {
-      if (worker.suicide === true) {
-        console.log('Oh, it was just suicide\' – no need to worry').
-      }
-    });
-
-    // 워커를 파괴
-    worker.kill();
+이 함수는 `.suicide`가 설정되도록 한다.
 
 이 메서드는 하위 호환성을 위한 `worker.destroy()`라는 별칭이 존재한다.
 
+워커에 `process.kill()`가 존재하지만 `process.kill()`는
+이 함수가 아니고 [kill](process.html#process_process_kill_pid_signal)이다.
+
 ### worker.disconnect()
 
-이 함수를 호출하면 해당 워커는 더는 연결을 수락하지 않는다(하지만, 다른 워커는 여전히 연결을
-수락한다). 이미 맺어진 연결도 종료할 수 있다. 맺어진 연결이 없으면 IPC 연결이 닫히고 워커가
-정상적으로(graceful) 죽는다. IPC 채널이 닫히면 `disconnect` 이벤트가 발생하고 이어서
-워커가 죽으면서 `exit` 이벤트가 발생한다.
+워커에서 이함수는 모든 서버를 닫고 각 서버의 'close' 이벤트를 기다린 후 IPC 채널의 연결을 종료한다.
 
-바로 끊기지 않는 연결이 있을 수도 있기 때문에 타임아웃을 사용하는 게 좋다. 먼저 워커를
-Disconnect시키고 2초 후에 서버를 죽인다(destroy). 대신 2초 후에 `worker.kill()`
-메소드를 실행할 수도 있지만, 워커가 충분히 소거하지 못할 수 있다.
+마스터에서 내부적인 메시지를 워커에 보내서 워커가 `.disconnect()`를 호출하도록 한다.
+
+이 함수는 `.suicide`가 설정되도록 한다.
+
+서버가 닫힌 뒤에는 더 이상 새로운 연결을 받지 않지만 동작중인 다른 워커가 연결을 받을 수도 있다.
+기존에 존재하는 연결은 평소처럼 닫힐수 있는 상태가 된다. 더이상 연결이 존재하지 않을 때
+([server.close()](net.html#net_event_close) 참고) 워커에 대한 IPC 채널은 워커가
+안전하게 죽을 수 있도록 닫힐 것이다.
+
+위의 내용은 서버 *연결에만* 적용되고 클라이언트 연결은 워커가 자동으로 닫지 않고
+disconnect는 종료하기 전에 닫기 위해서 기다리지 않는다.
+
+워커에 `process.disconnect`가 존재하지만 `process.disconnect`는 이 함수가 아니고
+[disconnect](child_process.html#child_process_child_disconnect)이다.
+
+오래 살아있는 서버 연결이 워커의 연결 종료를 막을 수 있으므로(메시지를 보내는데 유용하다) 연결을
+닫기 위해 어플리케이션의 특정 동작을 추가할 수 있다. 일정 시간후에 `disconnect` 이벤트가
+발생하지 않는다면 워커를 죽이도록 타임아웃을 구현하는데도 유용하다.
 
     if (cluster.isMaster) {
       var worker = cluster.fork();
       var timeout;
 
       worker.on('listening', function(address) {
+        worker.send('shutdown');
         worker.disconnect();
         timeout = setTimeout(function() {
-          worker.send('force kill');
+          worker.kill();
         }, 2000);
       });
 
@@ -368,13 +422,9 @@ Disconnect시키고 2초 후에 서버를 죽인다(destroy). 대신 2초 후에
 
       server.listen(8000);
 
-      server.on('close', function() {
-        // 마무리
-      });
-
       process.on('message', function(msg) {
-        if (msg === 'force kill') {
-          server.close();
+        if(msg === 'shutdown') {
+          // initiate graceful close of any connections to server
         }
       });
     }
@@ -383,8 +433,9 @@ Disconnect시키고 2초 후에 서버를 죽인다(destroy). 대신 2초 후에
 
 * `message` {Object}
 
-이 이벤트는 `child_process.fork()`의 것과 같다. 마스터에서 이 이벤트를 사용하고
-워커에서는 `process.on('message')`를 사용한다.
+이 이벤트는 `child_process.fork()`의 것과 같다.
+
+워커에서는 `process.on('message')`를 사용할 수도 있다.
 
 다음은 마스터 프로세스에서 총 요청 수를 세는 예제다. 메시지 시스템을 사용해서 구현한다:
 
@@ -430,25 +481,29 @@ Disconnect시키고 2초 후에 서버를 죽인다(destroy). 대신 2초 후에
 
 ### Event: 'online'
 
-`cluster.on('online')` 이벤트와 같지만, 해당 워커의 상태가 변경됐을 때만 발생한다.
+`cluster.on('online')` 이벤트와 유사하지만, 해당 워커에만 적용된다.
 
     cluster.fork().on('online', function() {
       // Worker is online
     });
 
+이는 워커에서 발생하지 않는다.
+
 ### Event: 'listening'
 
 * `address` {Object}
 
-`cluster.on('listening')` 이벤트와 같지만, 해당 워커의 상태가 변경됐을 때만 발생한다.
+`cluster.on('listening')` 이벤트와 유사하지만, 해당 워커에만 적용된다.
 
     cluster.fork().on('listening', function(address) {
       // Worker is listening
     });
 
+이는 워커에서 발생하지 않는다.
+
 ### Event: 'disconnect'
 
-`cluster.on('disconnect')` 이벤트와 같지만, 해당 워커의 상태가 변경됐을 때만 발생한다.
+`cluster.on('disconnect')` 이벤트와 유사하지만, 해당 워커에만 적용된다.
 
     cluster.fork().on('disconnect', function() {
       // Worker has disconnected
@@ -459,9 +514,7 @@ Disconnect시키고 2초 후에 서버를 죽인다(destroy). 대신 2초 후에
 * `code` {Number} 워커의 exit 코드
 * `signal` {String} 프로세스를 죽게 만든 시그널의 이름(eg. `'SIGHUP'`)
 
-워커 프로세스가 종료할 때 발생한다. 자세한 건
-[child_process Event: 'exit'](child_process.html#child_process_event_exit)을
-봐라.
+`cluster.on('exit')` 이벤트와 유사하지만, 해당 워커에만 적용된다.
 
     var worker = cluster.fork();
     worker.on('exit', function(code, signal) {
@@ -473,3 +526,9 @@ Disconnect시키고 2초 후에 서버를 죽인다(destroy). 대신 2초 후에
         console.log("worker success!");
       }
     });
+
+### Event: 'error'
+
+이 이벤트는 `child_process.fork()`의 것과 같다.
+
+워커에서는 `process.on('error')`를 사용할 수도 있다.

@@ -94,7 +94,7 @@ UNIX계열 소켓에서는 `options` 아규먼트는 다음을 지정하는 객�
 
 `/tmp/echo.sock` 소켓에 연결하려면 두번째 줄을 다음과 같이 변경한다.
 
-    var client = net.connect({path: '/tmp/echo.sock'},
+    var client = net.connect({path: '/tmp/echo.sock'};
 
 ## net.connect(port, [host], [connectListener])
 ## net.createConnection(port, [host], [connectListener])
@@ -112,7 +112,6 @@ UNIX계열 소켓에서는 `options` 아규먼트는 다음을 지정하는 객�
 ## Class: net.Server
 
 이 클래스는 TCP나 UNIX 서버를 생성하는데 사용한다.
-서버는 새로 들어오는 연결을 받을 수 있는 `net.Socket`이다.
 
 ### server.listen(port, [host], [backlog], [callback])
 
@@ -273,12 +272,14 @@ Windows에서는 파일스크립터에서 연결을 받아들이는 것을 지�
 `options`은 다음의 기본값을 가진 객체다.
 
     { fd: null
-      type: null
-      allowHalfOpen: false
+      allowHalfOpen: false,
+      readable: false,
+      writable: false
     }
 
-`fd`로 이미 존재하는 소켓의 파일 디스크립터를 지정할 수 있다. `type`은 의존하는
-프로토콜들 지정한다. `type`은 `'tcp4'`, `'tcp6'`, `'unix'`가 될 수 있다.
+`fd`로 이미 존재하는 소켓의 파일 디스크립터를 지정할 수 있다. 해당 소켓을 읽고 쓰기 가능하게
+하려면 `readable`이나 `writable`를 각각 `true`로 설정해라.(주의: `fd`를 전달했을
+때만 동작한다.)
 `allowHalfOpen`에 대해서는 `createServer()`와 `'end'` 이벤트를 참고해라.
 
 ### socket.connect(port, [host], [connectListener])

@@ -35,6 +35,9 @@ ChildProcess 클래스는 직접 사용하도록 만들어 진 것이 아니다.
 2. 프로세스를 죽일 수 없거나
 3. 어떤 이유로든지 자식 프로세스에 메시지 전송이 실패한 경우
 
+오류가 발생한 후에 `exit`-이벤트가 발생할 수도 있고 발생하지 않을 수도 있다는 점을 주의해라. 함수를
+실행하려고 두 이벤트를 리스닝하고 있다면 함수가 두번 호출되지 않도록 해야한다.
+
 [`ChildProcess#kill()`](#child_process_child_kill_signal)와
 [`ChildProcess#send()`](#child_process_child_send_message_sendhandle)도
 참고해라.
@@ -51,6 +54,9 @@ ChildProcess 클래스는 직접 사용하도록 만들어 진 것이 아니다.
 
 자식 프로세스의 stdio 스트림은 여전히 열려있을 것이다.
 
+노드가 `'SIGINT'`와 `'SIGTERM'`에 대한 신호 핸들러를 만들었으므로 이러한 신호를 받아서는
+종료되지(terminate) 않고 빠져나갈(exit) 것이다.
+
 `waitpid(2)`를 봐라.
 
 ### Event: 'close'
@@ -64,8 +70,7 @@ ChildProcess 클래스는 직접 사용하도록 만들어 진 것이 아니다.
 ### Event: 'disconnect'
 
 이 이벤트는 부모나 자식의 `.disconnect()` 메서드를 사용한 수에 발생한다. 연결이 끊긴
-후에는 더이상 메시지를 보낼 수 없다. `child.connected` 프로퍼티가 `true`인지 확인하는
-것이 메시지를 보낼 수 있는지 검사하는 또 다른 방법이다.
+후에는 더이상 메시지를 보낼 수 없고 `.connected`가 false가 된다.
 
 ### Event: 'message'
 
@@ -115,6 +120,12 @@ ChildProcess 클래스는 직접 사용하도록 만들어 진 것이 아니다.
 
     console.log('Spawned child pid: ' + grep.pid);
     grep.stdin.end();
+
+### child.connected
+
+* {Boolean} `.disconnect'가 호출되면 false로 설정한다
+
+`.connected`가 false이면 더이상 메시지를 보낼 수 없다.
 
 ### child.kill([signal])
 
@@ -172,6 +183,11 @@ ChildProcess 클래스는 직접 사용하도록 만들어 진 것이 아니다.
 
 자식에서 `process` 객체는 `send()` 메시지를 가질 것이고 `process`는 채널에서
 메시지를 받을 때마다 객체를 발생시킬 것이다.
+
+부모와 자식 모두에서 `send()` 메서드는 동기라는 점을 유념해라. 청크가 큰 데이터를 보내는 것은
+권장하지 않는다.(대신 파이프를 사용할 수 있다.
+[`child_process.spawn`](#child_process_child_process_spawn_command_args_options)
+참고.)
 
 `{cmd: 'NODE_foo'}` 메시지를 보냈을 때 특별한 경우가 있다.
 `cmd` 프로퍼티에 `NODE_` 접두사가 있는 모든 메시지는 node 코어에서 사용되는 내부 메시지이므로
@@ -254,11 +270,14 @@ ChildProcess 클래스는 직접 사용하도록 만들어 진 것이 아니다.
 
 ### child.disconnect()
 
-부모와 자식간의 IPC 연결을 닫으려면 `child.disconnect()` 메서드를 사용해라. 이
-메서드는 살아있는 IPC 채널이 없기 때문에 자식프로세스가 안전적으로 종료할 수 있게 한다.
-이 메서드를 호출했을 때 부모와 자식 모두에서 `disconnect` 이벤트가 발생할 것이고
-`connected` 플래그는 `false`가 된다. 자식 프로세스에서 `process.disconnect()`를
-호출할 수 있다는 것을 기억해라.
+부모와 자식간의 IPC 연결을 닫으면서 자식 프로세스에 더이상 유지되는 연결이 없도록 안전하게 자식
+프로세스를 종료한다. 이 메서드를 호출하면 부모와 자식 모두에서 `.connected` 플래그가
+`false`로 설정될 것이고 더이상 메시지를 보낼 수 없다.
+
+메시지를 받는 프로세스에 더이상 메시지가 없을 때 'disconnect' 이벤트가 발생할 것이고
+대부분을 즉각적으로 발생한다.
+
+자식 프로세스에서 `process.disconnect()`를 호출할 수도 있다.
 
 ## child_process.spawn(command, [args], [options])
 
@@ -374,7 +393,8 @@ spawn이 비어 있는 옵션 객체를 받으면 `process.env`를 사용하는 
    `/dev/null`를 열고 자식의 fd에 붙힐 것이다.
 4. `Stream` 객체 - tty, 파일, 소켓, 자식프로세스에 연결된 파이프를 참조하는 읽거나
    쓰기가 가능한 스트림을 공유한다. 스트림이 의존하는 파일 디스크립터는 자식 프로세스에서
-   `stdio` 비열의 인덱스에 대응하는 fd로 복제된다.
+   `stdio` 비열의 인덱스에 대응하는 fd로 복제된다. 스트림은 반드시 의존하는 디스크립터를
+   가져야 한다.(`'open'` 이벤트가 발생할 때까지 파일 스트림을 하지 않는다.)
 5. 양의 정수 - 이 정수값은 부모 프로세스에서 현재 열려있는 파일 디스크립터로 변환된다.
    `Stream` 객체가 공유되는 방법과 유사하게 자식 프로세스와 공유된다.
 6. `null`, `undefined` - 기본값을 사용한다. stdio fd 0, 1, 2(즉 stdin, stdout,
@@ -441,7 +461,7 @@ spawn이 비어 있는 옵션 객체를 받으면 `process.env`를 사용하는 
   * `env` {객체} 환경변수 키-밸류 쌍
   * `encoding` {문자열} (기본값: 'utf8')
   * `timeout` {숫자} (기본값: 0)
-  * `maxBuffer` {숫자} (기본값: 200*1024)
+  * `maxBuffer` {숫자} (기본값: `200*1024`)
   * `killSignal` {문자열} (기본값: 'SIGTERM')
 * `callback` {함수} 프로세스가 종료되었을 대 출력과 함께 호출된다
   * `error` {Error}
@@ -481,7 +501,7 @@ spawn이 비어 있는 옵션 객체를 받으면 `process.env`를 사용하는 
 `maxBuffer`는 stdout이나 stderr에서 사용할 수 있는 가장 큰 데이터의 양을
 지정한다. `maxBuffer`갑을 초과하면 자식 프로세스는 죽을 것이다.
 
-## child_process.execFile(file, args, options, callback)
+## child_process.execFile(file, [args], [options], [callback])
 
 * `file` {문자열} 실행할 프로그램의 파일명
 * `args` {배열} 문자열 아규먼트의 목록
@@ -496,14 +516,14 @@ spawn이 비어 있는 옵션 객체를 받으면 `process.env`를 사용하는 
   * `error` {Error}
   * `stdout` {Buffer}
   * `stderr` {Buffer}
-* Return: ChildProcess 객체
+* 반환값: ChildProcess 객체
 
 하위 쉘을 실행하는 대신에 지정한 파일을 직접 실행한다는 점을 제외하면
 `child_process.exec()`와 유사하다. `child_process.exec`보다
 약간 의존적이게 만든다. 이는 같은 옵션을 가진다.
 
 
-## child\_process.fork(modulePath, [args], [options])
+## child_process.fork(modulePath, [args], [options])
 
 * `modulePath` {문자열} 자식프로세스에서 실행될 모듈
 * `args` {배열} 문자열 아규먼트의 목록
@@ -512,18 +532,17 @@ spawn이 비어 있는 옵션 객체를 받으면 `process.env`를 사용하는 
   * `env` {객체} 환경변수의 키-밸류 쌍
   * `encoding` {문자열} (기본값: 'utf8')
   * `execPath` {String} 자식 프로세스를 생성하는데 사용하는 실행가능한 경로
-* Return: ChildProcess 객체
+  * `execArgv` {Array} 실행파일에 전달하는 문자열 인자 목록
+    (기본값: `process.execArgv`)
+  * `silent` {Boolean} true이면 자식의 stdin, stdout, stderr가 부모로
+    파이프로 연결될 것이다. false이면 stdin, stdout, stderr를 부모에서
+    상속받는다. 자세한 내용은 `spawn()`의 `stdio`에서 "pipe"와 "inherit" 옵션을 봐라.
+    (기본값은 false)
+* 반환값: ChildProcess 객체
 
 이는 Node 프로세스를 생성하기(spawn) 위해 `spawn()` 기능의 특별한 경우이다. 게다가
 보통의 ChildProcess 인스턴스에서 모든 메서드를 가지려고 반환된 객체는 내장된
 통신 채널을 가진다. 자세한 내용은 `child.send(message, [sendHandle])`를 참고해라.
-
-기본적으로 생성된(spawned) Node 프로세서는 부모의 stdout, stderr와 연관된
-stdout, stderr를 가질 것이다. 이 동작을 변경하려면 `options` 객체의 `silent`
-프로퍼티를 `true`로 설정해라.
-
-자식 프로세스들은 완료되었다고 자동으로 종료되지 않으므로 명시적으로 `process.exit()`를 호출해야
-한다. 차후에는 이 제약사항이 없어질 것이다.
 
 이러한 자식 노드들도 V8의 완전한 새 인스턴스이다. 새로운 각 노드마다 최소한 30ms의
 구동시간과 10mb의 메모리를 가정해보자. 즉, 수천 개의 노드를 생성할 수 없다.

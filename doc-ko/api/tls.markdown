@@ -97,9 +97,9 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
 
   - `cert`: PEM 형식의 서버 인증키를 담고 있는 문자열이나 `Buffer`다. (필수사항)
 
-  - `ca`: 신뢰할 수 있는 인증서의 문자열이나 `Buffer` 배열이다. 이 옵션을 생락하면
-    각각 VeriSign처럼 잘 알려진 "루트" CA를 사용할 것이다. 연결에 권한을 부여하는 데
-    이것들을 사용한다.
+  - `ca`: 신뢰할 수 있는 인증서의 문자열이나 `Buffer` 배열로 PEM 형식이다. 이
+    옵션을 생락하면 각각 VeriSign처럼 잘 알려진 "루트" CA를 사용할 것이다. 연결에
+    권한을 부여하는 데 이것들을 사용한다.
 
   - `crl` : PEM으로 인코딩된 CRL(Certificate Revocation List)의 문자열이나 문자열의
     리스트
@@ -247,9 +247,9 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
 
   - `cert`: PEM 형식으로 클라이언트의 인증서 키를 담고 있는 문자열이나 `Buffer`다.
 
-  - `ca`: 신뢰할 수 있는 인증서의 문자열이나 `Buffer` 배열이다. 이 옵션을 생락하면
-    각각 VeriSign처럼 잘 알려진 "루트" CA를 사용할 것이다. 연결에 권한을 부여하는 데
-    이것들을 사용한다.
+  - `ca`: 신뢰할 수 있는 인증서의 문자열이나 `Buffer` 배열로 PEM 형식이다. 이 옵션을
+    생락하면 각각 VeriSign처럼 잘 알려진 "루트" CA를 사용할 것이다. 연결에 권한을
+    부여하는 데 이것들을 사용한다.
 
   - `rejectUnauthorized`: 이 값이 `true`이면 서버 인증서를 제공한 CA 리스트로 검증한다.
     검증에 실패하면 `'error'` 이벤트가 발생한다. 기본값: `true`.

@@ -8,19 +8,20 @@
 
 ## Event: 'exit'
 
-프로세스가 종료될 때 발생한다. 이 이벤트는 모듈의 상태를 상수시간으로 확인하는데 좋은
-훅(hook)이다.(유닛테스트에서처럼) 메인 이벤트루프는 'exit' 콜백이 종료된 후에는 더이상
-실행되지 않으므로 타이머도 스케쥴링되지 않을 것이다.
+프로세스가 종료될 때 발생한다. 이 때 이벤트 루프의 종료를 막을 수 있는 방법은 없고 일단
+`exit` 리스너들이 모두 종료되면 해당 프로세스는 종료될 것이다. 그러므로 이 핸들러에서
+**동기적인** 작업만을 **반드시** 수행해야 한다. 이 이벤트는 모듈의 상태를 상수시간으로
+확인하기에 좋은 지점이다.(유닛테스트에서처럼) 콜백은 프로세스가 종료될 때의 코드를 인자로 가진다.
 
 `exit`이벤트 예제:
 
-    process.on('exit', function() {
+    process.on('exit', function(code) {
+      // 이렇게 하지 *말아라*
       setTimeout(function() {
         console.log('This will not run');
       }, 0);
-      console.log('About to exit.');
+      console.log('About to exit with code:', code);
     });
-
 
 ## Event: 'uncaughtException'
 
@@ -58,9 +59,9 @@
 ## Signal Events
 
 <!--type=event-->
-<!--name=SIGINT, SIGUSR1, etc.-->
+<!--name=SIGINT, SIGHUP, etc.-->
 
-프로세스가 Signal을 받았을 때 발상한다. SIGINT, SIGUSR1와 같은 표준 POSIX 신호이름의
+프로세스가 Signal을 받았을 때 발상한다. SIGINT, SIGHUP와 같은 표준 POSIX 신호이름의
 목록은 sigaction(2)를 봐라.
 
 `SIGINT` 예제:
@@ -75,6 +76,32 @@
 `SIGINT` 신호를 보내는 쉬운 방법은 대부분의 터미털 프로그램에서 `Control-C`를 입력하는
 것이다.
 
+Note:
+
+- `SIGUSR1`는 디버거를 시작하기 위해 node.js에 예약되어 있는 신호다. 리스터를 등록할 수는
+  있지만 시작할 때 디버거를 멈추지는 않을 것이다.
+- `SIGTERM`와 `SIGINT`는 `128 + signal number` 코드로 종료하기 전에 터미널 모드를
+  리셋하는 비윈도우 계열의 플랫폼에서 기본 핸들러들을 가진다. 이러한 신호 중 하나에 등록된 리스너가
+  있다면 해당 기본 동작은 제거될 것이다.(node가 종료하지 않을 것이다.)
+- `SIGPIPE`는 기본적으로 무시하지만 리스너를 등록할 수 있다.
+- `SIGHUP`는 윈도우즈에서는 콘솔창을 닫을 때 생성되는 신호고 다른 플랫폼에서는 다양한
+  유사상황(signal(7) 참고)에서 생성된다. 리스너를 등록할 수 있지만 윈도우즈가 약 10초후에
+  무조건 node를 종료할 것이고 비위도우즈 계열에서는 `SIGHUP`의 기본 동작이 node를 종료하는
+  것이지만 리스너를 등록했다면 기본 동작은 제거될 것이다.
+- `SIGTERM`는 윈도우즈는 지원하지 않고 리스너를 등록할 수는 있다.
+- 터미널에서 `SIGINT` 신호는 모든 플랫폼에서 지원하고 보통 `CTRL+C`로(설정할 수는 있지만)
+  생성할 수 있는 신호다. 터미널의 raw 모드가 활성화 되어 있을 때는 이 신호가 만들어지지 않는다.
+- `SIGBREAK`는 윈도우즈에서 `CTRL+BREAK`를 눌렀을 때 전달되는 신호다. 비윈도우즈 계열의
+  플렛폼에서는 리스너를 등록할 수 있지만 이 코드를 보내거나 생성할 수 있는 방법이 없다.
+- `SIGWINCH`는 콘솔의 크기를 변경했을 때 전달된다. 윈도우즈에서는 콘설에 작성을 해서 커서를
+  움직이거나 raw 모드에서 읽기가 가능한 tty를 사용했을 때만 발생할 것이다.
+- `SIGKILL`에는 리스너를 등록할 수 없고 모든 플랫폼이 무조건 node를 종료할 것이다.
+- `SIGSTOP`에는 리스너를 등록할 수 없다.
+
+윈도우즈는 신호 전송을 지원하지 않지만 node가 `process.kill()`와
+`child_process.kill()`를 에뮤레이팅해서 제공한다.
+- 프로세스의 존재를 검색하기 위해 신호 `0`을 보낼 수 있다.
+- `SIGINT`, `SIGTERM`, `SIGKILL`신호를 보내면 해당 프로세스가 무조건 종료된다.
 
 ## process.stdout
 
@@ -382,8 +409,12 @@ node와 의존성에 대한 버전 문자열을 노출하는 프로퍼티이다.
 ## process.kill(pid, [signal])
 
 프로세스에 신호를 보낸다. `pid`는 프로세스 id이고 `signal`은 보내려는 신호를
-설명하는 문자열이다. 신호이름은 'SIGINT'나 'SIGUSR1'같은 문자열이다. `signal`을
-생략하면 'SIGTERM'가 될 것이다. 더 자세한 내용은 kill(2)를 봐라.
+설명하는 문자열이다. 신호이름은 'SIGINT'나 'SIGHUP'같은 문자열이다. `signal`을
+생략하면 'SIGTERM'가 될 것이다.
+더 자세한 내용은 [Signal Events](#process_signal_events)와 kill(2)를 봐라.
+
+대상이 존재하지 않으면 오류를 던질 것이다. 예외적으로 신호 `0` 을 해당 프로세스의
+존재를 검사하는데 사용할 수 있다.
 
 이 함수의 이름이 `process.kill`이므로 실제로 `kill` 시스템 호출처럼 단순히 신호
 전송자이다. 보낸 신호는 타겟 신호를 죽이는 일이외에 다른 일을 할 것이다.
@@ -401,6 +432,8 @@ node와 의존성에 대한 버전 문자열을 노출하는 프로퍼티이다.
 
     process.kill(process.pid, 'SIGHUP');
 
+Note: Node.js가 SIGUSR1를 받으면 디버거를 시작한다.
+[Signal Events](#process_signal_events)를 참고해라.
 
 ## process.pid
 

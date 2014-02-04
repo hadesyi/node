@@ -304,12 +304,13 @@ C++ 함수에 자바스크립트 함수를 전달해서 C++ 함수에서 자바�
       static void Init(v8::Handle<v8::Object> exports);
 
      private:
-      MyObject();
+      explicit MyObject(double value = 0);
       ~MyObject();
 
       static v8::Handle<v8::Value> New(const v8::Arguments& args);
       static v8::Handle<v8::Value> PlusOne(const v8::Arguments& args);
-      double counter_;
+      static v8::Persistent<v8::Function> constructor;
+      double value_;
     };
 
     #endif
@@ -323,39 +324,51 @@ C++ 함수에 자바스크립트 함수를 전달해서 C++ 함수에서 자바�
 
     using namespace v8;
 
-    MyObject::MyObject() {};
-    MyObject::~MyObject() {};
+    Persistent<Function> MyObject::constructor;
+
+    MyObject::MyObject(double value) : value_(value) {
+    }
+
+    MyObject::~MyObject() {
+    }
 
     void MyObject::Init(Handle<Object> exports) {
-      // Prepare constructor template
+      // 생성자 템플릿을 준비한다
       Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
       tpl->SetClassName(String::NewSymbol("MyObject"));
       tpl->InstanceTemplate()->SetInternalFieldCount(1);
-      // Prototype
+      // 프로토타입
       tpl->PrototypeTemplate()->Set(String::NewSymbol("plusOne"),
           FunctionTemplate::New(PlusOne)->GetFunction());
 
-      Persistent<Function> constructor = Persistent<Function>::New(tpl->GetFunction());
+      constructor = Persistent<Function>::New(tpl->GetFunction());
       exports->Set(String::NewSymbol("MyObject"), constructor);
     }
 
     Handle<Value> MyObject::New(const Arguments& args) {
       HandleScope scope;
 
-      MyObject* obj = new MyObject();
-      obj->counter_ = args[0]->IsUndefined() ? 0 : args[0]->NumberValue();
-      obj->Wrap(args.This());
-
-      return args.This();
+      if (args.IsConstructCall()) {
+        // 생성자로 `new MyObject(...)`가 호출된다
+        double value = args[0]->IsUndefined() ? 0 : args[0]->NumberValue();
+        MyObject* obj = new MyObject(value);
+        obj->Wrap(args.This());
+        return args.This();
+      } else {
+        // 평범한 함수 `MyObject(...)`로 호출되고 생성자 호출로 변환된다.
+        const int argc = 1;
+        Local<Value> argv[argc] = { args[0] };
+        return scope.Close(constructor->NewInstance(argc, argv));
+      }
     }
 
     Handle<Value> MyObject::PlusOne(const Arguments& args) {
       HandleScope scope;
 
       MyObject* obj = ObjectWrap::Unwrap<MyObject>(args.This());
-      obj->counter_ += 1;
+      obj->value_ += 1;
 
-      return scope.Close(Number::New(obj->counter_));
+      return scope.Close(Number::New(obj->value_));
     }
 
 다음 코드로 테스트한다:
@@ -414,13 +427,13 @@ C++ 함수에 자바스크립트 함수를 전달해서 C++ 함수에서 자바�
       static v8::Handle<v8::Value> NewInstance(const v8::Arguments& args);
 
      private:
-      MyObject();
+      explicit MyObject(double value = 0);
       ~MyObject();
 
-      static v8::Persistent<v8::Function> constructor;
       static v8::Handle<v8::Value> New(const v8::Arguments& args);
       static v8::Handle<v8::Value> PlusOne(const v8::Arguments& args);
-      double counter_;
+      static v8::Persistent<v8::Function> constructor;
+      double value_;
     };
 
     #endif
@@ -433,10 +446,13 @@ C++ 함수에 자바스크립트 함수를 전달해서 C++ 함수에서 자바�
 
     using namespace v8;
 
-    MyObject::MyObject() {};
-    MyObject::~MyObject() {};
-
     Persistent<Function> MyObject::constructor;
+
+    MyObject::MyObject(double value) : value_(value) {
+    }
+
+    MyObject::~MyObject() {
+    }
 
     void MyObject::Init() {
       // 생성자 템플릿 준비
@@ -446,18 +462,24 @@ C++ 함수에 자바스크립트 함수를 전달해서 C++ 함수에서 자바�
       // 프로토타입
       tpl->PrototypeTemplate()->Set(String::NewSymbol("plusOne"),
           FunctionTemplate::New(PlusOne)->GetFunction());
-
       constructor = Persistent<Function>::New(tpl->GetFunction());
     }
 
     Handle<Value> MyObject::New(const Arguments& args) {
       HandleScope scope;
 
-      MyObject* obj = new MyObject();
-      obj->counter_ = args[0]->IsUndefined() ? 0 : args[0]->NumberValue();
-      obj->Wrap(args.This());
-
-      return args.This();
+      if (args.IsConstructCall()) {
+        // 생성자로 `new MyObject(...)`가 호출된다
+        double value = args[0]->IsUndefined() ? 0 : args[0]->NumberValue();
+        MyObject* obj = new MyObject(value);
+        obj->Wrap(args.This());
+        return args.This();
+      } else {
+        // 평범한 함수 `MyObject(...)`로 호출되고 생성자 호출로 변환된다.
+        const int argc = 1;
+        Local<Value> argv[argc] = { args[0] };
+        return scope.Close(constructor->NewInstance(argc, argv));
+      }
     }
 
     Handle<Value> MyObject::NewInstance(const Arguments& args) {
@@ -474,9 +496,9 @@ C++ 함수에 자바스크립트 함수를 전달해서 C++ 함수에서 자바�
       HandleScope scope;
 
       MyObject* obj = ObjectWrap::Unwrap<MyObject>(args.This());
-      obj->counter_ += 1;
+      obj->value_ += 1;
 
-      return scope.Close(Number::New(obj->counter_));
+      return scope.Close(Number::New(obj->value_));
     }
 
 다음으로 테스트한다:
@@ -519,7 +541,7 @@ C++ 객체를 감싸고 리턴하는 부분에 대해서 추가적으로 Node의
       MyObject* obj2 = node::ObjectWrap::Unwrap<MyObject>(
           args[1]->ToObject());
 
-      double sum = obj1->Val() + obj2->Val();
+      double sum = obj1->Value() + obj2->Value();
       return scope.Close(Number::New(sum));
     }
 
@@ -548,15 +570,15 @@ private 값을 자세히 조사할 수 있다:
      public:
       static void Init();
       static v8::Handle<v8::Value> NewInstance(const v8::Arguments& args);
-      double Val() const { return val_; }
+      double Value() const { return value_; }
 
      private:
-      MyObject();
+      explicit MyObject(double value = 0);
       ~MyObject();
 
-      static v8::Persistent<v8::Function> constructor;
       static v8::Handle<v8::Value> New(const v8::Arguments& args);
-      double val_;
+      static v8::Persistent<v8::Function> constructor;
+      double value_;
     };
 
     #endif
@@ -569,28 +591,37 @@ private 값을 자세히 조사할 수 있다:
 
     using namespace v8;
 
-    MyObject::MyObject() {};
-    MyObject::~MyObject() {};
-
     Persistent<Function> MyObject::constructor;
+
+    MyObject::MyObject(double value) : value_(value) {
+    }
+
+    MyObject::~MyObject() {
+    }
 
     void MyObject::Init() {
       // 생성자 템플릿 준비
       Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
       tpl->SetClassName(String::NewSymbol("MyObject"));
       tpl->InstanceTemplate()->SetInternalFieldCount(1);
-
       constructor = Persistent<Function>::New(tpl->GetFunction());
     }
 
     Handle<Value> MyObject::New(const Arguments& args) {
       HandleScope scope;
 
-      MyObject* obj = new MyObject();
-      obj->val_ = args[0]->IsUndefined() ? 0 : args[0]->NumberValue();
-      obj->Wrap(args.This());
-
-      return args.This();
+      if (args.IsConstructCall()) {
+        // 생성자로 `new MyObject(...)`가 호출된다
+        double value = args[0]->IsUndefined() ? 0 : args[0]->NumberValue();
+        MyObject* obj = new MyObject(value);
+        obj->Wrap(args.This());
+        return args.This();
+      } else {
+        // 평범한 함수 `MyObject(...)`로 호출되고 생성자 호출로 변환된다.
+        const int argc = 1;
+        Local<Value> argv[argc] = { args[0] };
+        return scope.Close(constructor->NewInstance(argc, argv));
+      }
     }
 
     Handle<Value> MyObject::NewInstance(const Arguments& args) {

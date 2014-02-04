@@ -52,7 +52,7 @@ HTTP 어플리케이션이 가능한 전체 범위를 다 지원하기 위해서
 
 요청이 있을 때마다 발생한다. 연결마다 여러번의 요청이 있을 수 있다.(keep-alive
 연결인 경우)
- `request`는 `http.IncomingMessage`의 인스턴스이고 `response`는
+ `request`는 [http.IncomingMessage][]의 인스턴스이고 `response`는
  `http.ServerResponse`의 인스턴스다.
 
 ### Event: 'connection'
@@ -79,7 +79,7 @@ http Expect: 100-continue 헤더를 가진 요청을 받을 때마다 발생한�
 것이다.
 
 이 이벤트를 다루면 클라이언트가 계속해서 요청바디를 보내야 한다면
-`response.writeContinue` 호출하고 클라이언트가 요청 바디를 계속 보내지 않는다면
+[response.writeContinue()][] 호출하고 클라이언트가 요청 바디를 계속 보내지 않는다면
 적절한 HTTP 응답(예시: 400 Bad Request)을 생성한다.
 
 ### Event: 'connect'
@@ -211,8 +211,18 @@ Server 객체에 `'timeout'` 이벤트 리스너가 있으면 타임아웃이 �
 
 `function () { }`
 
-`response.end()`가 호출되기 전이나 플러시할 수 있을 때 의존하는 연결을
+[response.end()][]가 호출되기 전이나 플러시할 수 있을 때 의존하는 연결을
 종료했다는 것을 나타낸다.
+
+### Event: 'finish'
+
+`function () { }`
+
+응답을 보냈을 때 발생한다. 조금 더 자세히 얘기하면 응답 헤더와 바디의 마지막 부분을 네트워크를
+통해서 전송하기 위해서 운영체제에 전달했을 때 이 이벤트가 발생한다. 이는 클라이언트는
+아직 아무것도 받지 않았다는 것을 의미하지 않는다.
+
+이 이벤트 뒤에는 응답 객체에서 어떤 이벤트도 더이상 발생하지 않을 것이다.
 
 ### response.writeContinue()
 
@@ -232,10 +242,10 @@ Server 객체에 `'timeout'` 이벤트 리스너가 있으면 타임아웃이 �
       'Content-Length': body.length,
       'Content-Type': 'text/plain' });
 
-이 메서드는 한 메시지에서 딱 한번만 호출되어야 하고 `response.end()`가 호출되기 전에
+이 메서드는 한 메시지에서 딱 한번만 호출되어야 하고 [response.end()][]가 호출되기 전에
 호출되어야 한다.
 
-이 메서드가 호출되기 전에 `response.write()`나 `response.end()`를 호출한다면
+이 메서드가 호출되기 전에 [response.write()][]나 [response.end()][]를 호출한다면
 암묵적이고 변할 가능성이 있는 헤더가 계산해서 이 함수를 호출할 것이다.
 
 Note: 해당 Content-Length는 문자가 아니라 바이트로 주어진다. 문자열 `'hello world'`는
@@ -257,8 +267,8 @@ Socket의 타임아웃값을 `msecs`로 설정한다. 콜백을 지정하면 응
 
 ### response.statusCode
 
-(명시적으로 `response.writeHead()`를 호출하지 않고) 암묵적인 헤더를 사용하는 경우 헤더가 플러시됐을
-때 클라이언트에 보낼 상태코드를 이 프로퍼티가 제어한다.
+(명시적으로 [response.writeHead()][]를 호출하지 않고) 암묵적인 헤더를 사용하는 경우
+헤더가 플러시됐을 때 클라이언트에 보낼 상태코드를 이 프로퍼티가 제어한다.
 
 예제:
 
@@ -312,7 +322,7 @@ Socket의 타임아웃값을 `msecs`로 설정한다. 콜백을 지정하면 응
 
 ### response.write(chunk, [encoding])
 
-이 메서드는 호출하고 `response.writeHead()`는 호출하지 않았다면 암묵적인 헤더 모드로
+이 메서드는 호출하고 [response.writeHead()][]는 호출하지 않았다면 암묵적인 헤더 모드로
 바꾸고 암묵적인 헤더를 플러시할 것이다.
 
 이 메서드는 응답 바디의 청크를 전송한다. 바디의 연속적인 부분을 제공하기 위해 이 함수를
@@ -359,7 +369,7 @@ Socket의 타임아웃값을 `msecs`로 설정한다. 콜백을 지정하면 응
 호출한 것과 같다.
 
 
-## http.request(options, callback)
+## http.request(options, [callback])
 
 Node는 HTTP 요청에 대한 연결을 서버당 여러 개 유지하고 있다. 이 함수는 투명하게
 요청을 진행한다.
@@ -386,7 +396,9 @@ Node는 HTTP 요청에 대한 연결을 서버당 여러 개 유지하고 있다
  - `false`: Agent와 함께 연결 풀을 사용하지 않는다. 기본값은
    `Connection: close`에 요청한다.
 
-`http.request()`는 `http.ClientRequest` 클래스의 인스턴스를 리턴한다.
+선택사항인 `callback` 파라미터는 ['response'][] 이벤트의 1회성 리스터로 추가될 것이다.
+
+`http.request()`는 [http.ClientRequest][] 클래스의 인스턴스를 리턴한다.
 `ClientRequest` 인스턴스는 쓰기가 가능한 스트림이다. POST 요청으로 파일을
 업로드해야 한다면 `ClientRequest` 객체에 작성한다.
 
@@ -507,7 +519,7 @@ _처리중인_ 요청을 나타낸다. `setHeader(name, value)`, `getHeader(name
 
 응답을 받으려면 응답 객체에 `'response'`에 대한 리스너를 추가해라. `'response'`는
 응답 헤더를 받았을 때 요청 객체에서 발생할 것이다. `'response'` 이벤트는
-`http.IncomingMessage` 인스턴스를 아규먼트로 받아서 실행된다.
+[http.IncomingMessage][] 인스턴스를 아규먼트로 받아서 실행된다.
 
 `'response'` 이벤트 가운데 응답 객체에 리스너들을 추가할 수 있다. 특히 `'data'`
 이벤트를 받기 위해 추가할 수 있다.
@@ -529,7 +541,7 @@ Note: Node는 Content-Length와 전송된 바디의 길이가 같은지 같지 �
 `function (response) { }`
 
 해당 요청에 대한 응답을 받았을 때 발생한다. 이 이벤트는 딱 한번만 발생한다. `response` 아규먼트는
-`http.IncomingMessage`의 인스턴스가 될 것이다.
+[http.IncomingMessage][]의 인스턴스가 될 것이다.
 
 옵션:
 
@@ -703,7 +715,7 @@ CONNECT 메서드를 받는 클라이언트의 연결을 닫힐 것이다.
 
 ## http.IncomingMessage
 
-`IncomingMessage` 객체는 `http.Server`나 `http.ClientRequest`가 생성하고
+`IncomingMessage` 객체는 [http.Server][]나 [http.ClientRequest][]가 생성하고
 `'request'`와 `'response'` 이벤트에 각각 첫 번째 인자로 전달된다. 응답 상태,
 헤더, 데이터에 접근할 때 사용한다.
 
@@ -714,11 +726,8 @@ CONNECT 메서드를 받는 클라이언트의 연결을 닫힐 것이다.
 
 `function () { }`
 
-`response.end()`가 호출되거나 플러시할 수 있기 전에 의존하는 연결이 종료되었다는
-것을 나타낸다.
-
+의존하는 연결이 닫혔는 지를 나타낸다.
 `'end'`처럼 이 이벤트는 응답마다 딱 한번만 발생한다.
-자세한 내용은 [http.ServerResponse][]의 `'close'` 이벤트를 봐라.
 
 ### message.httpVersion
 
@@ -755,14 +764,14 @@ HTTP 버전이다. 아마 `'1.1'`나 `'1.0'` 둘 중 하나일 것이다.
 
 ### message.method
 
-**`http.Server`에서 얻은 요청에만 유효하다.**
+**[http.Server][]에서 얻은 요청에만 유효하다.**
 
 요청 메서드의 문자열 표현. 읽기 전용이다.
 예제: `'GET'`, `'DELETE'`.
 
 ### message.url
 
-**`http.Server`에서 얻은 요청에만 유효하다..**
+**[http.Server][]에서 얻은 요청에만 유효하다..**
 
 요청 URL 문자열. 이 값은 실제 HTTP 요청에 있는 URL만 답고 있다.
 요청이 다음과 같다면
@@ -809,21 +818,30 @@ request.connection.verifyPeer()와 request.connection.getPeerCertificate()를
 사용해라.
 
 
-[Agent]: #http_class_http_agent
 ['checkContinue']: #http_event_checkcontinue
+['listening']: net.html#net_event_listening
+['response']: #http_event_response
+[Agent]: #http_class_http_agent
 [Buffer]: buffer.html#buffer_buffer
 [EventEmitter]: events.html#events_class_events_eventemitter
+[Readable Stream]: stream.html#stream_readable_stream
+[Writable Stream]: stream.html#stream_writable_stream
 [global Agent]: #http_http_globalagent
+[http.ClientRequest]: #http_class_http_clientrequest
+[http.IncomingMessage]: #http_http_incomingmessage
+[http.ServerResponse]: #http_class_http_serverresponse
+[http.Server]: #http_class_http_server
 [http.request()]: #http_http_request_options_callback
-[http.IncomingMessage]: #http_class_http_incomingmessage
-['listening']: net.html#net_event_listening
+[http.request()]: #http_http_request_options_callback
 [net.Server.close()]: net.html#net_server_close_callback
 [net.Server.listen(path)]: net.html#net_server_listen_path_callback
 [net.Server.listen(port)]: net.html#net_server_listen_port_host_backlog_callback
-[Readable Stream]: stream.html#stream_readable_stream
+[response.end()]: #http_response_end_data_encoding
+[response.write()]: #http_response_write_chunk_encoding
+[response.writeContinue()]: #http_response_writecontinue
+[response.writeHead()]: #http_response_writehead_statuscode_reasonphrase_headers
 [socket.setKeepAlive()]: net.html#net_socket_setkeepalive_enable_initialdelay
 [socket.setNoDelay()]: net.html#net_socket_setnodelay_nodelay
 [socket.setTimeout()]: net.html#net_socket_settimeout_timeout_callback
 [stream.setEncoding()]: stream.html#stream_stream_setencoding_encoding
 [url.parse()]: url.html#url_url_parse_urlstr_parsequerystring_slashesdenotehost
-[Writable Stream]: stream.html#stream_writable_stream

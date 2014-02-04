@@ -181,8 +181,8 @@ Mac OS X에서만 사용할 수 있다.
 ## fs.symlink(srcpath, dstpath, [type], callback)
 
 비동기 symlink(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
-`type` 아규먼트는 `'dir'`이나 `'file'`, `'junction'`이 가능하다.(기본값은 `'file'`이다) 이 옵션은
-윈도우에서만 사용된다.(다른 플랫폼에서는 무시한다.)
+`type` 아규먼트는 `'dir'`이나 `'file'`, `'junction'`이 가능하다.(기본값은 `'file'`이다)
+이 옵션은 윈도우에서만 사용된다.(다른 플랫폼에서는 무시한다.)
 Windows의 junction에서는 목적지경로가 절대경로여야 한다. `'junction'`을 사용하면 `destination`
 아규먼트를 절대경로로 자동으로 정규화한다.
 
@@ -560,6 +560,12 @@ null 일 경우를 위한 대체(fallback) 로직을 가지고 있어야 한다.
       util.debug(exists ? "it's there" : "no passwd!");
     });
 
+`fs.exists()`는 시대착오적인 API로 과거에 존재했기 때문에 그냥 존재할 뿐이다.
+그래서 코드에서 `fs.exists()`를 사용할 이유는 거의 없을 것이다.
+
+특히 파일을 열기 전에 파일이 존재하는지 검사하는 것은 권장하지 않는 방법인데 이렇게 하면 레이스
+컨디션에 빠지기 쉬워진다.(`fs.exists()` 와 `fs.open()`의 호출 사이에 다른 프로세스가 파일을
+삭제할 수도 있다.) 파일을 그냥 열고 파일이 존재하지 않는 경우 오류를 처리해라.
 
 ## fs.existsSync(path)
 

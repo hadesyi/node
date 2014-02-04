@@ -118,7 +118,9 @@ Module 시스템이 locked 상태이므로 이 기능은 없어지지 않을 것
 
 * {Object}
 
-현재 모듈에 대한 참조이다. 특히 `module.exports`는 `exports` 객체와 같다.
+현재 모듈에 대한 참조이다. 특히, `module.exports`는 모듈이 무엇을 외부에 노출해서
+`require()`로 사용할 수 있게 할 것인지 정의하는데 사용한다.
+
 `module`는 실제로 전역이 아니라 각 모듈의 지역범위이다.
 
 더 자세한 내용은 [module system documentation][]를 봐라.
@@ -127,9 +129,10 @@ Module 시스템이 locked 상태이므로 이 기능은 없어지지 않을 것
 
 <!-- type=var -->
 
-현재 모듈과 `require()`로 접근가능하게 된 모듈의 모든 인스턴스 사이에서 공유되는
-`module.exports` 객체에 대한 참조. 언제 `exports`를 사용하고 언제 `module.exports`를
-사용하는 지에 대한 자세한 내용은 [module system documentation][]를 참고해라.
+`module.exports`에 대한 더 간략화된 참조다. 언제 `exports`를 사용하고
+언제 `module.exports`를 사용하는 지에 대한 자세한 내용은
+[module system documentation][]를 참고해라.
+
 `exports`는 실제로 전역이 아니라 각 모듈의 지역범위이다.
 
 더 자세한 내용은 [module system documentation][]를 봐라.
