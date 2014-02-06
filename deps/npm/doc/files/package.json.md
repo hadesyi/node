@@ -9,32 +9,6 @@ file.  It must be actual JSON, not just a JavaScript object literal.
 A lot of the behavior described in this document is affected by the config
 settings described in `npm-config(7)`.
 
-## DEFAULT VALUES
-
-npm will default some values based on package contents.
-
-* `"scripts": {"start": "node server.js"}`
-
-  If there is a `server.js` file in the root of your package, then npm
-  will default the `start` command to `node server.js`.
-
-* `"scripts":{"preinstall": "node-waf clean || true; node-waf configure build"}`
-
-  If there is a `wscript` file in the root of your package, npm will
-  default the `preinstall` command to compile using node-waf.
-
-* `"scripts":{"preinstall": "node-gyp rebuild"}`
-
-  If there is a `binding.gyp` file in the root of your package, npm will
-  default the `preinstall` command to compile using node-gyp.
-
-* `"contributors": [...]`
-
-  If there is an `AUTHORS` file in the root of your package, npm will
-  treat each line as a `Name <email> (url)` format, where email and url
-  are optional.  Lines which start with a `#` or are blank, will be
-  ignored.
-
 ## name
 
 The *most* important things in your package.json are the name and version fields.
@@ -112,21 +86,18 @@ If a url is provided, it will be used by the `npm bugs` command.
 You should specify a license for your package so that people know how they are
 permitted to use it, and any restrictions you're placing on it.
 
-The simplest way, assuming you're using a common license such as BSD or MIT, is
-to just specify the name of the license you're using, like this:
+The simplest way, assuming you're using a common license such as BSD-3-Clause
+or MIT, is to just specify the standard SPDX ID of the license you're using,
+like this:
 
-    { "license" : "BSD" }
+    { "license" : "BSD-3-Clause" }
 
-If you have more complex licensing terms, or you want to provide more detail
-in your package.json file, you can use the more verbose plural form, like this:
+You can check [the full list of SPDX license IDs](https://spdx.org/licenses/).
+Ideally you should pick one that is
+[OSI](http://opensource.org/licenses/alphabetical) approved.
 
-    "licenses" : [
-      { "type" : "MyLicense"
-      , "url" : "http://github.com/owner/project/path/to/license"
-      }
-    ]
-
-It's also a good idea to include a license file at the top level in your package.
+It's also a good idea to include a LICENSE file at the top level in
+your package.
 
 ## people fields: author, contributors
 
@@ -347,6 +318,7 @@ See semver(7) for more details about specifying version ranges.
 * `version1 - version2` Same as `>=version1 <=version2`.
 * `range1 || range2` Passes if either range1 or range2 are satisfied.
 * `git...` See 'Git URLs as Dependencies' below
+* `user/repo` See 'GitHub URLs' below
 
 For example, these are all valid:
 
@@ -383,6 +355,20 @@ Git urls can be of the form:
 
 The `commit-ish` can be any tag, sha, or branch which can be supplied as
 an argument to `git checkout`.  The default is `master`.
+
+## GitHub URLs
+
+As of version 1.1.65, you can refer to GitHub urls as just "foo": "user/foo-project". For example:
+
+```json
+{
+  "name": "foo",
+  "version": "0.0.0",
+  "dependencies": {
+    "express": "visionmedia/express"
+  }
+}
+```
 
 ## devDependencies
 
@@ -554,6 +540,27 @@ Any config values can be overridden, but of course only "tag" and
 
 See `npm-config(7)` to see the list of config options that can be
 overridden.
+
+## DEFAULT VALUES
+
+npm will default some values based on package contents.
+
+* `"scripts": {"start": "node server.js"}`
+
+  If there is a `server.js` file in the root of your package, then npm
+  will default the `start` command to `node server.js`.
+
+* `"scripts":{"preinstall": "node-gyp rebuild"}`
+
+  If there is a `binding.gyp` file in the root of your package, npm will
+  default the `preinstall` command to compile using node-gyp.
+
+* `"contributors": [...]`
+
+  If there is an `AUTHORS` file in the root of your package, npm will
+  treat each line as a `Name <email> (url)` format, where email and url
+  are optional.  Lines which start with a `#` or are blank, will be
+  ignored.
 
 ## SEE ALSO
 

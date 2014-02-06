@@ -1022,7 +1022,6 @@ void Connection::Initialize(Handle<Object> target) {
   NODE_SET_PROTOTYPE_METHOD(t, "getCurrentCipher", Connection::GetCurrentCipher);
   NODE_SET_PROTOTYPE_METHOD(t, "start", Connection::Start);
   NODE_SET_PROTOTYPE_METHOD(t, "shutdown", Connection::Shutdown);
-  NODE_SET_PROTOTYPE_METHOD(t, "receivedShutdown", Connection::ReceivedShutdown);
   NODE_SET_PROTOTYPE_METHOD(t, "close", Connection::Close);
 
 #ifdef OPENSSL_NPN_NEGOTIATED
@@ -1189,6 +1188,7 @@ int Connection::SelectSNIContextCallback_(SSL *s, int *ad, void* arg) {
         p->sniContext_ = Persistent<Value>::New(ret);
         SecureContext *sc = ObjectWrap::Unwrap<SecureContext>(
                                 Local<Object>::Cast(ret));
+        p->InitNPN(sc, true);
         SSL_set_SSL_CTX(s, sc->ctx_);
       } else {
         return SSL_TLSEXT_ERR_NOACK;
@@ -1223,20 +1223,7 @@ Handle<Value> Connection::New(const Arguments& args) {
 
   if (is_server) SSL_set_info_callback(p->ssl_, SSLInfoCallback);
 
-#ifdef OPENSSL_NPN_NEGOTIATED
-  if (is_server) {
-    // Server should advertise NPN protocols
-    SSL_CTX_set_next_protos_advertised_cb(sc->ctx_,
-                                          AdvertiseNextProtoCallback_,
-                                          NULL);
-  } else {
-    // Client should select protocol from advertised
-    // If server supports NPN
-    SSL_CTX_set_next_proto_select_cb(sc->ctx_,
-                                     SelectNextProtoCallback_,
-                                     NULL);
-  }
-#endif
+  p->InitNPN(sc, is_server);
 
 #ifdef SSL_CTRL_SET_TLSEXT_SERVERNAME_CB
   if (is_server) {
@@ -1778,20 +1765,6 @@ Handle<Value> Connection::Shutdown(const Arguments& args) {
 }
 
 
-Handle<Value> Connection::ReceivedShutdown(const Arguments& args) {
-  HandleScope scope;
-
-  Connection *ss = Connection::Unwrap(args);
-
-  if (ss->ssl_ == NULL) return False();
-  int r = SSL_get_shutdown(ss->ssl_);
-
-  if (r & SSL_RECEIVED_SHUTDOWN) return True();
-
-  return False();
-}
-
-
 Handle<Value> Connection::IsInitFinished(const Arguments& args) {
   HandleScope scope;
 
@@ -1978,6 +1951,24 @@ Handle<Value> Connection::Close(const Arguments& args) {
     ss->ssl_ = NULL;
   }
   return True();
+}
+
+
+void Connection::InitNPN(SecureContext* sc, bool is_server) {
+#ifdef OPENSSL_NPN_NEGOTIATED
+  if (is_server) {
+    // Server should advertise NPN protocols
+    SSL_CTX_set_next_protos_advertised_cb(sc->ctx_,
+                                          AdvertiseNextProtoCallback_,
+                                          NULL);
+  } else {
+    // Client should select protocol from advertised
+    // If server supports NPN
+    SSL_CTX_set_next_proto_select_cb(sc->ctx_,
+                                     SelectNextProtoCallback_,
+                                     NULL);
+  }
+#endif
 }
 
 #ifdef OPENSSL_NPN_NEGOTIATED
@@ -3185,6 +3176,9 @@ class Verify : public ObjectWrap {
 
   int VerifyFinal(char* key_pem, int key_pemLen, unsigned char* sig, int siglen) {
     if (!initialised_) return 0;
+
+    ClearErrorOnReturn clear_error_on_return;
+    (void) &clear_error_on_return;  // Silence compiler warning.
 
     EVP_PKEY* pkey = NULL;
     BIO *bp = NULL;

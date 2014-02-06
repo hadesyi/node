@@ -35,7 +35,7 @@ REPL은 극도로 단순한 emacs 라인수정을 가진다.
 
  - `input` - 리스닝할 읽을 수 있는 스트림. 기본값은 `process.stdin`이다.
 
- - `output` - readline 데이터를 작성할 쓰기가능한 스트림. 기본값은
+ - `output` - readline 데이터를 작성할 쓰기 가능한 스트림. 기본값은
    `process.stdout`이다.
 
  - `terminal` - `stream`을 TTY처럼 다뤄야 하고 작성된 데이터가 ANSI/VT100로
@@ -52,7 +52,7 @@ REPL은 극도로 단순한 emacs 라인수정을 가진다.
  - `useGlobal` - `true`로 설정하면 repl이 분리된 컨텍스트에서 스크립트를 실행하는
    대신에 `global` 객체를 사용한다. 기본값은 `false`이다.
 
- - `ignoreUndefined` - `true`로 설정하면 repl은 명령의 결과값이 `undefined`인
+ - `ignoreUndefined` - `true`로 설정하면 repl은 명령의 결과 값이 `undefined`인
    경우 출력하지 않는다. 기본값은 `false`이다.
 
  - `writer` - 화면에 표시하기 위해서 포매팅(컬러링 포함)된 값을 평가하려고
@@ -106,7 +106,7 @@ stdin, Unix 소켓, TCP 소켓에서 REPL을 시작하는 예제는 다음과 �
 Unix 소켓이나 TCP 소켓을 통해서 연결할 것이다. `telnet`은 TCP 소켓에 연결하는 데 유용하고
 `socat`은 Unix와 TCP 소켓에 연결하는 데 사용할 수 있다.
 
-stdin 대신 Unix 소켓에 기반한 서버에서 REPL을 시작하면 재시작 없이 오랫동안
+stdin 대신 Unix 소켓에 기반을 둔 서버에서 REPL을 시작하면 재시작 없이 오랫동안
 실행되는 node 프로세스에 연결할 수 있다.
 
 `net.Server`와 `net.Socket` 인스턴스에서 실행되는 "완전한 기능의" (`terminal`) REPL의
@@ -120,7 +120,7 @@ https://gist.github.com/2053342 를 참고해라.
 `function () {}`
 
 사용자가 어떤 방법으로든 REPL을 종료했을 때 발생한다. 즉 repl에서 `.exit`를 입력하거나
-SIGINT 신호를 위해 Ctrl+C를 두번 입력하거나 `input` 스트림에서 "end" 신호를 위해
+SIGINT 신호를 위해 Ctrl+C를 두 번 입력하거나 `input` 스트림에서 "end" 신호를 위해
 Ctrl+D를 입력하는 등이다.
 
 `exit` 이벤트를 리스닝하는 예제:
@@ -135,7 +135,7 @@ Ctrl+D를 입력하는 등이다.
 
 <!-- type=misc -->
 
-REPL내에서 Control+D를 누르면 종료될 것이다. 다중라인 포현식은 입력이 될 수 있다.
+REPL내에서 Control+D를 누르면 종료될 것이다. 다중라인 표현식은 입력이 될 수 있다.
 전역 변수와 지역 변수에 모두 탭 자동완성을 지원한다.
 
 특수한 변수 `_` (언더스코어)는 마지막 표현식의 결과를 담고 있다.
@@ -165,7 +165,7 @@ REPL내 `context` 객체에서 지역변수로 나타나는 변수들이 있다.
 
 몇몇 REPL 명령어가 있다.
 
-  - `.break` - 다중 라인 표현식을 입력하는 동안 종종 멈추거나 표현식을 완성하기를 신경쓰지
+  - `.break` - 다중 라인 표현식을 입력하는 동안 종종 멈추거나 표현식을 완성하기를 신경 쓰지
     않을 때 사용한다. `.break`은 다시 시작할 것이다.
   - `.clear` - `context` 객체를 비어있는 객체로 리셋하고 모든 다중라인 표현식을
     정리한다.
@@ -176,7 +176,7 @@ REPL내 `context` 객체에서 지역변수로 나타나는 변수들이 있다.
   - `.load` - 파일에서 현재 REPL 세션으로 로드한다.
     >.load ./file/to/load.js
 
-REPL에서 다음의 키 조합은 다음과 같은 특수한 효가가 있다.
+REPL에서 다음의 키 조합은 다음과 같은 특수한 효과가 있다.
 
   - `<ctrl>C` - `.break` 키워드와 유사하다. 현재 명령어를 종료한다.
     비어있는 라인에서 두 번 입력하면 강제적으로 종료한다.

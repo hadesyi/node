@@ -30,7 +30,7 @@ API는 커스텀 스트림을 쉽게 만들 수 있도록 설계되었다.
 모든 스트림은 EventEmitter지만 추가적인 커스텀 메서드들과 프로퍼티들이 있고 이는
 Readable, Writable, Duplex냐에 따라 약간씩 다르다.
 
-스트림이 Readable이면서 Writable이면 아래 나와있는 모든 메서드와 이벤트를 구현한다.
+스트림이 Readable이면서 Writable이면 아래 나와 있는 모든 메서드와 이벤트를 구현한다.
 그러므로 [Duplex][]나 [Transform][]도 이 API에서 완전히 설명하고 있지만
 이 둘의 구현은 약간 다르다.
 
@@ -38,7 +38,7 @@ Readable, Writable, Duplex냐에 따라 약간씩 다르다.
 스트리밍 인터페이스를 **구현한다면** 아래의 [API for Stream Implementors][]도
 참고해라.
 
-거의 대부분의 Node 프로그램(얼마나 간단하냐에 상관없이)은 어떤 방법으로든 Stream을
+대부분의 Node 프로그램(얼마나 간단하냐에 상관없이)은 어떤 방법으로든 Stream을
 사용한다. 다음은 Node 프로그램에서 Stream을 사용하는 예제이다.
 
 ```javascript
@@ -94,7 +94,7 @@ Readable 스트림에서 데이터가 온다.
 Readable 스트림은 데이터를 받을 준비가 되었다고 알려줄 때까지 데이터를 보내지 않는다.
 
 Readable 스트림에는 **flowing 모드**와 **non-flowing 모드** 두 가지 "모드"가 있다.
-flowing mode에서는 기반시스템에서 데이터를 읽어와서 가능한한 빨리 프로그램에 제공한다.
+flowing mode에서는 기반시스템에서 데이터를 읽어와서 가능한 한 빨리 프로그램에 제공한다.
 non-flowing 모드에서 데이터 청크를 받으려면 `stream.read()`를 명시적으로 호출해야 한다.
 
 readable 스트림의 예제에는 다음이 포함되어 있다.
@@ -113,7 +113,7 @@ readable 스트림의 예제에는 다음이 포함되어 있다.
 스트림에서 데이터의 청크를 읽을 수 있을 때 `'readable'` 이벤트를 발생시킬 것이다.
 
 몇몇 경우에서는 `'readable'` 이벤트를 처리할 때 데이터가 기존에 없다면 데이터를
-의존 시스템에서 내부 퍼버로 읽도록 할 것이다.
+의존 시스템에서 내부 버퍼로 읽도록 할 것이다.
 
 ```javascript
 var readable = getReadableStreamSomehow();
@@ -131,7 +131,7 @@ readable.on('readable', function() {
 `data` 이벤트 리스너를 추가하면 스트림이 flowing 모드로 바뀌고 데이터를 사용할 수 있게
 되면 바로 핸들러로 전달할 것이다.
 
-가능한한 빨리 스트림에서 데이터를 모두 받으려면 다음과 같이 하는 것이 가장 좋은 방법이다.
+가능한 한 빨리 스트림에서 데이터를 모두 받으려면 다음과 같이 하는 것이 가장 좋은 방법이다.
 
 ```javascript
 var readable = getReadableStreamSomehow();
@@ -142,7 +142,7 @@ readable.on('data', function(chunk) {
 
 #### Event: 'end'
 
-더 이상 데이터가 없으면 이 이벤트가 발생한다.
+더는 데이터가 없으면 이 이벤트가 발생한다.
 
 데이터를 완전히 소비하지 않는 한 `end` 이벤트는 **발생하지 않는다**. 이는 flowing
 모드로 바꾸거나 끝까지 반복해서 `read()`를 호출해서 데이터를 모두 소비할 수 있다.
@@ -159,7 +159,7 @@ readable.on('end', function() {
 
 #### Event: 'close'
 
-의존 리소스(예를 들어 기반(backing) 파일 디스크립터)가 닫혔을 때 발생한다. 모든 스크림은
+의존 리소스(예를 들어 기반(backing) 파일 디스크립터)가 닫혔을 때 발생한다. 모든 스트림은
 이 이벤트를 발생할 것이다.
 
 #### Event: 'error'
@@ -216,7 +216,7 @@ readable.on('data', function(chunk) {
 
 #### readable.resume()
 
-이 메서드는 readable 스트림이 다시 `data` 이벤트를 발생키실 수 있게 한다.
+이 메서드는 readable 스트림에서 `data` 이벤트가 다시 발생할 수 있게 한다.
 
 이 메서드는 스트림을 flowing-mode로 바꿀 것이다. 스트림에서 데이터를 소비하기를
 원치 *않지만* `end` 이벤트는 받기를 *원한다면* 데이터의 흐름(flow)를 여는
@@ -233,7 +233,7 @@ readable.on('end', function(chunk) {
 #### readable.pause()
 
 이 메서드는 flowing-mode의 스트림이 `data` 이벤트 발생을 멈추도록 할 것이다.
-사용가능한 모든 데이터는 내부 버퍼에 남아있을 것이다.
+사용 가능한 모든 데이터는 내부 버퍼에 남아있을 것이다.
 
 이 메서드는 flowing mode에서만 유효한 메서드이다. non-flowing 스트림에서
 호출한 경우 flowing mode로 바꾸고 멈춘 채로 유지할 것이다.
@@ -285,7 +285,7 @@ process.stdin.pipe(process.stdout);
 ```
 
 기본적으로 소스 스트림이 `end`를 발생시켰을 때 목적지에서 [`end()`][]가 호출되므로
-`destination`는 더이상 writable이 아니다. 목적지 스트림을 열어둔 채로 두려면
+`destination`는 더는 writable이 아니다. 목적지 스트림을 열어둔 채로 두려면
 `options`으로 `{ end: false }`를 전달해라.
 
 이 코드는 마지막에 "Goodbye"를 쓸 수 있게 `writer`를 열어둔 채로 둔다.
@@ -308,12 +308,12 @@ reader.on('end', function() {
 
 목적지를 지정하지 않으면 모든 파이프를 제거한다.
 
-목적지를 지정했지만 목적지에 파이프가 설정되어 있지 않으면 아무런 동작도 일어나지 않는다.
+목적지를 지정했지만, 목적지에 파이프가 설정되어 있지 않으면 아무런 동작도 일어나지 않는다.
 
 ```javascript
 var readable = getReadableStreamSomehow();
 var writable = fs.createWriteStream('file.txt');
-// readable에서 오는 모든 데이터를 딱 1초동안만
+// readable에서 오는 모든 데이터를 딱 1초 동안만
 // 'file.txt'로 보낸다.
 readable.pipe(writable);
 setTimeout(function() {
@@ -328,7 +328,7 @@ setTimeout(function() {
 
 * `chunk` {Buffer | String} 읽기 큐에서 언쉬프트할 데이터의 청크
 
-이 함수는 소스에서 데이터를 가져와서 일부 데이터는 "소비하지 않아야" 하고 스트림을 다른
+이 함수는 소스에서 데이터를 가져와서 일부 데이터는 "소비하지 않아야"하고 스트림을 다른
 어딘가로 전달할 수 있는 파서가 스트림을 사용하는 등의 특수한 경우에 유용하다.
 
 프로그램에서 `stream.unshift(chunk)`를 호출해야만 한다면 [Transform][] 스트림을
@@ -378,7 +378,7 @@ Node v0.10 이전 버전의 스트림은 지금의 스트림 API 전체를 구�
 
 `'data'` 이벤트를 발생시키고 경고(advisory) 전용인 `pause()` 메서드를 가지는
 과거 버전의 Node 라이브러리를 사용하고 있다면 데이터 소스로 과거의 스트림을 사용하는
-[Readable][] 스크림을 생성하기 위해 `wrap()` 메서드를 사용할 수 있다.
+[Readable][] 스트림을 생성하기 위해 `wrap()` 메서드를 사용할 수 있다.
 
 이 함수를 호출해야 하는 경우는 극히 드물 것이지만 오래된 Node 프로그램과 라이브러리와 상호작용이
 
@@ -391,7 +391,7 @@ var Readable = require('stream').Readable;
 var myReader = new Readable().wrap(oreader);
 
 myReader.on('readable', function() {
-  myReader.read(); // etc.
+  myReader.read(); // 기타 등등
 });
 ```
 
@@ -420,15 +420,15 @@ writable 스트림 예제는 다음을 포함하고 있다.
 * `callback` {Function} 데이터의 청크를 내보냈을 때(flushed)의 콜백함수
 * Returns: {Boolean} 데이터를 모두 처리했으면 true이다.
 
-이 메서드는 기반 시스템에 데이터를 작성하고 데이터를 완전히 처리하고나면 전달받은
+이 메서드는 기반 시스템에 데이터를 작성하고 데이터를 완전히 처리하고 나면 전달받은
 콜백함수를 호출한다.
 
-반환값은 바로 이어서 작성해야 하는지를 나타낸다. 데이터가 내부적으로 버퍼링되었다면 `false`를
+반환 값은 바로 이어서 작성해야 하는지를 나타낸다. 데이터가 내부적으로 버퍼링 되었다면 `false`를
 반환할 것이고 그렇지 않으면 `true`를 반환할 것이다.
 
-이 반환값이 나타내는 경고는 엄격하다. 이 함수가 `false`를 반환했더라도 계속해서 작성이 가능할
-수도 있다. 하지만 작성은 메모리에 버퍼링될 것이므로 지나치게 이렇게 하지 않는 것이 좋다.
-대신 추가적인 데이터를 작성하기 전에 `drain` 에빈트를 기다려라.
+이 반환 값이 나타내는 경고는 엄격하다. 이 함수가 `false`를 반환했더라도 계속해서 작성이 가능할
+수도 있다. 하지만 작성은 메모리에 버퍼링 될 것이므로 지나치게 이렇게 하지 않는 것이 좋다.
+대신 추가적인 데이터를 작성하기 전에 `drain` 이벤트를 기다려라.
 
 #### Event: 'drain'
 
@@ -436,8 +436,8 @@ writable 스트림 예제는 다음을 포함하고 있다.
 시작해도 될 때를 나타내기 위해서 `drain` 이벤트가 발생한다.
 
 ```javascript
-// 제공된 writable 스트림에 백만번 데이터를 작성한다.
-// 역압력(back-pressure)부분을 주의깊게 봐라.
+// 제공된 writable 스트림에 백만 번 데이터를 작성한다.
+// 역압력(back-pressure)부분을 주의 깊게 봐라.
 function writeOneMillionTimes(writer, data, encoding, callback) {
   var i = 1000000;
   write();
@@ -449,14 +449,14 @@ function writeOneMillionTimes(writer, data, encoding, callback) {
         // 마지막!
         writer.write(data, encoding, callback);
       } else {
-        // 계속할 지 기다릴지 확인
+        // 계속할지 기다릴지 확인
         // 아직 완료되지 않았으므로 callback을 전달하지 않는다.
         ok = writer.write(data, encoding);
       }
     } while (i > 0 && ok);
     if (i > 0) {
       // 일찍 마쳐야 한다!
-      // drain되면 추가적인 데이터를 작성한다
+      // drain되면 추가적인 데이터를 작성한다.
       writer.once('drain', write);
     }
   }
@@ -469,7 +469,7 @@ function writeOneMillionTimes(writer, data, encoding, callback) {
 * `encoding` {String} `chunk`가 문자열인 경우 인코딩
 * `callback` {Function} 스트림이 완료되었을 때 호출한 콜백함수로 선택적인 값이다
 
-스트림에 작성할 데이터가 더이상 없을 때 이 함수를 호출해라. 콜백함수를 전달하면 `finish`
+스트림에 작성할 데이터가 더는 없을 때 이 함수를 호출해라. 콜백함수를 전달하면 `finish`
 이벤트의 리스너로 등록된다.
 
 [`end()`][]를 호출한 뒤에 [`write()`][]를 호출하면 오류가 발생할 것이다.
@@ -479,7 +479,7 @@ function writeOneMillionTimes(writer, data, encoding, callback) {
 http.createServer(function (req, res) {
   res.write('hello, ');
   res.end('world!');
-  // 더이상 데이터를 작성할 수 없다!
+  // 더는 데이터를 작성할 수 없다!
 });
 ```
 
@@ -493,7 +493,7 @@ for (var i = 0; i < 100; i ++) {
   writer.write('hello, #' + i + '!\n');
 }
 writer.end('this is the end\n');
-write.on('finish', function() {
+writer.on('finish', function() {
   console.error('all writes are now complete.');
 });
 ```
@@ -533,10 +533,14 @@ reader.pipe(writer);
 reader.unpipe(writer);
 ```
 
+#### Event: 'error'
+
+데이터를 쓰거나 파이프로 연결할 때 오류가 발생하면 이 이벤트가 발생한다.
+
 ### Class: stream.Duplex
 
 Duplex 스트림은 [Readable][] 인터페이스와 [Writable][] 인터페이스를 모두 구현한
-스트림이다. 사용방법은 윗 부분을 봐라.
+스트림이다. 사용방법은 윗부분을 봐라.
 
 Duplex 스트림의 예제는 다음을 포함하고 있다.
 
@@ -549,7 +553,7 @@ Duplex 스트림의 예제는 다음을 포함하고 있다.
 
 Transform 스트림은 입력을 어떤 방법으로 계산해서 출력하는 [Duplex][] 스트림이다.
 Transform은 [Readable][] 인터페이스와 [Writable][] 인터페이스를 모두 구현한다.
-사용방법은 윗 부분을 봐라.
+사용방법은 윗부분을 봐라.
 
 Transform 스트림 예제는 다음을 포함하고 있다.
 
@@ -561,11 +565,11 @@ Transform 스트림 예제는 다음을 포함하고 있다.
 
 <!--type=misc-->
 
-어떤 종류의 스트림이든지 스트림을 구현하기 위한 패턴은 동일하다.
+어떤 종류의 스트림이든지 스트림을 구현하기 위한 패턴은 같다.
 
 1. 자신만의 하위클래스에 적절한 부모클래스를 상속받는다. ([`util.inherits`][]
    메서드는 이 부분에 유용하다.)
-2. 생성자에서 적절한 부모 클래스의 생성자를 호출해서 내부적인 메카니즘이 적절하게
+2. 생성자에서 적절한 부모 클래스의 생성자를 호출해서 내부적인 메커니즘이 적절하게
    설정되도록 해라.
 2. 하나 이상의 특정 메서드를 구현해라.(자세한 내용은 아래에 나온다.)
 
@@ -620,7 +624,7 @@ Transform 스트림 예제는 다음을 포함하고 있다.
   </tr>
   <tr>
     <td>
-      <p>작성한 데이터를 처리 후 결과를 읽어들인다</p>
+      <p>작성한 데이터를 처리 후 결과를 읽어드린다</p>
     </td>
     <td>
       <p>[Transform](#stream_class_stream_transform_1)</p>
@@ -632,14 +636,14 @@ Transform 스트림 예제는 다음을 포함하고 있다.
 </table>
 
 구현 코드에서는 위의 [API for Stream Consumers][]에서 설명한 메서드를 호출하지 않는
-것이 아주 중요하다. 호출한다면 스트리밍 인터페이스를 사용하는 프로그렘에서 부작용이 발생할
+것이 아주 중요하다. 호출한다면 스트리밍 인터페이스를 사용하는 프로그램에서 부작용이 발생할
 잠재성을 갖게 된다.
 
 ### Class: stream.Readable
 
 <!--type=class-->
 
-`stream.Readable`은 [`_read(size)`][] 메서드의 의존 구현체를 확장도록 설계된
+`stream.Readable`은 [`_read(size)`][] 메서드의 의존 구현체를 확장토록 설계된
 추상 클래스다.
 
 프로그램에서 스트림을 사용하는 방법은 위의 [API for Stream Consumers][]를 참고해라.
@@ -649,7 +653,7 @@ Transform 스트림 예제는 다음을 포함하고 있다.
 
 <!--type=example-->
 
-다음은 Readable 스트림의 기본적인 예제다. 이 예제는 순차적으로 1부터
+다음은 Readable 스트림의 기본적인 예제다. 이 예제는 차례대로 1부터
 1,000,000까지 숫자를 발생시키고 끝난다.
 
 ```javascript
@@ -681,14 +685,14 @@ Counter.prototype._read = function() {
 그리고 이 구현체는 들어오는 데이터를 문자열로 변환하지 않는다.
 
 하지만 이는 [Transform][] 스트림으로 구현하는 것이 더 좋다.
-더 좋은 구현체는 아래 부분을 참고해라.
+더 좋은 구현체는 아랫부분을 참고해라.
 
 ```javascript
 // 간단한 데이터 프로토콜에 대한 파서.
-// "header"는 JSON 객체이고 이어서 두개의 \n 문자가 오로고 이어서 메시지 바디가 온다.
+// "header"는 JSON 객체이고 이어서 두 개의 \n 문자가 오고 이어서 메시지 바디가 온다.
 //
 // Note: 이는 Transform 스트림으로 훨씬 간단히 할 수 있다!
-// 이를 위해 Readable를 직접 사용하는 것이 차선책이다. 이에 대한 예제은 아래의
+// 이를 위해 Readable를 직접 사용하는 것이 차선책이다. 이에 대한 예제는 아래의
 // Transform 부분을 참고해라.
 
 var Readable = require('stream').Readable;
@@ -698,13 +702,13 @@ util.inherits(SimpleProtocol, Readable);
 
 function SimpleProtocol(source, options) {
   if (!(this instanceof SimpleProtocol))
-    return new SimpleProtocol(options);
+    return new SimpleProtocol(source, options);
 
   Readable.call(this, options);
   this._inBody = false;
   this._sawFirstCr = false;
 
-  // 소스는 소켓이나 파일같은 readable 스트림이다
+  // 소스는 소켓이나 파일 같은 readable 스트림이다
   this._source = source;
 
   var self = this;
@@ -793,6 +797,7 @@ SimpleProtocol.prototype._read = function(n) {
     디코드한다. 기본값=null
   * `objectMode` {Boolean} 이 스트림이 객체의 스트림처럼 동작해야 하는지 여부.
     즉, stream.read(n)이 n 크기의 Buffer 대신 문자열 값을 반환한다는 것을 의미한다.
+    기본값=false
 
 Readable 클래스를 확장하는 클래스에서 버퍼링 설정을 적절하게 초기화할 수 있도록
 Readable 생성자를 꼭 호출해라.
@@ -820,7 +825,7 @@ Readable 클래스 내부 함수에서만 호출해야 한다.
 `size` 아규먼트는 권고사항이다. "read"는 데이터를 반환하는 하나의 호출인
 구현체에서 얼마나 많은 데이터를 가여와야 하는지 지정하는데 이 값을 사용한다. TCP나 TLS처럼
 관련이 없는 구현체는 이 인자를 무시하고 데이터를 이용할 수 있을때마다 제공할 것이다. 예를 들면
-[`stream.push(chunk)`][]를 호출하기 전에 `size` 바이트가 사용가능할 때까지
+[`stream.push(chunk)`][]를 호출하기 전에 `size` 바이트가 사용 가능할 때까지
 "기다릴" 필요가 없다.
 
 #### readable.push(chunk, [encoding])
@@ -828,10 +833,10 @@ Readable 클래스 내부 함수에서만 호출해야 한다.
 * `chunk` {Buffer | null | String} 읽기 큐에 데이터의 청크를 넣는다
 * `encoding` {String} 문자열 청크의 인코딩. `'utf8'`나 `'ascii'`같은
   유효한 Buffer 인코딩이어야 한다.
-* return {Boolean} push를 계속해야 하는지 여부
+* return {Boolean} push를 계속 해야 하는지 여부
 
 Note: **이 함수는 Readable 구현체에서 호출해야 지 Readable 스트림를 소비하는 쪽에서
-호출하면 안된다.**
+호출하면 안 된다.**
 
 `push(chunk)`가 최소 한번 실행될 때까지는 `_read()` 함수는 다시 호출되지
 않을 것이다.
@@ -842,8 +847,8 @@ Note: **이 함수는 Readable 구현체에서 호출해야 지 Readable 스트�
 `push()` 메서드는 데이터를 읽기 큐에 명시적으로 넣을 것이다. 이 함수를 `null`로 호출하면
 데이터가 끝났다는(EOF) 신호가 올 것이다.
 
-이 API는 최대한 유연하게 설계되었다. 예를 들어 어떤 종류의 pause/resume 메카니즘과 데이터
-콜백을 가진 저수준 소스를 감싸고 있다고 해보자. 이러한 경우 다음과 같이 해서 저수준 소스를
+이 API는 최대한 유연하게 설계되었다. 예를 들어 어떤 종류의 pause/resume 메커니즘과 데이터
+콜백을 가진 저수준 소스를 감싸고 있다고 해보자. 이럴 때 다음과 같이 해서 저수준 소스를
 감쌀 수 있다.
 
 ```javascript
@@ -905,7 +910,7 @@ Writable 클래스를 확장한 클래스에서는 버퍼링 설정이 적절하
 
 * `chunk` {Buffer | String} 작성할 청크. `decodeStrings` 옵션이 `false`로
   설정하지 않았다면 항상 버퍼가 될 것이다.
-* `encoding` {String} 청크가 문자열인경우 인코딩 종류. 청크가 버퍼이면 무시한다.
+* `encoding` {String} 청크가 문자열인 경우 인코딩 종류. 청크가 버퍼이면 무시한다.
   `decodeStrings` 옵션을 명시적으로 `false`로 설정하지 않았다면 청크는
   **항상** 버퍼가 될 것이다.
 * `callback` {Function} 전달된 청크를 모두 처리했을 때
@@ -965,9 +970,9 @@ Duplex 클래스를 확장한 클래스에서는 버퍼링 설정을 적절히 �
 
 출력이 입력과 같은 크기이거나 청크의 수가 같거나 동시에 도착해야 한다는 등의 요구사항은 없다.
 예를 들면 Hash 스트림은 입력이 종료되었을 때 제공된 출력의 단일 청크만을 가질 것이다.
-zlib 스트림은 입력코다 아주 작거나 아주 큰 출력을 보낼 것이다.
+zlib 스트림은 입력보다 아주 작거나 아주 큰 출력을 보낼 것이다.
 
-Transform 클래스는 [`_read()`][]와 [`_write()`][] 메서드를 구현하기 보다는
+Transform 클래스는 [`_read()`][]와 [`_write()`][] 메서드를 구현하기보다는
 `_transform()` 메서드를 구현해야 하고 선택적으로 `_flush()` 메서드를
 구현할 수도 있다.(하단 참조)
 
@@ -981,7 +986,7 @@ Transform 클래스를 확장한 클래스에서는 버퍼링 설정을 적절�
 #### transform.\_transform(chunk, encoding, callback)
 
 * `chunk` {Buffer | String} 변환할 청크.  `decodeStrings` 옵션을
-  `false`로 설정하지 않는한 항상 버퍼가 될 것이다.
+  `false`로 설정하지 않는 한 항상 버퍼가 될 것이다.
 * `encoding` {String} 청크가 문자열인 경우 이 인코딩 타입이다.
   (`decodeStrings` 청크가 버퍼이면 무시한다.)
 * `callback` {Function} 제공된 청크의 처리가 끝났을 때 이 함수를 호출한다.
@@ -993,15 +998,15 @@ Note: **이 함수는 절대로 직접 호출하지 말아야 한다.**  자식 
 모든 Transform 스트림 구현체는 입력을 받고 출력을 생산하도록 `_transform`를
 제공해야 한다.
 
-해당 Transform 클래스가 무엇을 하던지 간에 쓰여진 바이트를 다루고 인터페이스의 읽기
+해당 Transform 클래스가 무엇을 하든지 간에 쓰인 바이트를 다루고 인터페이스의 읽기
 쪽에 이를 전달하도록 `_transform`을 수행해야 한다. 비동기 I/O를 수행하거나
 어떤 것을 처리하는 등이다.
 
 해당 입력 청크에서 출력을 생성하도록 해당 청크의 결과로 얼마나 많은 데이터를 출력하기
-원하는지에 따라 `transform.push(outputChunk)`를 0번이나 여러번 호출해라.
+원하는지에 따라 `transform.push(outputChunk)`를 0번이나 여러 번 호출해라.
 
 현재 청크가 완전히 소비되었을 때만 callback 함수를 호출한다. 특정 입력 청크의
-결과와 출력이 같을 수도 있고 같지 않을수도 있다.
+결과와 출력이 같을 수도 있고 같지 않을 수도 있다.
 
 이 메서드는 메서드를 정의한 클래스 내부에서 사용하고 사용자 프로그램이 직접 호출하면
 안되기 때문에 언더스코어로 시작한다. 하지만 자신의 확장 클래스에서 이 메서드를
@@ -1015,14 +1020,14 @@ Note: **이 함수는 절대로 직접 호출하지 말아야 한다.**  자식 
 Note: **이 함수는 절대로 직접 호출하지 말아야 한다.**  자식 클래스가 구현할 수도 있는데
 자식 클래스가 구현했다면 내부 Transform 클래스 메서드만 호출할 것이다.
 
-일부의 경우 변환 작업이 스트림의 끝에서 약간 더 많은 데이터를 발생시키도록 해야할 수도 있다.
+일부의 경우 변환 작업이 스트림의 끝에서 약간 더 많은 데이터를 발생시키도록 해야 할 수도 있다.
 예를 들어 `Zlib` 압축 스트림은 출력을 최적화해서 압축할 수 있도록 어떤 내부 상태를 저장할
-것이다. 하지만 결국에는 데이터가 완료될 수 있도록 남아있는 것으로 최선의 작업을 해야할
+것이다. 하지만 결국에는 데이터가 완료될 수 있도록 남아있는 것으로 최선의 작업을 해야 할
 필요가 있다.
 
-이러한 경우 쓰진 데이터를 모두 소비했지만 읽기 쪽에 끝났음을 알리는 `end`를 발생하기 전인
+이럴 때 쓰진 데이터를 모두 소비했지만 읽기 쪽에 끝났음을 알리는 `end`를 발생하기 전인
 아주 마지막에 호출될 `_flush` 메서드를 구현할 수 있다. `_transform`와 마찬가지로 적절하게
-0번이나 여러번 `transform.push(chunk)`를 호출하고 flush작업이 완료되었을 때
+0번이나 여러 번 `transform.push(chunk)`를 호출하고 flush 작업이 완료되었을 때
 `callback`을 호출해라.
 
 이 메서드는 메서드를 정의한 클래스 내부에서 사용하고 사용자 프로그램이 직접 호출하면
@@ -1035,7 +1040,7 @@ Note: **이 함수는 절대로 직접 호출하지 말아야 한다.**  자식 
 간단하게 구현할 수 있고 이는 위의 `parseHeader`와 `SimpleProtocol v1` 예제와
 비슷하다.
 
-이 예제에서는 인자로 입력을 제공하기 보다는 더 이상적인 Node 스트림 접근으로
+이 예제에서는 인자로 입력을 제공하기보다는 더 이상적인 Node 스트림 접근으로
 파서에 파이프를 연결한다.
 
 ```javascript
@@ -1056,7 +1061,7 @@ function SimpleProtocol(options) {
 
 SimpleProtocol.prototype._transform = function(chunk, encoding, done) {
   if (!this._inBody) {
-    // 청크가 \n\n를 가졌는지 검사한다
+    // 청크가 \n\n를 가졌는지 검사한다.
     var split = -1;
     for (var i = 0; i < chunk.length; i++) {
       if (chunk[i] === 10) { // '\n'
@@ -1110,7 +1115,7 @@ SimpleProtocol.prototype._transform = function(chunk, encoding, done) {
 ### Class: stream.PassThrough
 
 이는 입력 바이트를 출력으로 단순히 전달하는 [Transform][] 스트림의 별로 중요치 않은 구현체이다.
-이 클래스의 목적은 주로 예제나 테스트이지만 새로운 스트림에 대한 블럭을 구성하는 경우처럼
+이 클래스의 목적은 주로 예제나 테스트이지만 새로운 스트림에 대한 블록을 구성하는 경우처럼
 가끔은 유용한 경우가 있다.
 
 
@@ -1125,7 +1130,7 @@ SimpleProtocol.prototype._transform = function(chunk, encoding, done) {
 Writable 스트림과 Readable 스트림은 `_writableState.buffer`나
 `_readableState.buffer`를 각각 호출해서 내부 객체에 데이터를 버퍼링할 것이다.
 
-버퍼될 데이터의 양은 생성자에 전달한 `highWaterMark` 옵션에 따라 다르다.
+버퍼 될 데이터의 양은 생성자에 전달한 `highWaterMark` 옵션에 따라 다르다.
 
 Readable 스트림에서는 구현체가 [`stream.push(chunk)`][]를 호출했을 때 버퍼링이 일어난다.
 스트림의 컨슈머가 `stream.read()`를 호출하지 않은 경우 데이터가 소비될 때까지 데이터는
@@ -1135,24 +1140,24 @@ Writable 스트림에서는 사용자가 [`stream.write(chunk)`][]를 반복적�
 호출했을 때(`write()`가 `false`를 반환하더라도) 버퍼링이 일어난다.
 
 스트림의 목적은(특히 `pipe()` 메서드) 데이터 버퍼링을 수긍할만한 수준으로 제한해서 속도가
-제각각인 소스와 목적지가 사용가능한 메모리를 넘어서지 않게 하기 위함이다.
+제각각인 소스와 목적지가 사용 가능한 메모리를 넘어서지 않게 하기 위함이다.
 
 ### `stream.read(0)`
 
-데이터는 실제로 소비하지 않으면서 사용하는 readable 스트림의 메카니즘을 갱신하고자 하는
-경우가 있다. 이러한 경우에는 항상 null을 반환하는 `stream.read(0)`를 호출할 수 있다.
+데이터는 실제로 소비하지 않으면서 사용하는 readable 스트림의 메커니즘을 갱신하고자 하는
+경우가 있다. 이러면 항상 null을 반환하는 `stream.read(0)`를 호출할 수 있다.
 
-내부 읽기 버퍼가 `highWaterMark`보다 작고 스트림이 읽고 있는 중이 아닌 경우 `read(0)`를
+내부 읽기 버퍼가 `highWaterMark`보다 작고 스트림이 읽는 중이 아닌 경우 `read(0)`를
 호출하면 저수준의 `_read` 호출이 발생할 것이다.
 
-이렇게 해야하는 경우는 거의 없지만 Node 내부에서 이러한 작업을 하는 경우를
+이렇게 해야 하는 경우는 거의 없지만 Node 내부에서 이러한 작업을 하는 경우를
 볼 수 있을 것이다.(특히 Readable 스트림 클래스의 내부에서)
 
 ### `stream.push('')`
 
-0 바이트 문자열이나 버퍼를 밀어넣을 때([Object mode][]가 아닌 경우) 흥미로운 부가작용이
+0 바이트 문자열이나 버퍼를 밀어 넣을 때([Object mode][]가 아닌 경우) 흥미로운 부가작용이
 일어난다. 이는 [`stream.push()`][]를 호출한 *것이므로* `reading` 과정을 종료할 것이다.
-하지만 읽기 가능한 버퍼에는 어떤 데이터도 추가하지 *않으므로* 유저가 사용할 수 있는 데이터는
+하지만 읽기 가능한 버퍼에는 어떤 데이터도 추가하지 *않으므로* 사용자가 사용할 수 있는 데이터는
 전혀 없다.
 
 아주 드물게 지금은 제공할 데이터가 없지만 스트림의 컨슈머(또는 자신의 코드의 다른 곳에서)는
@@ -1170,31 +1175,31 @@ Writable 스트림에서는 사용자가 [`stream.write(chunk)`][]를 반복적�
 Node v0.10 이전 버전에서는 Readable 스트림 인터페이스가 더 간단하지만 동시에
 덜 강력하고 덜 유용하다.
 
-* `read()` 메서드를 호출하기를 기다리기 보다는 `'data'` 이벤트가 바로 발생하기 시작할
+* `read()` 메서드를 호출하기를 기다리기보다는 `'data'` 이벤트가 바로 발생하기 시작할
   것이다. 데이터를 다루는 방법을 결정하기 위해서 I/O를 사용해야 한다면 데이터를 잃어버리지
   않기 위해 어떤 종류든 버퍼에 청크를 저장해야 한다.
-* `pause()` 메서드는 보장된다기 보다는 권고사항이다. 즉, 스트림이 멈춰진 상태에 있더라도
+* `pause()` 메서드는 보장된다기보다는 권고사항이다. 즉, 스트림이 멈춰진 상태에 있더라도
   `'data'` 이벤트를 받을 준비를 하고 있어야 한다.
 
 Node v0.10에는 아래에서 설명한 Readable 클래스가 추가되었다. 오래된 Node 프로그램과의
-하위 호환성때문에 `'data'` 이벤트 핸들러가 추가되거나 `pause()` 혹은 `resume()`
+하위 호환성 때문에 `'data'` 이벤트 핸들러가 추가되거나 `pause()` 혹은 `resume()`
 메서드가 호출되었을 때 Readable 스트림은 "flowing mode"로 바뀐다. 그래서 새로운
 `read()` 메서드와 `'readable'` 이벤트를 사용하지 않더라도 `'data'` 청크를
 잃어버릴 걱정을 하지 않아도 된다.
 
-대부분의 프로그램은 정상적으로 잘 동작할 것이지만 이 기능은 다음과 같은 상황에
+프로그램 대부분은 정상적으로 잘 동작할 것이지만 이 기능은 다음과 같은 상황에
 대처한다.
 
 * `'data'` 이벤트 핸들러가 추가되지 않았을 때.
 * `pause()`와 `resume()` 메서드가 호출되지 않았을 때.
 
-에를 들면 다음 코드를 생각해 보자.
+예를 들면 다음 코드를 생각해 보자.
 
 ```javascript
 // 주의! 동작하지 않음!
 net.createServer(function(socket) {
 
-  // 'end' 메서드를 추가했지만 데이터를 소비하지 않는다
+  // 'end' 메서드를 추가했지만, 데이터를 소비하지 않는다.
   socket.on('end', function() {
     // 이 코드는 실행되지 않는다.
     socket.end('I got your message (but didnt read it)\n');
@@ -1222,7 +1227,7 @@ net.createServer(function(socket) {
 }).listen(1337);
 ```
 
-flowing-mode로 변경되는 새로운 Readable 스트림에 추가적으로 v0.10 이전 방식의 스트림은
+flowing-mode로 변경되는 새로운 Readable 스트림에 추가로 v0.10 이전 방식의 스트림은
 `wrap()` 메서드를 사용해서 Readable 클래스로 감쌀 수 있다.
 
 
@@ -1242,7 +1247,7 @@ object 모드의 Writable 스트림은 `stream.write(data, encoding)`의
 `encoding` 인자를 항상 무시할 것이다.
 
 특별한 값인 `null`은 object 모드 스트림에서도 여전히 특별한 값이다. 즉, object 모드의
-readable 스트림에서 `stream.read()`이 반환한 `null`은 더이상 데이터가 없음을
+readable 스트림에서 `stream.read()`이 반환한 `null`은 더는 데이터가 없음을
 의미하고 [`stream.push(null)`][]은 스트림 데이터가 끝났다(`EOF`)는 신호로 사용한다.
 
 Node 코어에서 object 모드인 스트림은 없다.
@@ -1284,7 +1289,7 @@ JSONParseStream.prototype._transform = function(chunk, encoding, cb) {
   this._buffer += this._decoder.write(chunk);
   // newline으로 분리한다
   var lines = this._buffer.split(/\r?\n/);
-  // 버퍼링된 마지막 부분의 라인을 유지한다
+  // 버퍼링 된 마지막 부분의 라인을 유지한다
   this._buffer = lines.pop();
   for (var l = 0; l < lines.length; l++) {
     var line = lines[l];
@@ -1294,7 +1299,7 @@ JSONParseStream.prototype._transform = function(chunk, encoding, cb) {
       this.emit('error', er);
       return;
     }
-    // 읽을 수 있는 컨슈머로 파싱된 객체를 밀어넣는다
+    // 읽을 수 있는 컨슈머로 파싱된 객체를 밀어 넣는다
     this.push(obj);
   }
   cb();
@@ -1310,7 +1315,7 @@ JSONParseStream.prototype._flush = function(cb) {
       this.emit('error', er);
       return;
     }
-    // 읽을 수 있는 컨슈머로 파싱된 객체를 밀어넣는다
+    // 읽을 수 있는 컨슈머로 파싱된 객체를 밀어 넣는다
     this.push(obj);
   }
   cb();
@@ -1318,7 +1323,7 @@ JSONParseStream.prototype._flush = function(cb) {
 ```
 
 상태 객체에는 프로그램에서 스트림의 상태를 디버깅할 수 있는 유용한 정보가 담겨있다. 이 객체를
-살펴보는 건 안전하지만 생성자에서 옵션 플래스를 설정하는 것을 넘어서서 객체를 수정하는 것은
+살펴보는 건 안전하지만, 생성자에서 옵션 플래그를 설정하는 것을 넘어서서 객체를 수정하는 것은
 안전하지 **않다**.
 
 

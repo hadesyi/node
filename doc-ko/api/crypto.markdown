@@ -36,11 +36,11 @@ OpenSSL의 hash, hmac, cipher, decipher, sign, verify 메서드의 랩퍼(wrappe
 
 ## crypto.createCredentials(details)
 
-인증서 객체를 생성한다. 선택사항인 details는 키를 가진 딕셔너리가 된다.
+인증서 객체를 생성한다. 선택사항인 details는 키를 가진 딕션어리가 된다.
 
-* `pfx` : PFX나 PKCS12로 암호화된 개인키, 인증서, CA 증명서를 담고 있는 문자열이나 버퍼
-* `key` : PEM으로 암호화된 개인키를 담고 있는 문자열
-* `passphrase` : 개인키나 pfx에 대한 암호문(passphrase) 문자열
+* `pfx` : PFX나 PKCS12로 암호화된 개인 키, 인증서, CA 증명서를 담고 있는 문자열이나 버퍼
+* `key` : PEM으로 암호화된 개인 키를 담고 있는 문자열
+* `passphrase` : 개인 키나 pfx에 대한 암호문(passphrase) 문자열
 * `cert` : PEM으로 암호화된 증명서를 담고 있는 문자열
 * `ca` : PEM으로 암호화된 믿을 수 있는 CA 증명서의 문자열이나 리스트
 * `crl` : PEM으로 암호화된 CRL(Certificate Revocation List)의 문자열 혹은 문자열의 리스트
@@ -59,7 +59,7 @@ OpenSSL의 hash, hmac, cipher, decipher, sign, verify 메서드의 랩퍼(wrappe
 
 `algorithm`은 플랫폼상의 OpenSSL 버전에서 사용할 수 있는 알고리즘에 의존한다.
 `'sha1'`, `'md5'`, `'sha256'`, `'sha512'`등이 있다. 최근 릴리즈에서는
-`openssl list-message-digest-algorithms`로 사용할 수 있는 다이제스트 알로리즘을 볼 수 있다.
+`openssl list-message-digest-algorithms`로 사용할 수 있는 다이제스트 알고리즘을 볼 수 있다.
 
 예제: 이 프로그램은 파일의 sha1 합을 생성한다.
 
@@ -84,7 +84,7 @@ OpenSSL의 hash, hmac, cipher, decipher, sign, verify 메서드의 랩퍼(wrappe
 데이터의 해시 다이제스트를 생성하는 클래스다.
 
 읽고 쓸 수 있는 [stream](stream.html)이다. 해시를 계산하는데 작성된 데이터를 사용한다.
-스트림의 작성가능한 쪽이 종료되고 나면 계산된 해시 다이제스트를 얻는데 `read()` 메서드를
+스트림의 작성 가능한 쪽이 종료되고 나면 계산된 해시 다이제스트를 얻는데 `read()` 메서드를
 사용해라. 레거시 `update`와 `digest` 메서드도 지원한다.
 
 `crypto.createHash`가 반환하는 클래스다.
@@ -93,13 +93,14 @@ OpenSSL의 hash, hmac, cipher, decipher, sign, verify 메서드의 랩퍼(wrappe
 
 전달한 `input_encoding`의 `data`로 해시 내용을 갱신한다.
 전달한 `input_encoding` 인코딩은 `'utf8'`, `'ascii'`, `'binary'`가 될 수 있다.
-인코딩을 지정하지 않으면 버퍼라고 가정한다.
+인코딩을 지정하지 않고 입력이 문자열이면 `'binary'` 인코딩을 사용한다. `data`가
+`Buffer`이면 `input_encoding`는 무시한다.
 
 이 함수는 스트림처럼 새로운 데이터가 올 때마다 여러 번 호출될 수 있다.
 
 ### hash.digest([encoding])
 
-해시되어야 하는 전달한 데이터의 모든 다이제스트를 계산한다.
+해시 되어야 하는 전달한 데이터의 모든 다이제스트를 계산한다.
 `encoding`은 `'hex'`, `'binary'`, `'base64'`가 될 수 있다.
 인코딩을 지정하지 않으면 버퍼를 반환한다.
 
@@ -110,7 +111,7 @@ Note: `hash` 객체는 `digest()` 메서드가 호출한 후에는 사용할 수
 
 hmac 객체를 생성하고 반환한다. 전달한 algorithm과 key의 암호화 해시이다.
 
-이는 읽고 쓸 수 있는 [stream](stream.html)이다. hmac을 계산하는데 쓰여진 데이터를 사용한다.
+이는 읽고 쓸 수 있는 [stream](stream.html)이다. hmac을 계산하는데 쓰인 데이터를 사용한다.
 스트림의 쓰기 가능한 쪽이 종료되고 나면 계산한 다이제스트를 얻는데 `read()` 메서드를 사용해라.
 레거시 `update`와 `digest` 메서드도 지원한다.
 
@@ -121,12 +122,12 @@ hmac 객체를 생성하고 반환한다. 전달한 algorithm과 key의 암호�
 
 암호화 hmac 내용을 생성하는 클래스다.
 
-`crypto.createHmac`가 리턴하는 클래스다.
+`crypto.createHmac`가 반환하는 클래스다.
 
 ### hmac.update(data)
 
 전달한 `data`로 hmac 내용을 갱신한다.
-이 함수는 스트림처럼 새로운 데이터가 올 때마다 여러번 호출될 수 있다.
+이 함수는 스트림처럼 새로운 데이터가 올 때마다 여러 번 호출될 수 있다.
 
 ### hmac.digest([encoding])
 
@@ -144,7 +145,7 @@ Note: `hmac` 객체는 `digest()` 메서드가 호출한 후에는 사용할 수
 `algorithm`는 OpenSSL에 의존적이다. `'aes192'` 등이 있다.
 OpenSSL 최근 릴리즈에서는 `openssl list-cipher-algorithms`로 사용할 수 있는
 암호화 알고리즘을 볼 수 있다.
-`password`는 key와 IV를 얻는데 사용하고 반드시 `'binary'`로 인코딩된 문자열이나
+`password`는 key와 IV를 얻는 데 사용하고 반드시 `'binary'`로 인코딩된 문자열이나
 [buffer](buffer.html)이어야 한다.
 
 이는 읽고 쓸 수 있는 [stream](stream.html)이다. 해시를 계산하는데 작성된 데이터를 사용한다.
@@ -177,11 +178,12 @@ Cipher 객체는 읽고 쓸 수 있는 [streams](stream.html)이다. 읽기 가�
 전달한 `input_encoding`의 인코딩의 `data`로 cipher를 갱신한다.
 `input_encoding`는 `'utf8'`, `'ascii'`, `'binary'`가 될 수 있다.
 인코딩을 지정하지 않으면 버퍼라고 가정한다.
+`data`가 `Buffer`면 `input_encoding`은 무시한다.
 
 `output_encoding`는 암호화된 데이터의 출력형식을 지정하고 `'binary'`, `'base64'`,
 `'hex'`가 될 수 있다. 기본값은 `'binary'`이다.
 
-암호화된 내용을 반환하고 스트림처럼 새로운 데이터로 여러번 호출할 수 있다.
+암호화된 내용을 반환하고 스트림처럼 새로운 데이터로 여러 번 호출할 수 있다.
 
 ### cipher.final([output_encoding])
 
@@ -192,8 +194,11 @@ Note: `cipher` 객체는 `final()` 메서드를 호출한 후에는 사용할 �
 
 ### cipher.setAutoPadding(auto_padding=true)
 
-입력데이터의 자동 패딩을 사용하지 않고 블럭 크기를 사용한다. `auto_padding`가 false이면 전체 입력데이터의 길이는 cipher의 블럭 크기의 배수가 되어야 하고 그렇지 않으면 `final`는 실패할 것이다.
-표준이 아닌 패딩은 유용한데 예를 들어 PKCS 패딩 대신 `0x0`를 사용할 수 있다. 이 함수는 반드시 `cipher.final` 이전에 호출해야 한다.
+입력데이터의 자동 패딩을 사용하지 않고 블록 크기를 사용한다. `auto_padding`가 false이면
+전체 입력데이터의 길이는 cipher의 블록 크기의 배수가 되어야 하고
+그렇지 않으면 `final`는 실패할 것이다.
+표준이 아닌 패딩은 유용한데 예를 들어 PKCS 패딩 대신 `0x0`를 사용할 수 있다.
+이 함수는 반드시 `cipher.final` 이전에 호출해야 한다.
 
 
 ## crypto.createDecipher(algorithm, password)
@@ -218,8 +223,9 @@ Decipher 객체는 읽고 쓸 수 있는 [streams](stream.html)이다. 읽기 �
 
 ### decipher.update(data, [input_encoding], [output_encoding])
 
-'binary'`, `'base64'`, `'hex'`로 인코딩된 `data`로 decipher를 갱신한다.
+`'binary'`, `'base64'`, `'hex'`로 인코딩된 `data`로 decipher를 갱신한다.
 인코딩을 지정하지 않으면 버퍼라고 가정한다.
+`data`가 `Buffer`면 `input_encoding`은 무시한다.
 
 `output_decoding`는 반환할 복호화된 평문의 형식을 지정한다. `'binary'`, `'ascii'`,
 `'utf8'`가 될 수 있고 버퍼를 지정하지 않으면 버퍼를 반환한다.
@@ -233,8 +239,9 @@ Note: `decipher` 객체는 `final()` 메서드가 호출된 후에는 사용할 
 
 ### decipher.setAutoPadding(auto_padding=true)
 
-표준 블럭 패팅없이 암호화된 데이터를 `decipher.final`가 확인하고 제거하지 않도록 자동 패딩을 사용하지 않을 수 있다. 입력데이터의 길이가 cipher 블락 크기의 배수일 때만 동작한다.
-이 함수는 반드시 데이터를 `decipher.update`로 스트리밍하기 전에 호출해야 한다.
+표준 블록 패딩없이 암호화된 데이터를 `decipher.final`가 확인하고 제거하지 않도록 자동 패딩을
+사용하지 않을 수 있다. 입력데이터의 길이가 cipher 블록 크기의 배수일 때만 동작한다.
+이 함수는 반드시 데이터를 `decipher.update`로 스트리밍 하기 전에 호출해야 한다.
 
 
 ## crypto.createSign(algorithm)
@@ -249,7 +256,7 @@ Note: `decipher` 객체는 `final()` 메서드가 호출된 후에는 사용할 
 
 `crypto.createSign`가 반환하는 클래스이다.
 
-Sign 객체는 쓸 수 있는 [streams](stream.html)이다. 사그니처를 생성할 때 작성한 데이터를
+Sign 객체는 쓸 수 있는 [streams](stream.html)이다. 시그니처를 생성할 때 작성한 데이터를
 사용한다. 모든 데이터를 쓰고 나면 `sign` 메서드가 시그니처를 반환할 것이다.
 레거시 `update` 메서드도 지원한다.
 
@@ -261,7 +268,7 @@ data로 sign 객체를 갱신한다.
 ### sign.sign(private_key, [output_format])
 
 전달한 갱신 데이터 모두를 sign을 통해서 서명을 계산한다.
-`private_key`는 서명에 사용할 PEM 인코딩된 개인키를 담고 있는 문자열이다.
+`private_key`는 서명에 사용할 PEM 인코딩된 개인 키를 담고 있는 문자열이다.
 
 `'binary'`, `'hex'`, `'base64'`가 될 수 있는 `output_format`의 서명을 반환한다.
 인코딩을 지정하지 않으면 버퍼를 반환한다.
@@ -271,7 +278,7 @@ Note: `sign` 객체는 `sign()` 메서드를 호출한 후에는 사용할 수 �
 ## crypto.createVerify(algorithm)
 
 전달한 algorithm으로 검증 객체를 생성하고 반환한다.
-이 함수는 위의 서명객체의 반영이다.
+이 함수는 위 서명객체의 반영이다.
 
 ## Class: Verify
 
@@ -319,7 +326,7 @@ Diffie-Hellman 키 교환을 생성하는 클래스이다.
 
 ### diffieHellman.generateKeys([encoding])
 
-개인 Diffie-Hellman 키값과 공개 Diffie-Hellman 키값을 생성하고 지정한 인코딩으로
+개인 Diffie-Hellman 킷값과 공개 Diffie-Hellman 킷값을 생성하고 지정한 인코딩으로
 공개키를 반환한다. 이 키는 다른 관련자에게 이동할 수 있다. 인코딩은 `'binary'`,
 `'hex'`, `'base64'`가 될 수 있다.
 인코딩을 지정하지 않으면 버퍼를 반환한다.
@@ -328,10 +335,10 @@ Diffie-Hellman 키 교환을 생성하는 클래스이다.
 
 다른 관련자의 공개키로 `other_public_key`를 사용하는 공유 시크릿을 계산하고 계산된
 공유 시크릿을 반환한다. 제공된 키는 지정한 `input_encoding`를 사용해서 해석된다. 시크릿은
-지정한 `output_encoding`을 사용하서 인코딩된다. 인코딩은 `'binary'`, `'hex'`,
+지정한 `output_encoding`을 사용해서 인코딩된다. 인코딩은 `'binary'`, `'hex'`,
 `'base64'`가 될 수 있고 입력 인코딩을 지정하지 않으면 버퍼로 간주한다.
 
-출력인코딩을 지정하지 않으면 버퍼를 반환한다.
+출력 인코딩을 지정하지 않으면 버퍼를 반환한다.
 
 ### diffieHellman.getPrime([encoding])
 
@@ -350,7 +357,7 @@ Diffie-Hellman 키 교환을 생성하는 클래스이다.
 
 ### diffieHellman.getPrivateKey([encoding])
 
-`'binary'`, `'hex'`, `'base64'`가 될 수 있는 지정한 인코딩의 Diffie-Hellman 개인키를
+`'binary'`, `'hex'`, `'base64'`가 될 수 있는 지정한 인코딩의 Diffie-Hellman 개인 키를
 반환한다. 인코딩을 지정하지 않으면 버퍼를 반환한다.
 
 ### diffieHellman.setPublicKey(public_key, [encoding])
@@ -360,7 +367,7 @@ Diffie-Hellman 공개키를 설정한다. 키 인코딩은 `'binary'`, `'hex'`, 
 
 ### diffieHellman.setPrivateKey(private_key, [encoding])
 
-Diffie-Hellman 개인키를 설정한다. 키 인코딩은 `'binary'`, `'hex'`, `'base64'`가
+Diffie-Hellman 개인 키를 설정한다. 키 인코딩은 `'binary'`, `'hex'`, `'base64'`가
 될 수 있다. 인코딩을 지정하지 않으면 버퍼로 간주한다.
 
 ## crypto.getDiffieHellman(group_name)
@@ -371,7 +378,7 @@ Diffie-Hellman 개인키를 설정한다. 키 인코딩은 `'binary'`, `'hex'`, 
 와 `'modp14'`, `'modp15'`, `'modp16'`, `'modp17'`, `'modp18'`
 ([RFC 3526][]에 정의되어 있다.)이다.
 반환된 객체는 위의 [crypto.createDiffieHellman()][]가 생성한 객체의
-인터페이스와 비슷하지만 키를 변경할 수 없다.(예를 들면
+인터페이스와 비슷하지만, 키를 변경할 수 없다.(예를 들면
 [diffieHellman.setPublicKey()][]를 사용해서)
 이 루틴을 사용했을 때의 이점은 관련자들이 미리 그룹 규칙을 생성하지 않고
 교환하지도 않아서 프로세서와 통신 시간을 모두 아낄 수 있다.
@@ -394,7 +401,7 @@ Diffie-Hellman 개인키를 설정한다. 키 인코딩은 `'binary'`, `'hex'`, 
 ## crypto.pbkdf2(password, salt, iterations, keylen, callback)
 
 비동기적인 PBKDF2가 전달한 password, salt, iterations에서 전달한 길이의 키를 얻기 위해
-의사난수의(pseudorandom) 함수 HMAC-SHA1를 적용한다.
+의사 난수의(pseudorandom) 함수 HMAC-SHA1를 적용한다.
 callback은 2개의 아규먼트 `(err, derivedKey)`를 받는다.
 
 ## crypto.pbkdf2Sync(password, salt, iterations, keylen)
@@ -403,7 +410,7 @@ callback은 2개의 아규먼트 `(err, derivedKey)`를 받는다.
 
 ## crypto.randomBytes(size, [callback])
 
-강력한 암호의 의사난수(pseudo-random) 데이터를 생성한다. 사용법:
+강력한 암호의 의사 난수(pseudo-random) 데이터를 생성한다. 사용법:
 
     // async
     crypto.randomBytes(256, function(ex, buf) {
@@ -416,14 +423,19 @@ callback은 2개의 아규먼트 `(err, derivedKey)`를 받는다.
       var buf = crypto.randomBytes(256);
       console.log('Have %d bytes of random data: %s', buf.length, buf);
     } catch (ex) {
-      // handle error
+      // 처리 오류
+      // 엔트로피 소스를 다 소비했을 가능성이 높다
     }
+
+NOTE: 강력한 암호의 데이터를 생성하기 위해 모인 엔트로피가 충분하지 않다면 오류를 던지거나
+콜백함수를 호출하면서 오류를 전달한다. 즉, 모든 엔트로피 소스를 소비했더라도 콜백이 없는
+`crypto.randomBytes`는 블락되지 않는다.
 
 ## crypto.pseudoRandomBytes(size, [callback])
 
 암호가 *아닌* 강력한 임의의 의사 데이터(pseudo-random data)를 생성한다.
-데이터가 충분히 길다면 반환된 데이터는 유일한 값이 될 것이지만 반드시 예측할 수 없는 것은
-아니다. 이 때문에 이 함수의 출력은 암호화된 키의 생성처럼 예측불가능성이 중요한 곳에서는
+데이터가 아주 길다면 반환된 데이터는 유일한 값이 될 것이지만 반드시 예측할 수 없는 것은
+아니다. 이 때문에 이 함수의 출력은 암호화된 키의 생성처럼 예측 불가능성이 중요한 곳에서는
 사용하지 말아야 한다.
 
 반면 사용방법은 `crypto.randomBytes`의 반대이다.
@@ -434,7 +446,7 @@ callback은 2개의 아규먼트 `(err, derivedKey)`를 받는다.
 `'buffer'`이다. crypto 모듈을 기본 인코딩으로 `'binary'`를 사용하는 레거시 프로그램과
 쉽게 호환성을 맞출 수 있다.
 
-새로운 프로그램은 버퍼를 기대할 것이므로 임시적으로만 이 값을 사용해라.
+새로운 프로그램은 버퍼를 기대할 것이므로 임시로만 이 값을 사용해라.
 
 ## Recent API Changes
 
@@ -445,19 +457,19 @@ Crypto 모듈은 통일된 Stream API의 개념과 바이너리 데이터를 다
 Buffers 대신 기본적으로 바이너리로 인코딩된 문자열을 받아들이고 반환한다.
 이는 기본적으로 Buffer를 대신 사용하도록 바뀌었다.
 
-이 변경사항은 전부는 아니지만 일부에서는 호환성을 깨뜨릴 것이다.
+이 변경사항은 전부는 아니지만, 일부에서는 호환성을 깨뜨릴 것이다.
 
 예를 들어 현재 Sign 클래스에 기본 인자를 사용하고 그 결과를 Verify 클래스에 전달하고
-데이터를 검사하지 않는다면 이전과 마차가지로 계속 동작할 것이다.
+데이터를 검사하지 않는다면 이전과 마찬가지로 계속 동작할 것이다.
 바이너리 문자열을 얻고 Verify 객체에 바이너리 문자열을 제공하는 곳에서
 Buffer를 얻을 것이고 Verify 객체에 Buffer를 제공할 것이다.
 
-하지만 Buffers에서 제대로 동작하지 않을 문자열 데이터로 어떤 작업을 한거나(문자열을
-이어붙힌다거나 데이터베이스에 저장하는 등) 인코딩 인자없이 암호화함수에 바이너리 문자열을
+하지만 Buffers에서 제대로 동작하지 않을 문자열 데이터로 어떤 작업을 한 거나(문자열을
+이어 붙인다거나 데이터베이스에 저장하는 등) 인코딩 인자 없이 암호화 함수에 바이너리 문자열을
 전달한다면 사용하고자 하는 인코딩을 지정하는 인코딩 인자를 제공해야 할 것이다.
 기본적으로 바이너리 문자열을 사용하는 이전 방식으로 변경하려면
 `crypto.DEFAULT_ENCODING` 필드를 'binary'로 설정해라.
-새로운 프로그램은 버퍼를 기대할 것이므로 이는 임시적으로만 사용해라.
+새로운 프로그램은 버퍼를 기대할 것이므로 이는 임시로만 사용해라.
 
 
 [createCipher()]: #crypto_crypto_createcipher_algorithm_password

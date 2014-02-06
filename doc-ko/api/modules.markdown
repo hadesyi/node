@@ -5,7 +5,7 @@
 <!--name=module-->
 
 매우 간단하게 모듈을 로딩할 수 있다. 노드에서는 파일 하나가 모듈 하나다. 예를 들어 `foo.js` 파일에서
-같은 디렉토리에 있는 `circle.js`를 로드하는 것을 살펴보자.
+같은 디렉터리에 있는 `circle.js`를 로드하는 것을 살펴보자.
 
 `foo.js`:
 
@@ -25,27 +25,33 @@
       return 2 * PI * r;
     };
 
-`circle.js` 모듈은 `area()`와 `circumference()`를 Export했다.
-뭔가 Export하려면 해당 객체를 `exports` 객체에 할당한다. `exports`는
-Export하기 위해 사용하는 객체다.
+`circle.js` 모듈은 `area()`와 `circumference()`를 익스포트했다.
+모듈 루트에 함수와 객체를 추가하려면 `exports` 객체에 추가하면 된다.
 
-`exports`는 추가할 때만 사용할 수 있는 `module.exports`의 참조이다.
-생성자같은 단일 아이템을 익스포트한다면 `module.exports`를 직접 사용해야 한다.
+모듈 내의 로컬 변수는 모듈이 함수로 감싸진 것처럼 외부에 노출되지 않는다.(private)
+이 예제에서 `PI` 변수는 `circle.js`의 private이다.
 
-    function MyConstructor (opts) {
-      //...
+모듈 전체가 하나의 함수로 익스포트하고 싶거나(생성자처럼) 한 번에 하나의 프로퍼티를 구성하는
+대신 한 번의 할당으로 전체 객체를 익스포트하고 싶다면 `exports`말고 `module.exports`에 할당해라.
+
+아래 `bar.js`는 생성자를 익스포트하는 `square` 모듈을 사용하고 있다.
+
+    var square = require('./square.js');
+    var mySquare = square(2);
+    console.log('The area of my square is ' + mySquare.area());
+
+`square` 모듈은 `square.js`에 정의되어 있다.
+
+    // exports에 할당하는 것이 모듈을 수정하지 않는다. 반드시 module.exports를 사용해라.
+    module.exports = function(width) {
+      return {
+        area: function() {
+          return width * width;
+        }
+      };
     }
 
-    // BROKEN: exports를 수정하지 않는다
-    exports = MyConstructor;
-
-    // 생성자를 제대로 익스포트한다
-    module.exports = MyConstructor;
-
-로컬 변수는 모듈 외부에 노출되지 않는다(private). 이 예제에서 `PI`는 `circle.js`에서만
-사용할 수 있는 private 변수다.
-
-이 모듈 시스템은 `module`이라는 모듈에 구현했다.
+이 모듈 시스템은 `require("module")` 모듈에 구현되어 있다.
 
 ## Cycles
 
@@ -107,7 +113,7 @@ Node 모듈 중에서는 바이너리로 컴파일해야 하는 모듈이 있다
 
 코어 모듈은 Node 소스코드의 `lib/` 폴더에 들어 있다.
 
-모듈을 require하면 항상 코어 모듈이 먼저 로드된다. 예를 들어, `require('http')`로 로드될 것
+모듈을 require 하면 항상 코어 모듈이 먼저 로드된다. 예를 들어, `require('http')`로 로드될 것
 같은 파일이 있어도 Node에 들어 있는 HTTP 모듈이 반환된다.
 
 ## File Modules
@@ -124,7 +130,7 @@ Interpret한다. 그리고 `.node` 파일은 컴파일한 addon 모듈이라서 
 `require('home/marco/foo.js')`는 `/home/marco/foo.js` 파일을 로드한다.
 
 모듈을 상대 경로로 찾으려면 모듈 이름이 `'./'`로 시작하면 된다. 즉, `foo.js`라는 파일에서
-`require('./circle')`라고 호출하면 같은 디렉토리에 있는 `circle.js`를 로드한다.
+`require('./circle')`라고 호출하면 같은 디렉터리에 있는 `circle.js`를 로드한다.
 
 '/'이나 './'로 시작하지 않으면 그냥 파일이 아니라 "코어 모듈"이나 `node_modules` 폴더에 있는
 모듈을 찾는다.
@@ -137,11 +143,11 @@ Interpret한다. 그리고 `.node` 파일은 컴파일한 addon 모듈이라서 
 <!--type=misc-->
 
 `require()`에 넘어온 모듈 ID가 네이티브 모듈을 가리키는 것도 아니고, 그 모듈 ID가
-`'/'`, `'./'`, `'../'`로 시작하지도 않으면 Node는 그 모듈의 상위 디렉토리에서 찾기 시작한다.
-상위 디렉토리에 있는 `/node_modules`에서 해당 모듈을 찾는다.
+`'/'`, `'./'`, `'../'`로 시작하지도 않으면 Node는 그 모듈의 상위 디렉터리에서 찾기 시작한다.
+상위 디렉터리에 있는 `/node_modules`에서 해당 모듈을 찾는다.
 
-만약 못 찾으면 상위상위 디렉토리에서 찾고, 그래도 못 찾으면 상위상위상위 디렉토리에서 찾는다.
-루트 디렉토리에 다다를 때까지 계속 찾는다.
+만약 못 찾으면 상위 디렉터리에서 찾고, 그래도 못 찾으면 상위의 상위 디렉터리에서 찾는다.
+루트 디렉터리에 다다를 때까지 계속 찾는다.
 
 예를 들어, `'home/ry/projects/foo.js'`라는 파일에서 `requre('bar.js')`라고 호출하면
 다음과 같은 순서로 모듈을 찾는다:
@@ -170,8 +176,8 @@ Interpret한다. 그리고 `.node` 파일은 컴파일한 addon 모듈이라서 
 
 Node가 package.json을 읽고 사용하기 때문에 이런 게 가능하다.
 
-그 디렉토리에 package.json 파일이 없으면 Node는 `index.js`나 `index.node` 파일을 찾는다.
-package.json 파일이 없으면 `require('./some-library')`는 다음과 같은 파일을 로드한다:
+그 디렉터리에 package.json 파일이 없으면 Node는 `index.js`나 `index.node` 파일을 찾는다.
+package.json 파일이 없으면 `require('./some-library')`는 다음과 같은 파일을 로드한다.
 
 * `./some-library/index.js`
 * `./some-library/index.node`
@@ -195,7 +201,7 @@ package.json 파일이 없으면 `require('./some-library')`는 다음과 같은
 
 모듈은 찾은(resolved) 파일 이름을 키로 캐싱한다. `node_modules` 폴더에서 로딩하는 것이기 때문에
 같은 require 코드라도 호출하는 위치에 따라 찾은 파일이 다를 수 있다. 즉, `require('foo')`가
-다른 파일을 찾아낸다면 다른 객체를 리턴한다.
+다른 파일을 찾아낸다면 다른 객체를 반환한다.
 
 ## The `module` Object
 
@@ -204,8 +210,8 @@ package.json 파일이 없으면 `require('./some-library')`는 다음과 같은
 
 * {Object}
 
-모듈에서 `module` 변수는 해당 모듈 객체를 가리킨다. 특히 `module.exports`는
-`exports` 전역모듈(module-global)로 접근할 수 있다. `module`은 글로벌 변수가
+모듈에서 `module` 변수는 해당 모듈 객체를 가리킨다. `module.exports`는
+`exports` 전역모듈(module-global)로 편리하게 접근할 수 있다. `module`은 글로벌 변수가
 아니라 모듈마다 다른 객체를 가리키는 로컬 변수다.
 
 ### module.exports
@@ -213,8 +219,10 @@ package.json 파일이 없으면 `require('./some-library')`는 다음과 같은
 * {Object}
 
 `module.exports` 객체는 Module 시스템이 자동으로 만들어 준다. Export하려는 객체를
-`module.exports`에 할당해서 직접 만든 객체가 반환되게 할 수도 있다.
-`.js`라는 모듈을 만들어 보자:
+`module.exports`에 할당해서 직접 만든 객체가 반환되게 할 수도 있다. 원하는 객체를
+`exports`에 할당하면 원하는 것과는 달리 로컬 `exports` 변수가 다시 바인딩 될 것이다.
+
+`.js`라는 모듈을 만들어 보자.
 
     var EventEmitter = require('events').EventEmitter;
 
@@ -226,7 +234,7 @@ package.json 파일이 없으면 `require('./some-library')`는 다음과 같은
       module.exports.emit('ready');
     }, 1000);
 
-이 모듈은 다음과 같이 사용한다:
+이 모듈은 다음과 같이 사용한다.
 
     var a = require('./a');
     a.on('ready', function() {
@@ -234,7 +242,7 @@ package.json 파일이 없으면 `require('./some-library')`는 다음과 같은
     });
 
 `module.exports`에 할당하는 것은 바로 실행되도록 해야 한다. 콜백으로 할당문이 실행되는 것을
-미루면 뜻대로 동작하지 않는다. 다음과 같이 하지 마라:
+미루면 뜻대로 동작하지 않는다. 다음과 같이 하지 마라.
 
 x.js:
 
@@ -247,6 +255,26 @@ y.js:
     var x = require('./x');
     console.log(x.a);
 
+#### exports alias
+
+모듈 내에서 사용 가능한 `exports` 변수는 처음에는 `module.exports`에 대한 참조이다. 일반적인
+변수와 마찬가지로 새로운 값을 `exports`에 할당하면 이전 값에 대한 바인딩을 사라진다.
+
+이 동작을 설명하기 위해 다음의 `require()`에 대한 가상 구현체를 생각해 보자.
+
+    function require(...) {
+      // ...
+      function (module, exports) {
+        // Your module code here
+        exports = some_func;        // exports를 재할당한다. exports는 더는 단축키가
+                                    // 아니고 아무것도 익스포트하지 않는다.
+        module.exports = some_func; // 모듈이 0을 익스포트하게 한다.
+      } (module, module.exports);
+      return module;
+    }
+
+`exports`와 `module.exports`의 관계가 어렵게 느껴진다면 그냥 `exports`는 무시하고
+`module.exports`만 사용해라.
 
 ### module.require(id)
 
@@ -256,9 +284,9 @@ y.js:
 `module.require` 메소드로 모듈을 로드하면 해당 모듈에서 require()를 호출하는 것처럼 모듈을
 로드한다.
 
-이 메소드를 호출하려면 일단 `module` 객체의 레퍼런스를 얻어야 한다. `module` 객체의 레퍼런스는
+이 메소드를 호출하려면 일단 `module` 객체의 참조를 얻어야 한다. `module` 객체의 참조는
 해당 모듈에서만 접근할 수 있고 `require()`는 `module`이 아니라 `module.exports`를 리턴하기
-때문에 해당 모듈에서 module 객체의 레퍼런스를 직접 리턴해야 한다.
+때문에 해당 모듈에서 module 객체의 참조를 직접 반환해야 한다.
 
 
 ### module.id
@@ -304,7 +332,7 @@ y.js:
 `require()`로 모듈을 찾을 때 정확한 파일 경로가 궁금하면 `require.resolve()` 함수로 얻어온다.
 
 require.resolve가 정확히 어떻게 동작하는지 슈도 코드로 살펴보자. 이 슈도 코드는 여태까지
-설명한 것을 모두 합쳐 놓은 것이다:
+설명한 것을 모두 합쳐 놓은 것이다.
 
     require(X) from module at path Y
     1. If X is a core module,
@@ -361,17 +389,17 @@ require.resolve가 정확히 어떻게 동작하는지 슈도 코드로 살펴�
 
 <!-- type=misc -->
 
-Node는 모듈을 못 찾으면 환경변수 `NODE_PATH`에 등록된 경로에서도 찾는다. 절대경로를
-`NODE_PATH`에 할당하면 되는데 콜론(`:`)으로 구분해서 절대경로를 여러 개 등록할 수 있다(주의:
+Node는 모듈을 못 찾으면 환경변수 `NODE_PATH`에 등록된 경로에서도 찾는다. 절대 경로를
+`NODE_PATH`에 할당하면 되는데 콜론(`:`)으로 구분해서 절대 경로를 여러 개 등록할 수 있다(주의:
 윈도우는 세미콜론(`;`)으로 구분한다).
 
-그리고 Node는 다른 디렉토리에서도 찾는다:
+그리고 Node는 다른 디렉터리에서도 찾는다:
 
 * 1: `$HOME/.node_modules`
 * 2: `$HOME/.node_libraries`
 * 3: `$PREFIX/lib/node`
 
-`$HOME`은 사용자의 홈 디렉토리이고 `$PREFIX`는 노드에 설정된 `node_prefix`를 말한다.
+`$HOME`은 사용자의 홈 디렉터리고 `$PREFIX`는 노드에 설정된 `node_prefix`를 말한다.
 
 왜 그런지 말하자면 길다. 무엇보다 `node_modules` 폴더를 이용해 모듈을 로컬에 설치하는 것이 좋다.
 이 방법이 속도도 더 빠르고 더 안전하다.
@@ -380,7 +408,7 @@ Node는 모듈을 못 찾으면 환경변수 `NODE_PATH`에 등록된 경로에�
 
 <!-- type=misc -->
 
-node로 어떤 파일을 실행하면 `require.main`은 그 파일의 `module` 객체를 가리킨다. 그래서
+Node로 어떤 파일을 실행하면 `require.main`은 그 파일의 `module` 객체를 가리킨다. 그래서
 Node로 파일을 직접 실행한 건지 아닌지 알 수 있다:
 
     require.main === module
@@ -395,10 +423,10 @@ Node로 파일을 직접 실행한 건지 아닌지 알 수 있다:
 
 <!-- type=misc -->
 
-`require()` 함수는 웬만한 디렉토리면 어디에서나 사용할 수 있다. `dpkg`, `rpm` 같은 패키지
+`require()` 함수는 웬만한 디렉터리면 어디에서나 사용할 수 있다. `dpkg`, `rpm` 같은 패키지
 매니저처럼 `npm`도 네이티브 Node 패키지를 아무런 수정 없이 빌드하게 할 수 있다.
 
-다음은 어떻게 디렉토리를 구성해야 모듈이 제대로 동작하는지 설명한다:
+다음은 어떻게 디렉터리를 구성해야 모듈이 제대로 동작하는지 설명한다:
 
 모듈은 `/usr/lib/node/<some-package>/<some-version>`에 설치하는 것을 권장한다. 어떤
 패키지의 어떤 버전이 설치됐는지 한 눈에 알 수 있어 좋다.
@@ -408,7 +436,7 @@ Node로 파일을 직접 실행한 건지 아닌지 알 수 있다:
 패키지에 의존할 수 있는데 충돌이 있거나 서로(cycle) 의존할 수도 있다.
 
 Node는 로드할 모듈을 찾을 때 `node_modules` 폴더에서 필요한 모듈을 찾는다. 그중에 심볼릭 링크가
-있으면 그 링크가 가리키는 모듈도 잘 찾는다. 다음과 같이 모듈을 찾는 매커니즘은 매우 간단하다:
+있으면 그 링크가 가리키는 모듈도 잘 찾는다. 다음과 같이 모듈을 찾는 메커니즘은 매우 간단하다:
 
 * `/usr/lib/node/foo/1.2.3/` - 버전이  1.2.3인 `foo` 패키지
 * `/usr/lib/node/bar/4.3.2/` - `foo`가 의존하는 `bar` 패키지
@@ -422,10 +450,10 @@ Node는 로드할 모듈을 찾을 때 `node_modules` 폴더에서 필요한 모
 패키지에서 `require('quux')`라고 호출하면
 `/usr/lib/node/bar/4.3.2/node_modules/quux`가 가리키는 모듈을 가져온다.
 
-최적화된 방법으로 모듈을 찾는 방법이 있는데 `/usr/lib/node` 디렉토리가 아니라
+최적화된 방법으로 모듈을 찾는 방법이 있는데 `/usr/lib/node` 디렉터리가 아니라
 `/usr/lib/node_modules/<name>/<version>`에 모듈을 넣는다. 그러면 Node는
 `/usr/node_modules`이나 `/node_modules`에서는 모듈을 찾지 않는다.
 
 `/usr/lib/node_modules` 폴더를 환경 변수 `$NODE_PATH`에 넣으면 Node REPL에서도 모듈을
 사용할 수 있다. `require()`를 호출한 파일이 있는 곳에서부터 상대경로로 `node_modules` 폴더에
-있는 모듈을 찾기 때문에 패키지는 그 `node_modules` 폴더 중 한 곳에 넣으면 된다.
+있는 모듈을 찾기 때문에 패키지는 그 `node_modules` 폴더 중 한곳에 넣으면 된다.

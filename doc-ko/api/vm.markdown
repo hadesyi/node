@@ -27,9 +27,9 @@ GitHub](https://github.com/joyent/node/issues?labels=vm&state=open)
 알려진 핵심이슈는 컨텍스트내에서 사용한 전역객체를 직접 제어할 방법을 V8이 제공하지
 않는다는 것이다. 그 결과 `sandbox` 객체의 프로퍼티를 컨텍스트에서 이용할 수
 있더라도 `sandbox`의 `prototype`에서 어떤 프로퍼티도 이용할 수 없다. 게다가
-컨텍스트의 전역범위내에서 `this` 표현식은 sandbox 대신 빈 객체(`{}`)가 된다.
+컨텍스트의 전역범위 내에서 `this` 표현식은 sandbox 대신 빈 객체(`{}`)가 된다.
 
-실행할 때 컨텍스트로 복사되고 실행후에 변경사항을 전파하기 위해 다시 복사된다.
+실행할 때 컨텍스트로 복사되고 실행 후에 변경사항을 전파하기 위해 다시 복사된다.
 
 ### Globals
 
@@ -38,15 +38,15 @@ GitHub](https://github.com/joyent/node/issues?labels=vm&state=open)
 `Object.getPrototypeOf([]) === Array.prototype`같은 일반적인 표현식이
 기대한 결과가 되지 않는다는 의미이다.
 
-이러한 문제들 중 일부는 Github의 `vm`에 대한 이슈에 우회방법이 리스트되어 있다.
+이러한 문제 중 일부는 Github의 `vm`과 관련된 이슈에 우회 방법이 나와 있다.
 예를 들어 `Array.isArray`는 `Array` 문제로 우회할 수 있다.
 
 ## vm.runInThisContext(code, [filename])
 
 `vm.runInThisContext()`는 `code`를 컴파일하고 실행해서 결과를 반환한다. 실행되는 코드는
-지역범위에 접근하지 않는다. `filename`은 선택사항이며 스택트레이스에서만 사용된다.
+지역 범위에 접근하지 않는다. `filename`은 선택사항이며 스택트레이스에서만 사용된다.
 
-같은 코드를 실행하는데 `vm.runInThisContext`과 `eval`을 사용한 예제
+다음은 같은 코드를 실행하는데 `vm.runInThisContext`과 `eval`을 사용한 예제이다.
 
     var localVar = 123,
         usingscript, evaled,
@@ -63,8 +63,8 @@ GitHub](https://github.com/joyent/node/issues?labels=vm&state=open)
     // localVar: 123, usingscript: 1
     // localVar: 1, evaled: 1
 
-`vm.runInThisContext`가 지역범위에 접근하지 않기 때문에 `localVar`는 변경되지 않았다.
-`eval`은 지역범위에 접근하기 때문에 `localVar`가 변경되었다.
+`vm.runInThisContext`가 지역 범위에 접근하지 않기 때문에 `localVar`는 변경되지 않았다.
+`eval`은 지역 범위에 접근하기 때문에 `localVar`가 변경되었다.
 
 `code`에 문법오류가 있는 경우 `vm.runInThisContext`는 stderr에 문법오류를 발생시키고 예외를
 던진다.
@@ -73,7 +73,7 @@ GitHub](https://github.com/joyent/node/issues?labels=vm&state=open)
 ## vm.runInNewContext(code, [sandbox], [filename])
 
 `vm.runInNewContext`는 `code`를 컴파일하고 `sandbox`에서 실행한 뒤 결과를 반환한다.
-실행되는 코드는 지역범위에 접근하지 않는다. `sandbox` 객체는 `code`의 전역객체로 사용될
+실행되는 코드는 지역 범위에 접근하지 않는다. `sandbox` 객체는 `code`의 전역객체로 사용될
 것이다.
 `sandbox`와 `filename`는 선택사항이고 `filename`는 스택트레이스에서만 사용된다.
 
@@ -92,7 +92,7 @@ GitHub](https://github.com/joyent/node/issues?labels=vm&state=open)
 
     // { animal: 'cat', count: 3, name: 'kitty' }
 
-신뢰할 수 없는 코드를 실행하는 것은 아주 신중을 요하는 복잡한 작업이다. 의도치않은 전역변수의 누수를 막는데
+신뢰할 수 없는 코드를 실행하는 것은 아주 신중을 필요로 하는 복잡한 작업이다. 의도치 않은 전역변수의 누수를 막는데
 `vm.runInNewContext`가 아주 유용하지만 신뢰하지 못하는 코드를 안전하게 실행하려면 프로세스를 분리할 필요가
 있다.
 
@@ -103,7 +103,7 @@ GitHub](https://github.com/joyent/node/issues?labels=vm&state=open)
 
 `vm.runInContext`는 `code`를 컴파일하고 `context`에서 실행한 뒤 결과를 반환한다.
 (V8) 컨텍스트는 내장된 객체 및 기능들과 함께 하나의 전역객체로 이루어져 있다.
-실행되는 코드는 지역범위에 접근하지 않고 전역객체는 `code`의 전역객체로 사용될
+실행되는 코드는 지역 범위에 접근하지 않고 전역객체는 `code`의 전역객체로 사용될
 `context`내에 있다.
 `filename`는 선택사항이고 스택트레이스에서만 사용된다.
 
@@ -125,7 +125,7 @@ GitHub](https://github.com/joyent/node/issues?labels=vm&state=open)
 `createContext`는 새로 생성된 컨텍스트의 전역객체를 초기화하기 위해서 제공된 샌드박스 객체의 얕은 복제를
 수행할 것이다.
 
-신뢰할 수 없는 코드를 실행하는 것은 아주 신중을 요하는 복잡한 작업이다. 의도치않은 전역변수의 누수를 막는데
+신뢰할 수 없는 코드를 실행하는 것은 아주 신중을 필요로 하는 복잡한 작업이다. 의도치 않은 전역변수의 누수를 막는데
 `vm.runInContext`가 아주 유용하지만 신뢰하지 못하는 코드를 안전하게 실행하려면 프로세스를 분리할 필요가
 있다.
 
@@ -135,16 +135,16 @@ GitHub](https://github.com/joyent/node/issues?labels=vm&state=open)
 ## vm.createContext([initSandbox])
 
 `vm.createContext`는 뒤이은 `vm.runInContext` 호출의 두 번째 파라미터로 사용하기에 적합한 새로운
-컨텍스트를 생성한다. (V8) 컨텍스트트는 내장된 객체 및 기능들과 함께 하나의 전역객체로 이루어져 있다.
+컨텍스트를 생성한다. (V8) 컨텍스트는 내장된 객체 및 기능들과 함께 하나의 전역객체로 이루어져 있다.
 선택적인 아규먼트인 `initSandbox`는 컨텍스트가 사용할 전역객체의 초기 내용을 생성하려고 얕은
 복사가 될 것이다.
 
 ## vm.createScript(code, [filename])
 
 `createScript`는 `code`를 컴파일하지만 실행하지는 않는다. 대신 컴파일된 코드를 나타내는
-`vm.Script` 객체를 반환한다. 이 스크립트는 아래의 메서드들을 사용해서 나중에 여려 번
-실행할 수 있다. 반환된 스크립트는 어떤 전역객체에도 바인딩되지 않는다. 반환된 스크립트는 매번
-실행되기 전에 해당 실행에 대해서 바인딩된다. `filename`는 선택사항이고 스택트레이스에서만
+`vm.Script` 객체를 반환한다. 이 스크립트는 아래의 메서드들을 사용해서 나중에 여러 번
+실행할 수 있다. 반환된 스크립트는 어떤 전역객체에도 바인딩 되지 않는다. 반환된 스크립트는 매번
+실행되기 전에 해당 실행에 대해서 바인딩 된다. `filename`는 선택사항이고 스택트레이스에서만
 사용될 것이다.
 
 `code`에 문법오류가 있는 경우 `createScript`는 stderr에 문법오류를 출력하고
@@ -157,12 +157,12 @@ GitHub](https://github.com/joyent/node/issues?labels=vm&state=open)
 
 ### script.runInThisContext()
 
-`vm.runInThisContext`와 유사하지만 미리 컴파일된 `Script` 객체의 메서드이다.
+`vm.runInThisContext`와 유사하지만, 미리 컴파일된 `Script` 객체의 메서드이다.
 `script.runInThisContext`는 `script`의 코드를 실행하고 결과를 반환한다.
-실행되는 코드는 지역범위에 접근하지 않지만 `global` 객체에는 접근한다.
+실행되는 코드는 지역 범위에 접근하지 않지만 `global` 객체에는 접근한다.
 (v8: 실제 컨텍스트에서)
 
-한번 코드를 컴파일하고 여러 번 실행하는 `script.runInThisContext`를 사용하는 예제
+다음은 한번 코드를 컴파일하고 여러 번 실행하는 `script.runInThisContext`를 사용하는 예제이다.
 
     var vm = require('vm');
 
@@ -181,9 +181,9 @@ GitHub](https://github.com/joyent/node/issues?labels=vm&state=open)
 
 ### script.runInNewContext([sandbox])
 
-`vm.runInNewContext`와 유사하지만 미리 컴파일된 `Script` 객체의 메서드이다.
+`vm.runInNewContext`와 유사하지만, 미리 컴파일된 `Script` 객체의 메서드이다.
 `script.runInNewContext`는 전역객체인 `sandbox`와 함께 `script`의 코드를 실행하고 결과를 반환한다.
-실행되는 코드는 지역범위에 접근하지 않는다. `sandbox`는 선택사항이다.
+실행되는 코드는 지역 범위에 접근하지 않는다. `sandbox`는 선택사항이다.
 
 예제: 전역변수가 증가하고 전역변수를 설정하는 코드를 컴파일하고 이 코드를 여러 번 실행한다.
 이 전역변수들은 sandbox안에 있다.
@@ -205,6 +205,6 @@ GitHub](https://github.com/joyent/node/issues?labels=vm&state=open)
 
     // { animal: 'cat', count: 12, name: 'kitty' }
 
-신뢰할 수 없는 코드를 실행하는 것은 아주 신중을 요하는 복잡한 작업이다. 의도치않은 전역변수의 누수를 막는데
+신뢰할 수 없는 코드를 실행하는 것은 아주 신중을 필요로 하는 복잡한 작업이다. 의도치 않은 전역변수의 누수를 막는데
 `script.runInNewContext`가 아주 유용하지만 신뢰하지 못하는 코드를 안전하게 실행하려면 프로세스를
 분리할 필요가 있다.
