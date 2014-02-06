@@ -2,12 +2,12 @@
 
     Stability: 3 - Stable
 
-이 모듈을 접근하려면 `require('dns')`를 사용해라. 쓰레드 풀에서 `getaddrinfo(3)`를
+이 모듈에 접근하려면 `require('dns')`를 사용해라. 스레드 풀에서 `getaddrinfo(3)`를
 사용하는 `dns.lookup`를 제외한 dns 모듈의 모든 메서드들은 C-Ares를 사용한다.
-C-Ares가 `getaddrinfo`보다 훨신 더 빠르지만 시스템 리졸버는 다른 프로그램이 어떻게
-동작하는 지에 더 관련이 있다. 사용자가 `net.connect(80, 'google.com')`나
+C-Ares가 `getaddrinfo`보다 훨씬 더 빠르지만, 시스템 리졸버는 다른 프로그램이 어떻게
+동작하는지에 더 관련이 있다. 사용자가 `net.connect(80, 'google.com')`나
 `http.get({ host: 'google.com' })`를 사용하면 `dns.lookup`메서드가 사용된다.
-빠르게 다량의 검색을 해야하는 사용자들은 C-Ares를 쓰는 메서드를 사용해야한다.
+빠르게 다량의 검색을 해야 하는 사용자들은 C-Ares를 쓰는 메서드를 사용해야 한다.
 
 다음은 `'www.google.com'`를 처리하고 반대로 반환된 IP 주소를 도메인으로 처리하는
 예제다.
@@ -65,7 +65,7 @@ IP v6 주소의 문자열 표현이다. `family` 아규먼트는 정수 4나 6�
 
 ## dns.resolve6(domain, callback)
 
-`dns.resolve4()`와 같지만 IPv6 조회(`AAAA` 레코드)에만 사용한다.
+`dns.resolve4()`와 같지만, IPv6 조회(`AAAA` 레코드)에만 사용한다.
 
 
 ## dns.resolveMx(domain, callback)
@@ -77,32 +77,32 @@ IP v6 주소의 문자열 표현이다. `family` 아규먼트는 정수 4나 6�
 
 ## dns.resolveTxt(domain, callback)
 
-`dns.resolve()`와 같지만 텍스트 조회(`TXT` 레코드)에만 사용한다.
-`addresses`는 `domain`에서 사용가능한 텍스트 레코드의 배열이다.
+`dns.resolve()`와 같지만, 텍스트 조회(`TXT` 레코드)에만 사용한다.
+`addresses`는 `domain`에서 사용 가능한 텍스트 레코드의 배열이다.
 (예시: `['v=spf1 ip4:0.0.0.0 ~all']`)
 
 ## dns.resolveSrv(domain, callback)
 
 `dns.resolve()`와 같지만 서비스 레코드(`SRV` 레코드)에만 사용한다.
-`addresses`는 `domain`에서 사용가능한 SRV 레코드의 배열이다. SRV 레코드의 프로퍼티들은
+`addresses`는 `domain`에서 사용 가능한 SRV 레코드의 배열이다. SRV 레코드의 프로퍼티들은
 우선순위, 중요도, 포트, 이름이다. (예시:
 `[{'priority': 10, {'weight': 5, 'port': 21223, 'name': 'service.example.com'}, ...]`)
 
 ## dns.resolveNs(domain, callback)
 
-`dns.resolve()`와 같지만 네임서버 레코드(`NS` 레코드)에만 사용한다.
-`addresses`는 `domain`에서 사용가능한 네임서버 레코드의 배열이다.
+`dns.resolve()`와 같지만 네임 서버 레코드(`NS` 레코드)에만 사용한다.
+`addresses`는 `domain`에서 사용 가능한 네임 서버 레코드의 배열이다.
 (예시: `['ns1.example.com', 'ns2.example.com']`)
 
 ## dns.resolveCname(domain, callback)
 
 `dns.resolve()`와 같지만 공인된 이름(canonical name) 레코드(`CNAME` 레코드)에만
-사용한다. `addresses`는 `domain`에서 사용가능한 공인된 이름 레코드의 배열이다.
+사용한다. `addresses`는 `domain`에서 사용 가능한 공인된 이름 레코드의 배열이다.
 (예시: `['bar.example.com']`)
 
 ## dns.reverse(ip, callback)
 
-반대로 ip 주소를 도메인명의 배열로 처리한다.
+반대로 ip 주소를 도메인 명의 배열로 처리한다.
 
 콜백은 `(err, domains)` 아규먼트를 받는다.
 
@@ -120,7 +120,7 @@ IP v6 주소의 문자열 표현이다. `family` 아규먼트는 정수 4나 6�
 - `dns.NOTIMP`: DNS 서버가 요청된 작업을 구현하지 않음.
 - `dns.REFUSED`: DNS 서버가 조회를 거절함.
 - `dns.BADQUERY`: 형식이 잘못된 DNS 조회.
-- `dns.BADNAME`: 형식이 잘못된 도메인명.
+- `dns.BADNAME`: 형식이 잘못된 도메인 명.
 - `dns.BADFAMILY`: 지원되지 않는 주소 패밀리.
 - `dns.BADRESP`: 형식이 잘못된 DNS 응답.
 - `dns.CONNREFUSED`: DNS 서버에 접속할 수 없음.
@@ -131,10 +131,9 @@ IP v6 주소의 문자열 표현이다. `family` 아규먼트는 정수 4나 6�
 - `dns.DESTRUCTION`: 채널이 파괴됨.
 - `dns.BADSTR`: 형식이 잘못된 문자열.
 - `dns.BADFLAGS`: 허용되지 않는 플래그가 지정됨.
-- `dns.NONAME`: 주어진 호스트명이 숫자가 아님.
+- `dns.NONAME`: 주어진 호스트 명이 숫자가 아님.
 - `dns.BADHINTS`: 허용되지 않는 힌트 플래그가 지정됨.
 - `dns.NOTINITIALIZED`: c-ares 라이브러리 초기화가 아직 수행되지 않음.
 - `dns.LOADIPHLPAPI`: iphlpapi.dll을 로딩하는 데 오류발생.
 - `dns.ADDRGETNETWORKPARAMS`: GetNetworkParams 함수를 찾을 수 없음.
 - `dns.CANCELLED`: DNS 조회가 취소됨.
-

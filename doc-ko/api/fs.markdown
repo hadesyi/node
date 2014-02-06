@@ -8,7 +8,7 @@
 `require('fs')`를 사용해라. 모든 함수는 비동기 방식과 동기방식이 있다.
 
 비동기 방식은 항상 마지막 파라미터로 완료 콜백함수를 받는다. 완료 콜백에 전달되는 함수는
-메서드에 따라 다르지만 첫 아규먼트는 항상 예외로 사용한다. 작업이 성공적으로 완료되면
+메서드에 따라 다르지만, 첫 아규먼트는 항상 예외로 사용한다. 작업이 성공적으로 완료되면
 첫 아규먼트는 `null`이나 `undefined`가 될 것이다.
 
 동기형식을 사용할 때는 모든 예외가 즉시 던져진다. try/catch를 사용해서 예외를
@@ -57,13 +57,13 @@
 _강력히 추천한다_. 동기방식은 모든 연결을 멈추고 작업이 완료될 때까지
 전체 프로세스를 블락킹할 것이다.
 
-파일명에 상대경로를 사용할 수 있지만 이 상대 경로는 `process.cwd()`이 대한
+파일명에 상대경로를 사용할 수 있지만, 이 상대 경로는 `process.cwd()`이 대한
 상대경로가 될 것이다.
 
-대부분의 fs함수는 callback인자를 생략할 수 있게 한다. callback인자를 생략하면
+대부분의 fs 함수는 callback 인자를 생략할 수 있게 한다. callback 인자를 생략하면
 오류는 무시하지만 폐기(deprecation) 경고는 출력하는 기본 콜백을 사용한다.
 
-**IMPORTANT**: 콜백 생략은 폐기되었다. v0.12는 기대하는대로 오류를 던질 것이다.
+**IMPORTANT**: 콜백 생략은 폐기되었다. v0.12는 기대하는 대로 오류를 던질 것이다.
 
 
 ## fs.rename(oldPath, newPath, callback)
@@ -84,7 +84,7 @@ _강력히 추천한다_. 동기방식은 모든 연결을 멈추고 작업이 �
 
 ## fs.truncate(path, len, callback)
 
-비동기 truncate(2). 발생할 수 있는 오류인자 외에 완료 콜백에 전달되는 인자는 없다.
+비동기 truncate(2). 발생할 수 있는 오류 인자 외에 완료 콜백에 전달되는 인자는 없다.
 
 ## fs.truncateSync(path, len)
 
@@ -183,8 +183,8 @@ Mac OS X에서만 사용할 수 있다.
 비동기 symlink(2). 전달한 완료콜백에는 예외 아규먼트 외에 다른 아규먼트는 없다.
 `type` 아규먼트는 `'dir'`이나 `'file'`, `'junction'`이 가능하다.(기본값은 `'file'`이다)
 이 옵션은 윈도우에서만 사용된다.(다른 플랫폼에서는 무시한다.)
-Windows의 junction에서는 목적지경로가 절대경로여야 한다. `'junction'`을 사용하면 `destination`
-아규먼트를 절대경로로 자동으로 정규화한다.
+Windows의 junction에서는 목적지 경로가 절대 경로여야 한다. `'junction'`을 사용하면 `destination`
+아규먼트를 절대 경로로 자동으로 정규화한다.
 
 ## fs.symlinkSync(srcpath, dstpath, [type])
 
@@ -202,7 +202,7 @@ Windows의 junction에서는 목적지경로가 절대경로여야 한다. `'jun
 
 비동기 realpath(2). `callback`은 두 개의 아규먼트 `(err, resolvedPath)`를 받는다.
 상대경로를 처리하려면 `process.cwd`를 사용해야 할 것이다. `cache`는 실제 경로를 알기
-위해 지정한 경로 처리를 강제하거나 추가적인 `fs.stat` 호출을 피하기 위해 사용할 수 있는
+위해 지정한 경로 처리를 강제하거나 추가적인 `fs.stat` 호출을 피하고자 사용할 수 있는
 매핑된 경로의 객체리터럴이다.
 
 예제:
@@ -244,8 +244,8 @@ Windows의 junction에서는 목적지경로가 절대경로여야 한다. `'jun
 
 ## fs.readdir(path, callback)
 
-비동기 readdir(3). 디렉토리의 내용을 읽는다.
-콜백은 두 아규먼트 `(err, files)`를 받고 `files`는 디렉토리에서 `'.'`와 `'..'`를
+비동기 readdir(3). 디렉터리의 내용을 읽는다.
+콜백은 두 아규먼트 `(err, files)`를 받고 `files`는 디렉터리에서 `'.'`와 `'..'`를
 제외한 파일명들의 배열이다.
 
 ## fs.readdirSync(path)
@@ -343,14 +343,14 @@ POSIX 시스템에서 존재하지 않는 파일에 대한 심볼릭 링크도 `
 
 `offset`과 `length`는 작성할 버퍼의 부분을 결정한다.
 
-`position`은 이 데이터를 작성해야할 파일의 시작 위치부터의 오프셋을 참조한다. `position`이
+`position`은 이 데이터를 작성해야 할 파일의 시작 위치부터의 오프셋을 참조한다. `position`이
 `null`이면 데이터는 현재 위치에 작성할 것이다.
 pwrite(2)를 봐라.
 
 콜백은 세 아규먼트 `(err, written, buffer)`를 받고 `written`는 `buffer`에서
-얼마나 많은 _바이트_가 작성되었는 지를 가리킨다.
+얼마나 많은 _바이트_가 작성되었는지를 가리킨다.
 
-콜백을 기다리지 않고 같은 파일에 여러번 `fs.write`를 사용하는 것은 안전하지 않다. 이 경우에
+콜백을 기다리지 않고 같은 파일에 여러 번 `fs.write`를 사용하는 것은 안전하지 않다. 이 경우에
 `fs.createWriteStream`를 사용하기를 강력하게 추천한다.
 
 리눅스에서는 추가(append) 모드로 파일을 열었을 경우 위치 쓰기(positional write)가 동작하지
@@ -366,11 +366,11 @@ pwrite(2)를 봐라.
 
 `buffer`는 데이터가 작성될 버퍼이다.
 
-`offset`은 버퍼내에서 쓰기 시작할 오프셋이다.
+`offset`은 버퍼 내에서 쓰기 시작할 오프셋이다.
 
-`length`는 읽어들일 바이트 수를 지정하는 정수이다.
+`length`는 읽을 바이트 수를 지정하는 정수이다.
 
-`position`은 파일에서 읽어들이기 시작하는 위치를 지정하는 정수이다.
+`position`은 파일에서 읽기 시작하는 위치를 지정하는 정수이다.
 `position`가 `null`이면 데이터는 파일의 현재 위치에서 읽을 것이다.
 
 콜백은 세 아규먼트 `(err, bytesRead, buffer)`를 받는다.
@@ -401,7 +401,7 @@ pwrite(2)를 봐라.
 
 ## fs.readFileSync(filename, [options])
 
-`fs.readFile`의 동기버전이다. `filename`의 내용을 반환한다.
+`fs.readFile`의 동기 버전이다. `filename`의 내용을 반환한다.
 
 `encoding`옵션을 지정하면 이 함수는 문자열을 반환하고 `encoding`을 지정하지 않으면
 버퍼를 반환한다.
@@ -432,7 +432,7 @@ pwrite(2)를 봐라.
 
 ## fs.writeFileSync(filename, data, [options])
 
-`fs.writeFile`의 동기버전이다.
+`fs.writeFile`의 동기 버전이다.
 
 ## fs.appendFile(filename, data, [options], callback)
 
@@ -456,7 +456,7 @@ pwrite(2)를 봐라.
 
 ## fs.appendFileSync(filename, data, [options])
 
-`fs.appendFile`의 동기버전이다.
+`fs.appendFile`의 동기 버전이다.
 
 ## fs.watchFile(filename, [options], listener)
 
@@ -465,10 +465,10 @@ pwrite(2)를 봐라.
 `filename`의 변경사항을 감시한다. 콜백 `listener`는 파일이 접근될 때마다 호출될
 것이다.
 
-두번째 아규먼트는 선택사항이다. `options`을 전달하는 경우 `options`은 두 불리언값의
+두 번째 아규먼트는 선택사항이다. `options`을 전달하는 경우 `options`은 두 불리언값의
 멤버변수 `persistent`와 `interval`을 담고 있는 객체가 될 것이다. `persistent`는
 파일을 감사하는 동안 계속해서 프로세스가 실행되어야 하는지를 나타낸다. `interval`은
-얼마나 자주 대상을 확인해야 하는지를 밀리초로 나타낸다.
+얼마나 자주 대상을 확인해야 하는지를 밀리 초로 나타낸다.
 기본값은 `{ persistent: true, interval: 5007 }`이다.
 
 `listener`는 두 아규먼트 현재의 stat 객체와 이전의 stat 객체를 받는다.
@@ -498,10 +498,10 @@ pwrite(2)를 봐라.
 
     Stability: 2 - Unstable.
 
-`filename`의 변경사항을 감시하고 `filename`은 파일이나 디렉토리가 될 수 있다.
+`filename`의 변경사항을 감시하고 `filename`은 파일이나 디렉터리가 될 수 있다.
 반환객체는 [fs.FSWatcher](#fs_class_fs_fswatcher)이다.
 
-두번째 아규먼트는 선택사항이다. `options`을 전달한다면 `options`은 불리언값의 멤버변수
+두 번째 아규먼트는 선택사항이다. `options`을 전달한다면 `options`은 불리언값의 멤버변수
 `persistent`를 담고 있는 객체여야 한다. `persistent`는 파일을 감사하는 동안 계속해서
 프로세스가 실행되어야 하는지를 나타낸다. 기본값은 `{ persistent: true }`이다.
 
@@ -526,19 +526,19 @@ pwrite(2)를 봐라.
 * SunOS 시스템에서 (Solaris와 SmartOS 포함) 이 기능은 `event ports`를 사용한다.
 * Windows 시스템에서 이 기능은 `ReadDirectoryChangesW`에 달려있다.
 
-몇가지 이유로 의존하는 기능을 사용할 수 없다면 `fs.watch`를 사용할 수 없을 것이다.
-예를 들어 네트워크 파일시스템(NFS, SMB 등)에서 파일이나 디렉토리를 감시하면 종종 신뢰할 수
-있을만큼 동작하지 않거나 전혀 작동하지 않는다.
+몇 가지 이유로 의존하는 기능을 사용할 수 없다면 `fs.watch`를 사용할 수 없을 것이다.
+예를 들어 네트워크 파일시스템(NFS, SMB 등)에서 파일이나 디렉터리를 감시하면 종종 신뢰할 수
+있을 만큼 동작하지 않거나 전혀 작동하지 않는다.
 
-stat 폴링(polling)을 사용하지만 더 느리고 덜 신뢰적인 `fs.watchFile`는 여전히
+stat 폴링(polling)을 사용하지만, 더 느리고 덜 신뢰적인 `fs.watchFile`는 여전히
 사용할 수 있다.
 
 #### Filename Argument
 
 <!--type=misc-->
 
-모든 클랫폼에서 `filename` 아규먼트를 콜백에 전달하는 것은 아니다. (현재는 Linux와
-Windows에서만 지원한다.) 이를 지원하는 플랫폼에서 조차도 `filename`을 항상 제공한다고
+모든 플랫폼에서 `filename` 아규먼트를 콜백에 전달하는 것은 아니다. (현재는 Linux와
+Windows에서만 지원한다.) 이를 지원하는 플랫폼에서조차도 `filename`을 항상 제공한다고
 보장하는 것은 아니다. 그러므로 콜백에 `filename` 아규먼트가 항상 전달된다고 가정하지 말고
 null 일 경우를 위한 대체(fallback) 로직을 가지고 있어야 한다.
 
@@ -554,7 +554,7 @@ null 일 경우를 위한 대체(fallback) 로직을 가지고 있어야 한다.
 ## fs.exists(path, callback)
 
 파일시스템을 확인해서 전달한 경로가 존재하는지 검사한다.
-존재여부fmf true나 false로 `callback`을 호출한다. 예제:
+존재여부를 true나 false로 `callback`을 호출한다. 예제:
 
     fs.exists('/etc/passwd', function (exists) {
       util.debug(exists ? "it's there" : "no passwd!");
@@ -569,12 +569,12 @@ null 일 경우를 위한 대체(fallback) 로직을 가지고 있어야 한다.
 
 ## fs.existsSync(path)
 
-`fs.exists`의 동기버전이다.
+`fs.exists`의 동기 버전이다.
 
 ## Class: fs.Stats
 
-`fs.stat()`, `fs.lstat()`, `fs.fstat()`가 리턴하는 객체고 이 함수들의 동기함수들도
-이 타입을 리턴한다.
+`fs.stat()`, `fs.lstat()`, `fs.fstat()`가 반환하는 객체고 이 함수들의 동기함수들도
+이 타입을 반환한다.
 
  - `stats.isFile()`
  - `stats.isDirectory()`
@@ -584,7 +584,7 @@ null 일 경우를 위한 대체(fallback) 로직을 가지고 있어야 한다.
  - `stats.isFIFO()`
  - `stats.isSocket()`
 
-정규 파일에 대한 `util.inspect(stats)`는 다음과 유사한 문자열을 리턴할
+정규 파일에 대한 `util.inspect(stats)`는 다음과 유사한 문자열을 반환할
 것이다.
 
     { dev: 2114,
@@ -602,10 +602,10 @@ null 일 경우를 위한 대체(fallback) 로직을 가지고 있어야 한다.
       ctime: Mon, 10 Oct 2011 23:24:11 GMT }
 
 `atime`, `mtime`, `ctime`는 [Date][MDN-Date] 객체의 인스턴스이고
-이 객체의 값들을 비교하려면 적절한 메서드를 사용해야한다. 대부분의 경우
-[getTime()][MDN-Date-getTime]는 1980년 1월 _1일부터 경과된
-밀리초를 반환할 것이고 이 정수값은 비교하기에 충분하다. 하지만 명확하지
-않은 정보를 보여주는데 사용할 수 있는 추가적인 메서드들이 있다. 더 자세한
+이 객체의 값들을 비교하려면 적절한 메서드를 사용해야 한다. 대부분의 경우
+[getTime()][MDN-Date-getTime]는 _1970년 1월 1일 00:00:00 UTC_부터
+지난 시간을 밀리 초로 반환할 것이고 이 정숫값은 비교하기에 충분하다. 하지만 명확하지
+않은 정보를 보여주는 데 사용할 수 있는 추가적인 메서드들이 있다. 더 자세한
 내용은 [MDN JavaScript Reference][MDN-Date] 페이지에 있다.
 
 [MDN-Date]: https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Date
@@ -625,15 +625,15 @@ null 일 경우를 위한 대체(fallback) 로직을 가지고 있어야 한다.
       autoClose: true
     }
 
-`options`는 전체 파일대신 읽어드릴 파일의 범위인 `start`와 `end`를 포함할 수 있다.
-`start`와 `end` 둘 다 포함하고 0 부터 시작한다. `encoding`은 `'utf8'`,
+`options`는 전체 파일 대신 읽어드릴 파일의 범위인 `start`와 `end`를 포함할 수 있다.
+`start`와 `end` 둘 다 포함하고 0부터 시작한다. `encoding`은 `'utf8'`,
 `'ascii'`, `'base64'`가 될 수 있다.
 
 `autoClose`가 false이면 오류가 발생하더라도 파일 디스크립터를 닫지 않는다. 파일 디스크립터를
 닫고 파일 디스크립터가 새는 문제가 없도록 하는 것은 개발자의 책임이다. `autoClose`를 true로
 설정하면(기본 동작) `error`나 `end`에서 파일 디스크립터를 자동으로 닫을 것이다.
 
-100 바이트 길이인 파일의 마지막 10 바이트를 읽는 예제.
+100 바이트 길이인 파일의 마지막 10바이트를 읽는 예제.
 
     fs.createReadStream('sample.txt', {start: 90, end: 99});
 
@@ -688,9 +688,9 @@ WriteStream의 파일이 열렸을 때 발생한다.
 ### Event: 'change'
 
 * `event` {String} fs 변경사항의 타입
-* `filename` {String} 변경된 파일명 (적절하거나 사용가능하다면)
+* `filename` {String} 변경된 파일명 (적절하거나 사용 가능하다면)
 
-감시하는 디렉토리나 파일명에서 어떤 변경이 생겼을 때 발생한다.
+감시하는 디렉터리나 파일명에서 어떤 변경이 생겼을 때 발생한다.
 더 자세한 내용은 [fs.watch](#fs_fs_watch_filename_options_listener)를 봐라.
 
 ### Event: 'error'

@@ -2,11 +2,11 @@
 
     Stability: 2 - Unstable
 
-이 모듈을 사용하려면 `require('readline')`를 실행해라. Readline은 줄마다 
+이 모듈을 사용하려면 `require('readline')`를 실행해라. Readline은 줄마다
 스트림(`process.stdin`같은)으로 읽을 수 있다.
 
-이 모듈을 한번 호출하고 나면 인터페이스를 종료할 때까지 node 프로그램은 종료되지 
-않을 것이다. 어떻게 프로그램을 안전하게(gracefully) 종료할 수 있는 지 보여주는 
+이 모듈을 한번 호출하고 나면 인터페이스를 종료할 때까지 node 프로그램은 종료되지
+않을 것이다. 어떻게 프로그램을 안전하게(gracefully) 종료할 수 있는지 보여주는
 예제가 있다.
 
     var readline = require('readline');
@@ -33,11 +33,11 @@ readline의 `Interface` 인스턴스를 생성한다. 다음 값의 "options" �
 
  - `completer` - 탭 자동완성에 사용한 선택적인 함수. 아래 이 값을 사용하는 예제를 봐라.
 
- - `terminal` - `input`스트림과 `output`스트림을 TTY처럼 다뤄야 하고 작성된 코드가 
-   ANSI/VT100로 이스케이프되었다면 `true`를 전달한다.
+ - `terminal` - `input`스트림과 `output`스트림을 TTY처럼 다뤄야 하고 작성된 코드가
+   ANSI/VT100로 이스케이프 되었다면 `true`를 전달한다.
    기본값은 인스턴스의 `output`스트림에서 `isTTY`를 확인하는 것이다.
 
-`completer` 함수는 사용자가 입력하는 현재 라인을 받고 2가지 배열을 리턴한다.
+`completer` 함수는 사용자가 입력하는 현재 라인을 받고 2가지 배열을 반환한다.
 
  1. 자동완성을 위해 일치하는 값들의 배열
 
@@ -73,7 +73,7 @@ readline의 `Interface` 인스턴스를 생성한다. 다음 값의 "options" �
 readline 인스턴스를 가지면 보통 `"line"` 이벤트를 리스닝한다.
 
 해당 인스턴스의 `terminal`값이 `true`이면 `output` 스트림은 `output.columns`
-프로퍼티를 정의하는 최적의 호환성을 가질 것이고 `output`은 컬럼이 변경될 때마다 
+프로퍼티를 정의하는 최적의 호환성을 가질 것이고 `output`은 칼럼이 변경될 때마다
 `"resize"` 이벤트를 발생시킨다.
 (`output`이 TTY이면 `process.stdout`는 자동으로 이렇게 한다.)
 
@@ -83,12 +83,12 @@ readline 인스턴스를 가지면 보통 `"line"` 이벤트를 리스닝한다.
 
 ### rl.setPrompt(prompt, length)
 
-프롬프트를 설정한다. 예를 들어 커맨드라인에서 `node`를 실행하면 node의 프롬프트인 
+프롬프트를 설정한다. 예를 들어 커맨드라인에서 `node`를 실행하면 node의 프롬프트인
 `> `를 볼 수 있다.
 
 ### rl.prompt([preserveCursor])
 
-사용자가 작성할 새로운 지점인 새로운 줄에서 현재의 `setPrompt` 옵션을 두어 
+사용자가 작성할 새로운 지점인 새로운 줄에서 현재의 `setPrompt` 옵션을 두어
 사용자에게 입력을 받기 위해서 readline을 준비한다. 커서 위치를 `0`으로 초기화하는
 것을 막으려면 `preserveCursor`을 `true`으로 설정해라.
 
@@ -97,7 +97,7 @@ readline 인스턴스를 가지면 보통 `"line"` 이벤트를 리스닝한다.
 
 ### rl.question(query, callback)
 
-`query`앞에 프로프트를 붙히고 사용자의 응답으로 `callback`을 호출한다. 
+`query`앞에 프로프트를 붙이고 사용자의 응답으로 `callback`을 호출한다.
 사용자에게 쿼리를 보여주고 사용자가 입력한 응답으로 `callback`을 호출한다.
 
 `createInterface`과 함께 사용한 `input` 스트림이 멈춰있다면 이 함수는 다시
@@ -142,7 +142,7 @@ TTY일 때 사용할 수 있다.
 `function (line) {}`
 
 `in` 스트림이 `\n`를 받을 때마다 발생한다. 보통 사용자가 엔터를 쳤을 때 받게 된다.
-이 이벤트는 사용자 입력을 받기 위한 좋은 후크(hook)이다.
+이 이벤트는 사용자 입력을 받기 위한 좋은 훅(hook)이다.
 
 `line` 이벤트를 받는 예제다.
 
@@ -169,7 +169,7 @@ TTY일 때 사용할 수 있다.
 
 `function () {}`
 
-`input`스트림이 재시작 할때마다 발생한다.
+`input`스트림이 재시작 할 때마다 발생한다.
 
 `resume` 이벤트를 리스닝하는 예제:
 
@@ -215,7 +215,7 @@ TTY일 때 사용할 수 있다.
 보내진다.
 
 프로그램이 `fg`로 복귀했을 때 `pause`와 `SIGCONT` 이벤트가 실행될 것이다. 스트림으로
-복귀하는데 사용할 수도 있다.
+복귀하는 데 사용할 수도 있다.
 
 프로그램이 백그라운드로 보내지기 전에 스트림이 멈춰있다면 `pause`와 `SIGCONT` 이벤트는
 발생하지 않을 것이다.

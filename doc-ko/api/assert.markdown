@@ -2,14 +2,14 @@
 
     Stability: 5 - Locked
 
-이 모듈을 어플리케이션에서 유닛 테스트를 작성하는데 사용하고 `require('assert')`로
+이 모듈을 애플리케이션에서 유닛 테스트를 작성하는 데 사용하고 `require('assert')`로
 이 모듈을 사용할 수 있다.
 
 ## assert.fail(actual, expected, message, operator)
 
 `actual`과 `expected`의 값을 보여주는 예외를 던진다.
 operator는 두 값을 무엇으로 비교했는지 표시하는 것이다.
-(역주, `operator`는 결국 Error.captureStackTrace로 넘겨지는데 무슨 역활인지 이해할 수 없음. 하지만 assert.js의 코드를 보면 모두 스트링이다. 비교하는데 사용한 함수나 Operator 이름임)
+(역주, `operator`는 결국 Error.captureStackTrace로 넘겨지는데 무슨 역할인지 이해할 수 없음. 하지만 assert.js의 코드를 보면 모두 스트링이다. 비교하는 데 사용한 함수나 Operator 이름임)
 
 ## assert(value, message), assert.ok(value, [message])
 
@@ -26,7 +26,7 @@ value가 참인지 검사한다. 이는 `assert.equal(true, !!value, message);`�
 ## assert.deepEqual(actual, expected, [message])
 
 깊은 동등성을 검사한다.
-(역주, deep equality는 한마디로 설명하기 어렵다. 타입마다 다른 방법으로 같음을 테스트한다. 예를 들어, Date의 경우 `actual.getTime() === expected.getTime()`라고 비교한다. 필요하다면 assert.js을 일독하기를 권한다)
+(역주, deep equality는 한마디로 설명하기 어렵다. 타입마다 다른 방법으로 같음을 테스트한다. 예를 들어, Date의 경우 `actual.getTime() === expected.getTime()`라고 비교한다. 필요하다면 assert.js을 일독하기를 권한다.)
 
 ## assert.notDeepEqual(actual, expected, [message])
 
@@ -42,7 +42,7 @@ value가 참인지 검사한다. 이는 `assert.equal(true, !!value, message);`�
 
 ## assert.throws(block, [error], [message])
 
-`block`이 오류는 던지기를 기대한다. `error`는 생성자, 정규표현식, 유효성검사 함수가
+`block`이 오류는 던지기를 기대한다. `error`는 생성자, 정규표현식, 유효성 검사 함수가
 될 수 있다.
 
 생성자의 인스턴스인지 테스트한다.
@@ -85,4 +85,5 @@ RegExp를 사용해서 오류 메시지를 검증한다.
 
 value가 true인지 테스트하고 true이면 그 value를 던진다. 콜백에서 첫 아규먼트
 `error`를 검사하는 데 유용하다.
-(역주, 예를 들면 `fs.readFile('notfound.js', assert.ifError);`라고 사용할 수 있어서 유용하다는 것이다)
+(역주, 예를 들면 `fs.readFile('notfound.js', assert.ifError);`라고
+사용할 수 있어서 유용하다는 것이다.)

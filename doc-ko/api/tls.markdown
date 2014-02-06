@@ -7,8 +7,8 @@
 `tls` 모듈은 TLS(Transport Layer Security)나 SSL(Secure Socket Layer)을
 제공하는데 OpenSSL을 사용한다: 암호화된 스트림 통신
 
-TLS/SSL는 공개키/개인키 기반이다. 각 클라이언트와 서버는 개인키를 반드시 가지고
-있어야 한다. 개인키는 다음과 같이 생성한다.
+TLS/SSL는 공개키/개인 키 기반이다. 각 클라이언트와 서버는 개인 키를 반드시 가지고
+있어야 한다. 개인 키는 다음과 같이 생성한다.
 
     openssl genrsa -out ryans-key.pem 1024
 
@@ -24,8 +24,8 @@ CSR로 자체서명 인증서를 생성하려면 다음과 같이 한다.
 
 아니면 서명을 위해서 인증기관(Certificate Authority)에 CSR을 보낼 수 있다.
 
-(TODO: CA를 생성하는 문서에 관심이 있느 사용자들은 Node 소스크도의
-`test/fixtures/keys/Makefile`를 봐야한다.)
+(TODO: CA를 생성하는 문서에 관심이 있는 사용자들은 Node 소스코드의
+`test/fixtures/keys/Makefile`를 봐야 한다.)
 
 다음과 같이 실행해서 .pfx나 .p12를 생성한다.
 
@@ -42,22 +42,22 @@ CSR로 자체서명 인증서를 생성하려면 다음과 같이 한다.
 
 <!-- type=misc -->
 
-TLS 프로토콜는 클라이언트가 TLS 세션의 어떤 관점을 재협상하게 한다. 불행히도 세션 재협상은
-DoS(denial-of-service) 공격의 잠재적인 요소인 서버측 리소스의 양의 불균형을 야기시킨다.
+TLS 프로토콜은 클라이언트가 TLS 세션의 어떤 관점을 재협상하게 한다. 불행히도 세션 재협상은
+DoS(denial-of-service) 공격의 잠재적인 요소인 서버 측 리소스의 양의 불균형을 일으킨다.
 
-이를 완화시키려면 재현상을 10분내에 3번으로 제한해야 한다. 이 한계를 넘어서면
+이를 완화하려면 재현상을 10분 내에 3번으로 제한해야 한다. 이 한계를 넘어서면
 [CleartextStream][] 인스턴스에서 오류가 발생한다. 이 제한은
 설정할 수 있다.
 
   - `tls.CLIENT_RENEG_LIMIT`: 재협상 제한, 기본값은 3이다.
 
-  - `tls.CLIENT_RENEG_WINDOW`: 초단위의 재협상 시간, 기본값은
-                               10 분이다.
+  - `tls.CLIENT_RENEG_WINDOW`: 초 단위의 재협상 시간, 기본값은
+                               10분이다.
 
 무엇을 하는지 알지 못하면 기본값을 바꾸지 마라.
 
 서버를 테스트하려면 `openssl s_client -connect address:port`로 서버에 연결한 뒤
-`R<CR>` (`R`문자 뒤에 캐리지리턴)을 몇번 입력한다.
+`R<CR>` (`R`문자 뒤에 캐리지리턴)을 몇 번 입력한다.
 
 
 ## NPN and SNI
@@ -68,7 +68,7 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
 핸드쉐이크 확장이다.
 
   * NPN - 다중 프로토콜(HTTP, SPDY)의 TLS 서버에 사용한다
-  * SNI - 다른 종류의 SSL 인증서의 다중 호스트네임의 TLS 서버에 사용한다.
+  * SNI - 다른 SSL 인증서의 다중 호스트명의 TLS 서버에 사용한다.
 
 
 ## tls.getCiphers()
@@ -84,21 +84,21 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
 ## tls.createServer(options, [secureConnectionListener])
 
 새로운 [tls.Server][]를 생성한다.
-`connectionListener` 아규먼트는 자동적으로 [secureConnection][]
+`connectionListener` 아규먼트는 자동으로 [secureConnection][]
 이벤트의 리스너로 설정된다.
 `options` 객체는 다음과 같은 선택사항이 있다.
 
-  - `pfx`: PFX나 PKCS12 형식으로 개인키, 인증서, 서버의 CA 인증서를 담고 있는
-    문자열이나 `Buffer`다. (`key`, `cert`, `ca` 옵셩은 상호배타적이다.)
+  - `pfx`: PFX나 PKCS12 형식으로 개인 키, 인증서, 서버의 CA 인증서를 담고 있는
+    문자열이나 `Buffer`다. (`key`, `cert`, `ca` 옵션은 상호배타적이다.)
 
-  - `key`: PEM 형식의 서버 개인키를 담고 있는 문자열이나 `Buffer`다. (필수사항)
+  - `key`: PEM 형식의 서버 개인 키를 담고 있는 문자열이나 `Buffer`다. (필수사항)
 
-  - `passphrase`: 개인키나 pfx에 대한 암호문의 문자열이다.
+  - `passphrase`: 개인 키나 pfx에 대한 암호문의 문자열이다.
 
   - `cert`: PEM 형식의 서버 인증키를 담고 있는 문자열이나 `Buffer`다. (필수사항)
 
   - `ca`: 신뢰할 수 있는 인증서의 문자열이나 `Buffer` 배열로 PEM 형식이다. 이
-    옵션을 생락하면 각각 VeriSign처럼 잘 알려진 "루트" CA를 사용할 것이다. 연결에
+    옵션을 생략하면 각각 VeriSign처럼 잘 알려진 "루트" CA를 사용할 것이다. 연결에
     권한을 부여하는 데 이것들을 사용한다.
 
   - `crl` : PEM으로 인코딩된 CRL(Certificate Revocation List)의 문자열이나 문자열의
@@ -106,7 +106,7 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
 
   - `ciphers`: 사용하거나 제외할 암호(cipher)를 설명하는 문자열이다.
 
-    [BEAST attacks]을 완화시키려면 CBC가 아닌 암호문을 우선시하도록 아래에서 설명할
+    [BEAST attacks]을 완화하려면 CBC가 아닌 암호문을 우선시하도록 아래에서 설명할
     `honorCipherOrder`을 이 옵션과 함께 사용하기를 권장한다.
 
     기본값은
@@ -121,27 +121,27 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
     `AES256-SHA`는 CBC 암호문이므로 BEAST attacks을 받기 쉽다. `AES256-SHA`를
     사용하지 *말아라*.
 
-  - `handshakeTimeout`: SSL/TLS 핸드쉐이크가 이 밀리초내에 끝나지 않으면 연결을 겨부한다.
+  - `handshakeTimeout`: SSL/TLS 핸드쉐이크가 이 밀리 초 내에 끝나지 않으면 연결을 거부한다.
     기본값은 120초이다.
 
     핸드쉐이크가 타임아웃될 때마다 `tls.Server` 객체에서 `'clientError'`가 발생한다.
 
-  - `honorCipherOrder` : 암호문을 선택할 때 클라이언트의 설정대신에 서버의 설정을 사용해라.
+  - `honorCipherOrder` : 암호문을 선택할 때 클라이언트의 설정 대신에 서버의 설정을 사용해라.
 
     SSLv2을 사용한다면 서버는 클라이언트로 설정리스트를 보낼 것이고 클라이언트가 암호문을
     선택한다.
 
-    이 옵션은 기본적으로는 사용안함으로 되어 있지만 BEAST attacks을 완화하려면 `ciphers`
+    이 옵션은 기본적으로는 사용안함으로 되어 있지만, BEAST attacks를 완화하려면 `ciphers`
     옵션과 함께 이 옵션을 사용하기를 *권장한다*.
 
   - `requestCert`: `true`로 지정하면 연결할 때 서버가 클라이언트한테 인증서를 요청하고
     인증서를 검증하는 데 사용할 것이다. 기본값: `false`.
 
   - `rejectUnauthorized`: `true`로 지정하면 제공된 CA 목록에서 인가되지 않은
-    모든 연결을 서버가 거절할 것이다. 이 옵션은 `requestCert`가 `true`일때만 유효하다.
+    모든 연결을 서버가 거절할 것이다. 이 옵션은 `requestCert`가 `true`일 때만 유효하다.
     기본값: `false`.
 
-  - `NPNProtocols`: 사용가능한 NPN 프로토콜의 배열이나 `Buffer`다. (프로토콜은
+  - `NPNProtocols`: 사용 가능한 NPN 프로토콜의 배열이나 `Buffer`다. (프로토콜은
     우선순위에 따라 정렬되어야 한다.)
 
   - `SNICallback`: 클라이언트가 SNI TLS 확장을 지원하는 경우 호출될 함수다. 이 함수는
@@ -156,7 +156,7 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
     `requestCert`가 `true`가 아니면 기본값은 제공하지 않는다.
 
   - `secureProtocol`: 사용할 SSL 방식. 예를 들어 SSL 버전 3을 사용하려면
-    `SSLv3_method`이다. 사용가능한 값은 설치한 OpenSSL에 따라 다르고
+    `SSLv3_method`이다. 사용 가능한 값은 설치한 OpenSSL에 따라 다르고
     상수 [SSL_METHODS][]에 정의되어 있다.
 
 간단한 에코(echo) 서버의 예제다.
@@ -168,10 +168,10 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
       key: fs.readFileSync('server-key.pem'),
       cert: fs.readFileSync('server-cert.pem'),
 
-      // This is necessary only if using the client certificate authentication.
+      // 클라이언트 인증서 인증(certificate authentication)을 사용할 때만 필요하다.
       requestCert: true,
 
-      // This is necessary only if the client uses the self-signed certificate.
+      // 클라이언트가 직접 서명한 인증서를 사용할 때만 필요하다.
       ca: [ fs.readFileSync('client-cert.pem') ]
     };
 
@@ -194,7 +194,7 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
     var options = {
       pfx: fs.readFileSync('server.pfx'),
 
-      // This is necessary only if using the client certificate authentication.
+      // 클라이언트 인증서 인증(certificate authentication)을 사용할 때만 필요하다.
       requestCert: true,
 
     };
@@ -221,7 +221,7 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
 기본값: `10 * 1024 * 1024`.
 
 
-무슨 작업을 하는지 알지 못한다면 기본값을 바꾸지 말아라.
+무슨 작업을 하는지 알지 못한다면 기본값을 바꾸지 마라.
 
 
 ## tls.connect(options, [callback])
@@ -238,12 +238,12 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
   - `socket`: 새로운 소켓을 생성하는 대신 전달한 소켓으로 안전한 연결을 만든다.
     이 옵션을 지정하면 `host`와 `port`은 무시한다.
 
-  - `pfx`: PFX나 PKCS12 형식으로 개인키, 인증서 서버의 CA 인증서를 담고 있는 문자열이나
+  - `pfx`: PFX나 PKCS12 형식으로 개인 키, 인증서 서버의 CA 인증서를 담고 있는 문자열이나
    `Buffer`다.
 
-  - `key`: PEM 형식으로 클라이언트의 개인키를 담고 있는 문자열이나 `Buffer`다.
+  - `key`: PEM 형식으로 클라이언트의 개인 키를 담고 있는 문자열이나 `Buffer`다.
 
-  - `passphrase`: 개인키나 pfx에 대한 암호문 문자열이다.
+  - `passphrase`: 개인 키나 pfx에 대한 암호문 문자열이다.
 
   - `cert`: PEM 형식으로 클라이언트의 인증서 키를 담고 있는 문자열이나 `Buffer`다.
 
@@ -261,7 +261,7 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
   - `servername`: SNI (Server Name Indication) TLS 확장에 대한 Servername이다.
 
   - `secureProtocol`: 사용할 SSL 방식. 예를 들어 SSL 버전 3을 사용하려면
-    `SSLv3_method`이다. 사용가능한 값은 설치한 OpenSSL에 따라 다르고
+    `SSLv3_method`이다. 사용 가능한 값은 설치한 OpenSSL에 따라 다르고
     상수 [SSL_METHODS][]에 정의되어 있다.
 
 `callback` 파라미터는 ['secureConnect'][]
@@ -275,11 +275,11 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
     var fs = require('fs');
 
     var options = {
-      // These are necessary only if using the client certificate authentication
+      // 클라이언트 인증서 인증(certificate authentication)을 사용할 때만 필요하다.
       key: fs.readFileSync('client-key.pem'),
       cert: fs.readFileSync('client-cert.pem'),
 
-      // This is necessary only if the server uses the self-signed certificate
+      // 클라이언트가 직접 서명한 인증서를 사용할 때만 필요하다.
       ca: [ fs.readFileSync('server-cert.pem') ]
     };
 
@@ -367,7 +367,7 @@ tls.createSecurePair가 반환하는 클래스다.
 
 `cleartextStream.authorized`는 서버에 대해 제공된 인증서 권한 중 하나로 클라이언트가
 검증되었는지 나타내는 불리언 값이다. `cleartextStream.authorized`가 false이면
-`cleartextStream.authorizationError`는 어떻게 권한부여가 실패했는 지를 알려주기 위해
+`cleartextStream.authorizationError`는 어떻게 권한부여가 실패했는지를 알려주기 위해
 설정된다. TLS 서버의 설정에 따라 권한이 부여되지 않은 연결을 받아들일 수 있다는 점을 알아두어야
 한다. `cleartextStream.npnProtocol`는 선택된 NPN 프로토콜을 담고 있는 문자열이다.
 `cleartextStream.servername`은 SNI로 요청된 servername을 담고 있는 문자열이다.
@@ -418,7 +418,7 @@ IPv4 주소(`INADDR_ANY`)에서 직접 연결을 받아들일 것이다.
 
 ### server.address()
 
-운영체제에서 보고된 서버가 바인딩된 주소와 주소 패밀리이름과 포트를 반환한다.
+운영체제에서 보고된 서버가 바인딩 된 주소와 주소 패밀리이름과 포트를 반환한다.
 더 자세한 내용은 [net.Server.address()][]를 봐라.
 
 ### server.addContext(hostname, credentials)
@@ -429,7 +429,7 @@ IPv4 주소(`INADDR_ANY`)에서 직접 연결을 받아들일 것이다.
 
 ### server.maxConnections
 
-서버의 연결수가 많아졌을 때 연결을 거절하려면 이 프로퍼티를 설정해라.
+서버의 연결 수가 많아졌을 때 연결을 거절하려면 이 프로퍼티를 설정해라.
 
 ### server.connections
 
@@ -442,7 +442,7 @@ IPv4 주소(`INADDR_ANY`)에서 직접 연결을 받아들일 것이다.
 
 ### cryptoStream.bytesWritten
 
-의존하는 소켓의 bytesWritten 접근자로의 프록시로 이는 소켓에 쓰여진 전체
+의존하는 소켓의 bytesWritten 접근자로의 프록시로 이는 소켓에 쓰인 전체
 바이트(*TLS 오버헤드를 포함해서*)를 반환할 것이다.
 
 ## Class: tls.CleartextStream
@@ -458,15 +458,15 @@ ClearTextStream는 SecurePair 객체의 `clear` 멤버이다.
 ### Event: 'secureConnect'
 
 새로운 연결이 성공적으로 핸드쉐이크를 했을 때 발생하는 이벤트이다.
-리스너는 서버의 인증서가 권한 부여를 받았는 지에 상관없이 호출될 것이다. 이는 서버 인증서가
-지정한 CA중의 하나로 서명되었는지를 보려고 `cleartextStream.authorized`를 검사하는
+리스너는 서버의 인증서가 권한 부여를 받았는지에 상관없이 호출될 것이다. 이는 서버 인증서가
+지정한 CA 중 하나로 서명되었는지를 보려고 `cleartextStream.authorized`를 검사하는
 사용자에게 달려있다. `cleartextStream.authorized === false`인 경우 오류는
 `cleartextStream.authorizationError`에 있을 것이다. 또한 NPN이 사용되었다면 협상
 프로토콜을 위해 `cleartextStream.npnProtocol`를 확인할 수 있다.
 
 ### cleartextStream.authorized
 
-피어(peer) 인증서가 지정한 CA중에 하나로 서명되었으면 `true` 그렇지 않으면 `false`인
+피어(peer) 인증서가 지정한 CA 중에 하나로 서명되었으면 `true` 그렇지 않으면 `false`인
 불리언이다.
 
 ### cleartextStream.authorizationError
@@ -514,7 +514,7 @@ SSL_CIPHER_get_name()와 SSL_CIPHER_get_version()를 봐라.
 
 ### cleartextStream.address()
 
-운영체제가 보고했듯이 기반하는 소켓의 바인딩된 주소와 주소 패밀리 이름과 포트를 반환한다.
+운영체제가 보고했듯이 기반을 두는 소켓의 바인딩 된 주소와 주소 패밀리 이름과 포트를 반환한다.
 다음과 같이 세 가지 프로퍼티를 가진 객체를 반환한다.
 `{ port: 12346, family: 'IPv4', address: '127.0.0.1' }`
 
@@ -525,7 +525,7 @@ SSL_CIPHER_get_name()와 SSL_CIPHER_get_version()를 봐라.
 
 ### cleartextStream.remotePort
 
-원격 포트르르 나태내는 숫자다. 예를 들면 `443`.
+원격 포트를 나타내는 숫자다. 예를 들면 `443`.
 
 [OpenSSL cipher list format documentation]: http://www.openssl.org/docs/apps/ciphers.html#CIPHER_LIST_FORMAT
 [BEAST attacks]: http://blog.ivanristic.com/2011/10/mitigating-the-beast-attack-on-tls.html
