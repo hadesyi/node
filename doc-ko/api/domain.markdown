@@ -259,7 +259,7 @@ d.on('error', function(er) {
 });
 d.run(function() {
   process.nextTick(function() {
-    setTimeout(function() { // 여러 비동기의 작업들을 시뮤레이트한다
+    setTimeout(function() { // 여러 비동기의 작업들을 시뮬레이트한다
       fs.open('non-existent file', 'r', function(er, fd) {
         if (er) throw er;
         // 처리중...
