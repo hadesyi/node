@@ -6,8 +6,7 @@ help.completion = function (opts, cb) {
   getSections(cb)
 }
 
-var fs = require("graceful-fs")
-  , path = require("path")
+var path = require("path")
   , spawn = require("child_process").spawn
   , npm = require("./npm.js")
   , log = require("npmlog")
@@ -15,6 +14,7 @@ var fs = require("graceful-fs")
   , glob = require("glob")
 
 function help (args, cb) {
+  npm.spinner.stop()
   var argv = npm.config.get("argv").cooked
 
   var argnum = 0
@@ -30,8 +30,11 @@ function help (args, cb) {
   var section = npm.deref(args[0]) || args[0]
 
   // npm help <noargs>:  show basic usage
-  if (!section)
-    return npmUsage(cb)
+  if (!section) {
+    var valid = argv[0] === 'help' ? 0 : 1
+    return npmUsage(valid, cb)
+  }
+
 
   // npm <cmd> -h: show command usage
   if ( npm.config.get("usage")
@@ -54,7 +57,6 @@ function help (args, cb) {
 
   // npm help <section>: Try to find the path
   var manroot = path.resolve(__dirname, "..", "man")
-  var htmlroot = path.resolve(__dirname, "..", "html", "doc")
 
   // legacy
   if (section === "global")
@@ -105,10 +107,11 @@ function viewMan (man, cb) {
   env.MANPATH = manpath
   var viewer = npm.config.get("viewer")
 
+  var conf
   switch (viewer) {
     case "woman":
       var a = ["-e", "(woman-find-file \"" + man + "\")"]
-      var conf = { env: env, customFds: [ 0, 1, 2] }
+      conf = { env: env, customFds: [ 0, 1, 2] }
       var woman = spawn("emacsclient", a, conf)
       woman.on("close", cb)
       break
@@ -118,9 +121,9 @@ function viewMan (man, cb) {
       break
 
     default:
-      var conf = { env: env, customFds: [ 0, 1, 2] }
-      var man = spawn("man", [num, section], conf)
-      man.on("close", cb)
+      conf = { env: env, customFds: [ 0, 1, 2] }
+      var manProcess = spawn("man", [num, section], conf)
+      manProcess.on("close", cb)
       break
   }
 }
@@ -147,7 +150,7 @@ function htmlMan (man) {
   return path.resolve(__dirname, "..", "html", "doc", sect, f)
 }
 
-function npmUsage (cb) {
+function npmUsage (valid, cb) {
   npm.config.set("loglevel", "silent")
   log.level = "silent"
   console.log
@@ -170,7 +173,7 @@ function npmUsage (cb) {
       , ""
       , "npm@" + npm.version + " " + path.dirname(__dirname)
       ].join("\n"))
-  cb()
+  cb(valid)
 }
 
 function usages () {
@@ -189,7 +192,6 @@ function usages () {
          + (usage.split("\n")
             .join("\n" + (new Array(maxLen + 6).join(" "))))
   }).join("\n")
-  return out
 }
 
 

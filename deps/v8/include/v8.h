@@ -1076,7 +1076,11 @@ class String : public Primitive {
     NO_OPTIONS = 0,
     HINT_MANY_WRITES_EXPECTED = 1,
     NO_NULL_TERMINATION = 2,
-    PRESERVE_ASCII_NULL = 4
+    PRESERVE_ASCII_NULL = 4,
+    // Used by WriteUtf8 to replace orphan surrogate code units with the
+    // unicode replacement character. Needs to be set to guarantee valid UTF-8
+    // output.
+    REPLACE_INVALID_UTF8 = 8
   };
 
   // 16-bit character codes.
@@ -2840,6 +2844,17 @@ class V8EXPORT Isolate {
    * case there is no current isolate.
    */
   static Isolate* GetCurrent();
+
+  /**
+   * Custom callback used by embedders to help V8 determine if it should abort
+   * when it throws and no internal handler can catch the exception.
+   * If FLAG_abort_on_uncaught_exception is true, then V8 will abort if either:
+   * - no custom callback is set.
+   * - the custom callback set returns true.
+   * Otherwise it won't abort.
+   */
+  typedef bool (*abort_on_uncaught_exception_t)();
+  void SetAbortOnUncaughtException(abort_on_uncaught_exception_t callback);
 
   /**
    * Methods below this point require holding a lock (using Locker) in

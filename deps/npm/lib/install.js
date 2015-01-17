@@ -34,7 +34,8 @@ install.completion = function (opts, cb) {
   // if it starts with https?://, then just give up, because it's a url
   // for now, not yet implemented.
   var registry = npm.registry
-  registry.get("/-/short", function (er, pkgs) {
+    , uri = url.resolve(npm.config.get("registry"), "-/short")
+  registry.get(uri, null, function (er, pkgs) {
     if (er) return cb()
     if (!opts.partialWord) return cb(null, pkgs)
 
@@ -47,7 +48,8 @@ install.completion = function (opts, cb) {
       return cb(null, pkgs)
     }
 
-    registry.get(pkgs[0], function (er, d) {
+    uri = url.resolve(npm.config.get("registry"), pkgs[0])
+    registry.get(uri, null, function (er, d) {
       if (er) return cb()
       return cb(null, Object.keys(d["dist-tags"] || {})
                 .concat(Object.keys(d.versions || {}))
@@ -73,6 +75,8 @@ var npm = require("./npm.js")
   , lifecycle = require("./utils/lifecycle.js")
   , archy = require("archy")
   , isGitUrl = require("./utils/is-git-url.js")
+  , npmInstallChecks = require("npm-install-checks")
+  , sortedObject = require("sorted-object")
 
 function install (args, cb_) {
   var hasArguments = !!args.length
@@ -117,7 +121,7 @@ function install (args, cb_) {
     })
   }
 
-  mkdir(where, function (er, made) {
+  mkdir(where, function (er) {
     if (er) return cb(er)
     // install dependencies locally by default,
     // or install current folder globally
@@ -149,7 +153,6 @@ function install (args, cb_) {
 
         installManyTop(deps.map(function (dep) {
           var target = data.dependencies[dep]
-            , parsed = url.parse(target.replace(/^git\+/, "git"))
           target = dep + "@" + target
           return target
         }), where, context, function(er, results) {
@@ -186,7 +189,7 @@ function install (args, cb_) {
 }
 
 function findPeerInvalid (where, cb) {
-  readInstalled(where, log.warn, function (er, data) {
+  readInstalled(where, { log: log.warn, dev: true }, function (er, data) {
     if (er) return cb(er)
 
     cb(null, findPeerInvalid_(data.dependencies, []))
@@ -204,7 +207,7 @@ function findPeerInvalid_ (packageMap, fpiList) {
 
     if (pkg.peerInvalid) {
       var peersDepending = {};
-      for (peerName in packageMap) {
+      for (var peerName in packageMap) {
         var peer = packageMap[peerName]
         if (peer.peerDependencies && peer.peerDependencies[packageName]) {
           peersDepending[peer.name + "@" + peer.version] =
@@ -287,8 +290,9 @@ function readDependencies (context, where, opts, cb) {
         return cb(null, data, null)
       }
 
+      var newwrap
       try {
-        var newwrap = JSON.parse(wrapjson)
+        newwrap = JSON.parse(wrapjson)
       } catch (ex) {
         return cb(ex)
       }
@@ -335,6 +339,7 @@ function save (where, installed, tree, pretty, hasArguments, cb) {
   }
 
   var saveBundle = npm.config.get('save-bundle')
+  var savePrefix = npm.config.get('save-prefix') || "^";
 
   // each item in the tree is a top-level thing that should be saved
   // to the package.json file.
@@ -349,8 +354,9 @@ function save (where, installed, tree, pretty, hasArguments, cb) {
         return w
       }).reduce(function (set, k) {
         var rangeDescriptor = semver.valid(k[1], true) &&
-                              semver.gte(k[1], "0.1.0", true)
-                            ? "~" : ""
+                              semver.gte(k[1], "0.1.0", true) &&
+                              !npm.config.get("save-exact")
+                            ? savePrefix : ""
         set[k[0]] = rangeDescriptor + k[1]
         return set
       }, {})
@@ -377,7 +383,7 @@ function save (where, installed, tree, pretty, hasArguments, cb) {
       var bundle = data.bundleDependencies || data.bundledDependencies
       delete data.bundledDependencies
       if (!Array.isArray(bundle)) bundle = []
-      data.bundleDependencies = bundle
+      data.bundleDependencies = bundle.sort()
     }
 
     log.verbose('saving', things)
@@ -387,8 +393,11 @@ function save (where, installed, tree, pretty, hasArguments, cb) {
       if (saveBundle) {
         var i = bundle.indexOf(t)
         if (i === -1) bundle.push(t)
+        data.bundleDependencies = bundle.sort()
       }
     })
+
+    data[deps] = sortedObject(data[deps])
 
     data = JSON.stringify(data, null, 2) + "\n"
     fs.writeFile(saveTarget, data, function (er) {
@@ -442,7 +451,7 @@ function prettify (tree, installed) {
                      if (g) g = " (" + g + ")"
                      return c.what + g
                    })
-                 })
+                 }, "", { unicode: npm.config.get("unicode") })
   }).join("\n")
 }
 
@@ -518,9 +527,6 @@ function installManyTop (what, where, context, cb_) {
 
 function installManyTop_ (what, where, context, cb) {
   var nm = path.resolve(where, "node_modules")
-    , names = context.explicit
-            ? what.map(function (w) { return w.split(/@/).shift() })
-            : []
 
   fs.readdir(nm, function (er, pkgs) {
     if (er) return installMany(what, where, context, cb)
@@ -703,7 +709,7 @@ function targetResolver (where, context, deps) {
     // already has a matching copy.
     // If it's not a git repo, and the parent already has that pkg, then
     // we can skip installing it again.
-    cache.add(what, function (er, data) {
+    cache.add(what, null, false, function (er, data) {
       if (er && parent && parent.optionalDependencies &&
           parent.optionalDependencies.hasOwnProperty(what.split("@")[0])) {
         log.warn("optional dep failed, continuing", what)
@@ -830,8 +836,6 @@ function installOne_ (target, where, context, cb) {
   if (prettyWhere === ".") prettyWhere = null
 
   if (isIncompatibleInstallOneInProgress(target, where)) {
-    var prettyTarget = path.relative(process.cwd(), targetFolder)
-
     // just call back, with no error.  the error will be detected in the
     // final check for peer-invalid dependencies
     return cb()
@@ -842,12 +846,16 @@ function installOne_ (target, where, context, cb) {
   }
   installOnesInProgress[target.name].push(where)
   var indexOfIOIP = installOnesInProgress[target.name].length - 1
+    , force = npm.config.get("force")
+    , nodeVersion = npm.config.get("node-version")
+    , strict = npm.config.get("engine-strict")
+    , c = npmInstallChecks
 
   chain
-    ( [ [checkEngine, target]
-      , [checkPlatform, target]
-      , [checkCycle, target, context.ancestors]
-      , [checkGit, targetFolder]
+    ( [ [c.checkEngine, target, npm.version, nodeVersion, force, strict]
+      , [c.checkPlatform, target, force]
+      , [c.checkCycle, target, context.ancestors]
+      , [c.checkGit, targetFolder]
       , [write, target, targetFolder, context] ]
     , function (er, d) {
         installOnesInProgress[target.name].splice(indexOfIOIP, 1)
@@ -858,146 +866,6 @@ function installOne_ (target, where, context, cb) {
         cb(er, d)
       }
     )
-}
-
-function checkEngine (target, cb) {
-  var npmv = npm.version
-    , force = npm.config.get("force")
-    , nodev = force ? null : npm.config.get("node-version")
-    , strict = npm.config.get("engine-strict") || target.engineStrict
-    , eng = target.engines
-  if (!eng) return cb()
-  if (nodev && eng.node && !semver.satisfies(nodev, eng.node)
-      || eng.npm && !semver.satisfies(npmv, eng.npm)) {
-    if (strict) {
-      var er = new Error("Unsupported")
-      er.code = "ENOTSUP"
-      er.required = eng
-      er.pkgid = target._id
-      return cb(er)
-    } else {
-      log.warn( "engine", "%s: wanted: %j (current: %j)"
-              , target._id, eng, {node: nodev, npm: npm.version} )
-    }
-  }
-  return cb()
-}
-
-function checkPlatform (target, cb) {
-  var platform = process.platform
-    , arch = process.arch
-    , osOk = true
-    , cpuOk = true
-    , force = npm.config.get("force")
-
-  if (force) {
-    return cb()
-  }
-
-  if (target.os) {
-    osOk = checkList(platform, target.os)
-  }
-  if (target.cpu) {
-    cpuOk = checkList(arch, target.cpu)
-  }
-  if (!osOk || !cpuOk) {
-    var er = new Error("Unsupported")
-    er.code = "EBADPLATFORM"
-    er.os = target.os || ['any']
-    er.cpu = target.cpu || ['any']
-    er.pkgid = target._id
-    return cb(er)
-  }
-  return cb()
-}
-
-function checkList (value, list) {
-  var tmp
-    , match = false
-    , blc = 0
-  if (typeof list === "string") {
-    list = [list]
-  }
-  if (list.length === 1 && list[0] === "any") {
-    return true
-  }
-  for (var i = 0; i < list.length; ++i) {
-    tmp = list[i]
-    if (tmp[0] === '!') {
-      tmp = tmp.slice(1)
-      if (tmp === value) {
-        return false
-      }
-      ++blc
-    } else {
-      match = match || tmp === value
-    }
-  }
-  return match || blc === list.length
-}
-
-function checkCycle (target, ancestors, cb) {
-  // there are some very rare and pathological edge-cases where
-  // a cycle can cause npm to try to install a never-ending tree
-  // of stuff.
-  // Simplest:
-  //
-  // A -> B -> A' -> B' -> A -> B -> A' -> B' -> A -> ...
-  //
-  // Solution: Simply flat-out refuse to install any name@version
-  // that is already in the prototype tree of the ancestors object.
-  // A more correct, but more complex, solution would be to symlink
-  // the deeper thing into the new location.
-  // Will do that if anyone whines about this irl.
-  //
-  // Note: `npm install foo` inside of the `foo` package will abort
-  // earlier if `--force` is not set.  However, if it IS set, then
-  // we need to still fail here, but just skip the first level. Of
-  // course, it'll still fail eventually if it's a true cycle, and
-  // leave things in an undefined state, but that's what is to be
-  // expected when `--force` is used.  That is why getPrototypeOf
-  // is used *twice* here: to skip the first level of repetition.
-
-  var p = Object.getPrototypeOf(Object.getPrototypeOf(ancestors))
-    , name = target.name
-    , version = target.version
-  while (p && p !== Object.prototype && p[name] !== version) {
-    p = Object.getPrototypeOf(p)
-  }
-  if (p[name] !== version) return cb()
-
-  var er = new Error("Unresolvable cycle detected")
-  var tree = [target._id, JSON.parse(JSON.stringify(ancestors))]
-    , t = Object.getPrototypeOf(ancestors)
-  while (t && t !== Object.prototype) {
-    if (t === p) t.THIS_IS_P = true
-    tree.push(JSON.parse(JSON.stringify(t)))
-    t = Object.getPrototypeOf(t)
-  }
-  log.verbose("unresolvable dependency tree", tree)
-  er.pkgid = target._id
-  er.code = "ECYCLE"
-  return cb(er)
-}
-
-function checkGit (folder, cb) {
-  // if it's a git repo then don't touch it!
-  fs.lstat(folder, function (er, s) {
-    if (er || !s.isDirectory()) return cb()
-    else checkGit_(folder, cb)
-  })
-}
-
-function checkGit_ (folder, cb) {
-  fs.stat(path.resolve(folder, ".git"), function (er, s) {
-    if (!er && s.isDirectory()) {
-      var e = new Error("Appears to be a git repo or submodule.")
-      e.path = folder
-      e.code = "EISGIT"
-      return cb(e)
-    }
-    cb()
-  })
 }
 
 function write (target, targetFolder, context, cb_) {
@@ -1012,10 +880,8 @@ function write (target, targetFolder, context, cb_) {
     if (!er) return cb_(er, data)
 
     if (false === npm.config.get("rollback")) return cb_(er)
-    npm.commands.unbuild([targetFolder], true, function (er2) {
-      if (er2) log.error("error rolling back", target._id, er2)
-      return cb_(er, data)
-    })
+    npm.rollbacks.push(targetFolder)
+    cb_(er, data)
   }
 
   var bundled = []
@@ -1107,7 +973,6 @@ function prepareForInstallMany (packageData, depsKey, bundled, wrap, family) {
     return true
   }).map(function (d) {
     var t = packageData[depsKey][d]
-      , parsed = url.parse(t.replace(/^git\+/, "git"))
     t = d + "@" + t
     return t
   })

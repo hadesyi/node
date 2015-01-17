@@ -66,7 +66,7 @@
 
 #include "node_object_wrap.h"
 
-#if NODE_WANT_INTERNALS
+#if defined(NODE_WANT_INTERNALS) && NODE_WANT_INTERNALS
 # include "node_internals.h"
 #endif
 
@@ -217,7 +217,7 @@ node_module_struct* get_builtin_module(const char *name);
 #ifdef _WIN32
 # define NODE_MODULE_EXPORT __declspec(dllexport)
 #else
-# define NODE_MODULE_EXPORT /* empty */
+# define NODE_MODULE_EXPORT __attribute__((visibility("default")))
 #endif
 
 #define NODE_MODULE(modname, regfunc)                                 \

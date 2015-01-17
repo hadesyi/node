@@ -4,17 +4,15 @@ module.exports = rebuild
 var readInstalled = require("read-installed")
   , semver = require("semver")
   , log = require("npmlog")
-  , path = require("path")
   , npm = require("./npm.js")
-  , asyncMap = require("slide").asyncMap
-  , fs = require("graceful-fs")
 
 rebuild.usage = "npm rebuild [<name>[@<version>] [name[@<version>] ...]]"
 
 rebuild.completion = require("./utils/completion/installed-deep.js")
 
 function rebuild (args, cb) {
-  readInstalled(npm.prefix, npm.config.get("depth"), function (er, data) {
+  var opt = { depth: npm.config.get("depth"), dev: true }
+  readInstalled(npm.prefix, opt, function (er, data) {
     log.info("readInstalled", typeof data)
     if (er) return cb(er)
     var set = filter(data, args)

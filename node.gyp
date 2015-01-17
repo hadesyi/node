@@ -1,9 +1,6 @@
 {
   'variables': {
     'v8_use_snapshot%': 'true',
-    # Turn off -Werror in V8
-    # See http://codereview.chromium.org/8159015
-    'werror': '',
     'node_use_dtrace%': 'false',
     'node_use_etw%': 'false',
     'node_use_perfctr%': 'false',
@@ -152,15 +149,37 @@
           'sources': [ 'src/node_crypto.cc' ],
           'conditions': [
             [ 'node_shared_openssl=="false"', {
-              'dependencies': [ './deps/openssl/openssl.gyp:openssl' ],
+              'dependencies': [
+                './deps/openssl/openssl.gyp:openssl',
+
+                # For tests
+                './deps/openssl/openssl.gyp:openssl-cli',
+              ],
+              # Do not let unused OpenSSL symbols to slip away
+              'xcode_settings': {
+                'OTHER_LDFLAGS': [
+                  '-Wl,-force_load,<(PRODUCT_DIR)/libopenssl.a',
+                ],
+              },
+              'conditions': [
+                ['OS in "linux freebsd"', {
+                  'ldflags': [
+                    '-Wl,--whole-archive <(PRODUCT_DIR)/libopenssl.a -Wl,--no-whole-archive',
+                  ],
+                }],
+              ],
             }]]
         }, {
           'defines': [ 'HAVE_OPENSSL=0' ]
         }],
         [ 'node_use_dtrace=="true"', {
           'defines': [ 'HAVE_DTRACE=1' ],
-          'dependencies': [ 'node_dtrace_header' ],
+          'dependencies': [
+            'node_dtrace_header',
+            'specialize_node_d',
+          ],
           'include_dirs': [ '<(SHARED_INTERMEDIATE_DIR)' ],
+
           #
           # DTrace is supported on solaris, mac, and bsd.  There are three
           # object files associated with DTrace support, but they're not all
@@ -270,6 +289,14 @@
             'PLATFORM="darwin"',
           ],
         }],
+        [ 'OS=="mac" and v8_postmortem_support=="true"', {
+          # Do not let `v8dbg_` symbols slip away
+          'xcode_settings': {
+            'OTHER_LDFLAGS': [
+              '-Wl,-force_load,<(V8_BASE)',
+            ],
+          },
+        }],
         [ 'OS=="freebsd"', {
           'libraries': [
             '-lutil',
@@ -291,7 +318,7 @@
           ],
         }],
         [
-          'OS=="linux" and node_shared_v8=="false"', {
+          'OS in "linux freebsd" and node_shared_v8=="false"', {
             'ldflags': [
               '-Wl,--whole-archive <(V8_BASE) -Wl,--no-whole-archive',
             ],
@@ -482,8 +509,34 @@
                   ]
                 } ],
               ]
-            }
+            },
           ]
+        } ],
+      ]
+    },
+    {
+      'target_name': 'specialize_node_d',
+      'type': 'none',
+      'conditions': [
+        [ 'node_use_dtrace=="true"', {
+          'actions': [
+            {
+              'action_name': 'specialize_node_d',
+              'inputs': [
+                'src/node.d'
+              ],
+              'outputs': [
+                '<(PRODUCT_DIR)/node.d',
+              ],
+              'action': [
+                'tools/specialize_node_d.py',
+                '<@(_outputs)',
+                '<@(_inputs)',
+                '<@(OS)',
+                '<@(target_arch)',
+              ],
+            },
+          ],
         } ],
       ]
     }

@@ -236,37 +236,60 @@
 
         er.domain = domain;
         er.domainThrown = true;
-        // wrap this in a try/catch so we don't get infinite throwing
-        try {
-          // One of three things will happen here.
-          //
-          // 1. There is a handler, caught = true
-          // 2. There is no handler, caught = false
-          // 3. It throws, caught = false
-          //
-          // If caught is false after this, then there's no need to exit()
-          // the domain, because we're going to crash the process anyway.
-          caught = domain.emit('error', er);
 
-          // Exit all domains on the stack.  Uncaught exceptions end the
-          // current tick and no domains should be left on the stack
-          // between ticks.
-          var domainModule = NativeModule.require('domain');
-          domainStack.length = 0;
-          domainModule.active = process.domain = null;
-        } catch (er2) {
-          // The domain error handler threw!  oh no!
-          // See if another domain can catch THIS error,
-          // or else crash on the original one.
-          // If the user already exited it, then don't double-exit.
-          if (domain === domainModule.active)
-            domainStack.pop();
-          if (domainStack.length) {
-            var parentDomain = domainStack[domainStack.length - 1];
-            process.domain = domainModule.active = parentDomain;
-            caught = process._fatalException(er2);
-          } else
-            caught = false;
+        // The top-level domain-handler is handled separately.
+        //
+        // The reason is that if V8 was passed a command line option
+        // asking it to abort on an uncaught exception (currently
+        // "--abort-on-uncaught-exception"), we want an uncaught exception
+        // in the top-level domain error handler to make the
+        // process abort. Using try/catch here would always make V8 think
+        // that these exceptions are caught, and thus would prevent it from
+        // aborting in these cases.
+        if (domainStack.length === 1) {
+          try {
+            // Set the _emittingTopLevelDomainError so that we know that, even
+            // if technically the top-level domain is still active, it would
+            // be ok to abort on an uncaught exception at this point
+            process._emittingTopLevelDomainError = true;
+            caught = domain.emit('error', er);
+          } finally {
+            process._emittingTopLevelDomainError = false;
+          }
+        } else {
+          // wrap this in a try/catch so we don't get infinite throwing
+          try {
+            // One of three things will happen here.
+            //
+            // 1. There is a handler, caught = true
+            // 2. There is no handler, caught = false
+            // 3. It throws, caught = false
+            //
+            // If caught is false after this, then there's no need to exit()
+            // the domain, because we're going to crash the process anyway.
+            caught = domain.emit('error', er);
+
+            // Exit all domains on the stack.  Uncaught exceptions end the
+            // current tick and no domains should be left on the stack
+            // between ticks.
+            var domainModule = NativeModule.require('domain');
+            domainStack.length = 0;
+            domainModule.active = process.domain = null;
+          } catch (er2) {
+            // The domain error handler threw!  oh no!
+            // See if another domain can catch THIS error,
+            // or else crash on the original one.
+            // If the user already exited it, then don't double-exit.
+            if (domain === domainModule.active)
+              domainStack.pop();
+            if (domainStack.length) {
+              var parentDomain = domainStack[domainStack.length - 1];
+              process.domain = domainModule.active = parentDomain;
+              caught = process._fatalException(er2);
+            } else {
+              caught = false;
+            }
+          }
         }
       } else {
         caught = process.emit('uncaughtException', er);
@@ -331,8 +354,12 @@
     var index = 1;
     var depth = 2;
 
-    process.nextTick = nextTick;
+    process.nextTick = function nextTick(cb) {
+      process._currentTickHandler(cb);
+    };
+
     // needs to be accessible from cc land
+    process._currentTickHandler = _nextTick;
     process._nextDomainTick = _nextDomainTick;
     process._tickCallback = _tickCallback;
     process._tickDomainCallback = _tickDomainCallback;
@@ -472,7 +499,7 @@
       tickDone(0);
     }
 
-    function nextTick(callback) {
+    function _nextTick(callback) {
       // on the way out, don't bother. it won't get fired anyway.
       if (process._exiting)
         return;
@@ -564,7 +591,7 @@
 
       case 'FILE':
         var fs = NativeModule.require('fs');
-        stream = new fs.SyncWriteStream(fd);
+        stream = new fs.SyncWriteStream(fd, { autoClose: false });
         stream._type = 'fs';
         break;
 
@@ -651,7 +678,7 @@
 
         case 'FILE':
           var fs = NativeModule.require('fs');
-          stdin = new fs.ReadStream(null, { fd: fd });
+          stdin = new fs.ReadStream(null, { fd: fd, autoClose: false });
           break;
 
         case 'PIPE':

@@ -160,7 +160,7 @@ readable.on('data', function(chunk) {
 
 #### Event: 'end'
 
-This event fires when no more data will be provided.
+This event fires when there will be no more data to read.
 
 Note that the `end` event **will not fire** unless the data is
 completely consumed.  This can be done by switching into flowing mode,
@@ -182,6 +182,8 @@ Emitted when the underlying resource (for example, the backing file
 descriptor) has been closed. Not all streams will emit this.
 
 #### Event: 'error'
+
+* {Error Object}
 
 Emitted if there was an error receiving data.
 
@@ -519,11 +521,10 @@ Calling [`write()`][] after calling [`end()`][] will raise an error.
 
 ```javascript
 // write 'hello, ' and then end with 'world!'
-http.createServer(function (req, res) {
-  res.write('hello, ');
-  res.end('world!');
-  // writing more now is not allowed!
-});
+var file = fs.createWriteStream('example.txt');
+file.write('hello, ');
+file.end('world!');
+// writing more now is not allowed!
 ```
 
 #### Event: 'finish'
@@ -578,6 +579,8 @@ reader.unpipe(writer);
 ```
 
 #### Event: 'error'
+
+* {Error object}
 
 Emitted if there was an error when writing or piping data.
 
@@ -961,6 +964,9 @@ how to implement Writable streams in your programs.
     returning false. Default=16kb
   * `decodeStrings` {Boolean} Whether or not to decode strings into
     Buffers before passing them to [`_write()`][].  Default=true
+  * `objectMode` {Boolean} Whether or not the `write(anyObj)` is
+    a valid operation. If set you can write arbitrary data instead
+    of only `Buffer` / `String` data.  Default=false
 
 In classes that extend the Writable class, make sure to call the
 constructor so that the buffering settings can be properly
@@ -1064,7 +1070,7 @@ initialized.
 * `encoding` {String} If the chunk is a string, then this is the
   encoding type.  (Ignore if `decodeStrings` chunk is a buffer.)
 * `callback` {Function} Call this function (optionally with an error
-  argument) when you are done processing the supplied chunk.
+  argument and data) when you are done processing the supplied chunk.
 
 Note: **This function MUST NOT be called directly.**  It should be
 implemented by child classes, and called by the internal Transform
@@ -1084,7 +1090,20 @@ as a result of this chunk.
 
 Call the callback function only when the current chunk is completely
 consumed.  Note that there may or may not be output as a result of any
-particular input chunk.
+particular input chunk. If you supply as the second argument to the
+it will be passed to push method, in other words the following are
+equivalent:
+
+```javascript
+transform.prototype._transform = function (data, encoding, callback) {
+  this.push(data);
+  callback();
+}
+
+transform.prototype._transform = function (data, encoding, callback) {
+  callback(null, data);
+}
+```
 
 This method is prefixed with an underscore because it is internal to
 the class that defines it, and should not be called directly by user
@@ -1117,6 +1136,14 @@ This method is prefixed with an underscore because it is internal to
 the class that defines it, and should not be called directly by user
 programs.  However, you **are** expected to override this method in
 your own extension classes.
+
+#### Events: 'finish' and 'end'
+
+The [`finish`][] and [`end`][] events are from the parent Writable
+and Readable classes respectively. The `finish` event is fired after
+`.end()` is called and all chunks have been processed by `_transform`,
+`end` is fired after all data has been output which is after the callback
+in `_flush` has been called.
 
 #### Example: `SimpleProtocol` parser v2
 
@@ -1461,6 +1488,8 @@ modify them.
 [Writable]: #stream_class_stream_writable
 [Duplex]: #stream_class_stream_duplex
 [Transform]: #stream_class_stream_transform
+[`end`]: #stream_event_end
+[`finish`]: #stream_event_finish
 [`_read(size)`]: #stream_readable_read_size_1
 [`_read()`]: #stream_readable_read_size_1
 [_read]: #stream_readable_read_size_1

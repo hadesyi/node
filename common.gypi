@@ -1,12 +1,13 @@
 {
   'variables': {
-    'visibility%': 'hidden',         # V8's visibility setting
-    'target_arch%': 'ia32',          # set v8's target architecture
-    'host_arch%': 'ia32',            # set v8's host architecture
-    'want_separate_host_toolset': 0, # V8 should not build target and host
-    'library%': 'static_library',    # allow override to 'shared_library' for DLL/.so builds
-    'component%': 'static_library',  # NB. these names match with what V8 expects
-    'msvs_multi_core_compile': '0',  # we do enable multicore compiles, but not using the V8 way
+    'werror': '',                     # Turn off -Werror in V8 build.
+    'visibility%': 'hidden',          # V8's visibility setting
+    'target_arch%': 'ia32',           # set v8's target architecture
+    'host_arch%': 'ia32',             # set v8's host architecture
+    'want_separate_host_toolset%': 0, # V8 should not build target and host
+    'library%': 'static_library',     # allow override to 'shared_library' for DLL/.so builds
+    'component%': 'static_library',   # NB. these names match with what V8 expects
+    'msvs_multi_core_compile': '0',   # we do enable multicore compiles, but not using the V8 way
     'gcc_version%': 'unknown',
     'clang%': 0,
     'python%': 'python',
@@ -20,7 +21,7 @@
       ['OS != "win"', {
         'v8_postmortem_support': 'true'
       }],
-      ['GENERATOR == "ninja"', {
+      ['GENERATOR == "ninja" or OS== "mac"', {
         'OBJ_DIR': '<(PRODUCT_DIR)/obj',
         'V8_BASE': '<(PRODUCT_DIR)/libv8_base.a',
       }, {
@@ -234,6 +235,11 @@
       }],
       ['OS=="freebsd" and node_use_dtrace=="true"', {
         'libraries': [ '-lelf' ],
+      }],
+      ['OS=="freebsd"', {
+        'ldflags': [
+          '-Wl,--export-dynamic',
+        ],
       }]
     ],
   }

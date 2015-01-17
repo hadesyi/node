@@ -1,7 +1,7 @@
 .\" Generated with Ronnjs 0.3.8
 .\" http://github.com/kapouer/ronnjs/
 .
-.TH "NPM\-SCRIPTS" "7" "January 2014" "" ""
+.TH "NPM\-SCRIPTS" "7" "September 2014" "" ""
 .
 .SH "NAME"
 \fBnpm-scripts\fR \-\- How npm handles the "scripts" field
@@ -63,7 +63,7 @@ stop and start scripts if no \fBrestart\fR script is provided\.
 .IP "" 0
 .
 .P
-Additionally, arbitrary scripts can be run by doing \fBnpm run\-script <stage> <pkg>\fR\|\.
+Additionally, arbitrary scripts can be run by doing \fBnpm run\-script <pkg> <stage>\fR\|\.
 .
 .SH "NOTE: INSTALL SCRIPTS ARE AN ANTIPATTERN"
 \fBtl;dr\fR Don\'t use \fBinstall\fR\|\.  Use a \fB\|\.gyp\fR file for compilation, and \fBprepublish\fR for anything else\.
@@ -319,7 +319,7 @@ only will prevent some optional features, then it\'s better to just
 print a warning and exit successfully\.
 .
 .IP "\(bu" 4
-npm help  Try not to use scripts to do what npm can do for you\.  Read through \fBpackage\.json\fR to see all the things that you can specify and enable
+Try not to use scripts to do what npm can do for you\.  Read through npm help 5 \fBpackage\.json\fR to see all the things that you can specify and enable
 by simply describing your package appropriately\.  In general, this
 will lead to a more robust and consistent state\.
 .
@@ -342,10 +342,10 @@ the user will sudo the npm command in question\.
 npm help run\-script
 .
 .IP "\(bu" 4
-npm help  package\.json
+npm help 5 package\.json
 .
 .IP "\(bu" 4
-npm help  developers
+npm help 7 developers
 .
 .IP "\(bu" 4
 npm help install

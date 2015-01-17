@@ -82,6 +82,9 @@ typedef int mode_t;
 #include "node_script.h"
 #include "v8_typed_array.h"
 
+#include "node_crypto.h"
+#include "util.h"
+
 using namespace v8;
 
 # ifdef __APPLE__
@@ -123,6 +126,7 @@ static Persistent<String> enter_symbol;
 static Persistent<String> exit_symbol;
 static Persistent<String> disposed_symbol;
 
+static Persistent<String> emitting_toplevel_domain_error_symbol;
 
 static bool print_eval = false;
 static bool force_repl = false;
@@ -176,6 +180,8 @@ static uv_async_t dispatch_debug_messages_async;
 // Declared in node_internals.h
 Isolate* node_isolate = NULL;
 
+int WRITE_UTF8_FLAGS = v8::String::HINT_MANY_WRITES_EXPECTED |
+                       v8::String::NO_NULL_TERMINATION;
 
 static void Spin(uv_idle_t* handle, int status) {
   assert((uv_idle_t*) handle == &tick_spinner);
@@ -899,6 +905,20 @@ Handle<Value> FromConstructorTemplate(Persistent<FunctionTemplate> t,
   return scope.Close(t->GetFunction()->NewInstance(argc, argv));
 }
 
+static bool IsDomainActive() {
+  if (domain_symbol.IsEmpty())
+    domain_symbol = NODE_PSYMBOL("domain");
+
+  Local<Value> domain_v = process->Get(domain_symbol);
+
+  return domain_v->IsObject();
+}
+
+bool ShouldAbortOnUncaughtException() {
+  Local<Value> emitting_toplevel_domain_error_v =
+    process->Get(emitting_toplevel_domain_error_symbol);
+  return !IsDomainActive() || emitting_toplevel_domain_error_v->BooleanValue();
+}
 
 Handle<Value> UsingDomains(const Arguments& args) {
   HandleScope scope;
@@ -918,7 +938,7 @@ Handle<Value> UsingDomains(const Arguments& args) {
   Local<Function> tdc = tdc_v.As<Function>();
   Local<Function> ndt = ndt_v.As<Function>();
   process->Set(String::New("_tickCallback"), tdc);
-  process->Set(String::New("nextTick"), ndt);
+  process->Set(String::New("_currentTickHandler"), ndt);
   process_tickCallback.Dispose();  // Possibly already set by MakeCallback().
   process_tickCallback = Persistent<Function>::New(tdc);
   return Undefined();
@@ -1100,7 +1120,7 @@ enum encoding ParseEncoding(Handle<Value> encoding_v, enum encoding _default) {
 
   if (!encoding_v->IsString()) return _default;
 
-  String::Utf8Value encoding(encoding_v);
+  node::Utf8Value encoding(encoding_v);
 
   if (strcasecmp(*encoding, "utf8") == 0) {
     return UTF8;
@@ -1200,12 +1220,12 @@ void DisplayExceptionLine (TryCatch &try_catch) {
 
   if (!message.IsEmpty()) {
     // Print (filename):(line number): (message).
-    String::Utf8Value filename(message->GetScriptResourceName());
+    node::Utf8Value filename(message->GetScriptResourceName());
     const char* filename_string = *filename;
     int linenum = message->GetLineNumber();
     fprintf(stderr, "%s:%i\n", filename_string, linenum);
     // Print line of source code.
-    String::Utf8Value sourceline(message->GetSourceLine());
+    node::Utf8Value sourceline(message->GetSourceLine());
     const char* sourceline_string = *sourceline;
 
     // Because of how node modules work, all scripts are wrapped with a
@@ -1252,7 +1272,7 @@ static void ReportException(TryCatch &try_catch, bool show_line) {
 
   if (show_line) DisplayExceptionLine(try_catch);
 
-  String::Utf8Value trace(try_catch.StackTrace());
+  node::Utf8Value trace(try_catch.StackTrace());
 
   // range errors have a trace member set to undefined
   if (trace.length() > 0 && !try_catch.StackTrace()->IsUndefined()) {
@@ -1267,11 +1287,11 @@ static void ReportException(TryCatch &try_catch, bool show_line) {
       !(er->ToObject()->Get(String::New("name"))->IsUndefined());
 
     if (isErrorObject) {
-      String::Utf8Value name(er->ToObject()->Get(String::New("name")));
+      node::Utf8Value name(er->ToObject()->Get(String::New("name")));
       fprintf(stderr, "%s: ", *name);
     }
 
-    String::Utf8Value msg(!isErrorObject ? er
+    node::Utf8Value msg(!isErrorObject ? er
                          : er->ToObject()->Get(String::New("message")));
     fprintf(stderr, "%s\n", *msg);
   }
@@ -1353,7 +1373,7 @@ static Handle<Value> Chdir(const Arguments& args) {
     return ThrowException(Exception::Error(String::New("Bad argument.")));
   }
 
-  String::Utf8Value path(args[0]);
+  node::Utf8Value path(args[0]);
 
   uv_err_t r = uv_chdir(*path);
 
@@ -1404,7 +1424,7 @@ static Handle<Value> Umask(const Arguments& args) {
       oct = args[0]->Uint32Value();
     } else {
       oct = 0;
-      String::Utf8Value str(args[0]);
+      node::Utf8Value str(args[0]);
 
       // Parse the octal string.
       for (int i = 0; i < str.length(); i++) {
@@ -1510,7 +1530,7 @@ static uid_t uid_by_name(Handle<Value> value) {
   if (value->IsUint32()) {
     return static_cast<uid_t>(value->Uint32Value());
   } else {
-    String::Utf8Value name(value);
+    node::Utf8Value name(value);
     return uid_by_name(*name);
   }
 }
@@ -1520,7 +1540,7 @@ static gid_t gid_by_name(Handle<Value> value) {
   if (value->IsUint32()) {
     return static_cast<gid_t>(value->Uint32Value());
   } else {
-    String::Utf8Value name(value);
+    node::Utf8Value name(value);
     return gid_by_name(*name);
   }
 }
@@ -1663,7 +1683,7 @@ static Handle<Value> InitGroups(const Arguments& args) {
     return ThrowTypeError("argument 2 must be a number or a string");
   }
 
-  String::Utf8Value arg0(args[0]);
+  node::Utf8Value arg0(args[0]);
   gid_t extra_group;
   bool must_free;
   char* user;
@@ -1714,13 +1734,10 @@ static Handle<Value> Uptime(const Arguments& args) {
   HandleScope scope;
   double uptime;
 
-  uv_err_t err = uv_uptime(&uptime);
+  uv_update_time(uv_default_loop());
+  uptime = uv_now(uv_default_loop()) - prog_start_time;
 
-  if (err.code != UV_OK) {
-    return Undefined();
-  }
-
-  return scope.Close(Number::New(uptime - prog_start_time));
+  return scope.Close(Integer::New(uptime / 1000));
 }
 
 
@@ -1827,7 +1844,7 @@ Handle<Value> DLOpen(const v8::Arguments& args) {
   }
 
   Local<Object> module = args[0]->ToObject(); // Cast
-  String::Utf8Value filename(args[1]); // Cast
+  node::Utf8Value filename(args[1]); // Cast
 
   if (exports_symbol.IsEmpty()) {
     exports_symbol = NODE_PSYMBOL("exports");
@@ -1843,7 +1860,7 @@ Handle<Value> DLOpen(const v8::Arguments& args) {
     return ThrowException(Exception::Error(errmsg));
   }
 
-  String::Utf8Value path(args[1]);
+  node::Utf8Value path(args[1]);
   base = *path;
 
   /* Find the shared library filename within the full path. */
@@ -1962,7 +1979,7 @@ static Handle<Value> Binding(const Arguments& args) {
   HandleScope scope;
 
   Local<String> module = args[0]->ToString();
-  String::Utf8Value module_v(module);
+  node::Utf8Value module_v(module);
   node_module_struct* modp;
 
   if (binding_cache.IsEmpty()) {
@@ -2021,7 +2038,7 @@ static void ProcessTitleSetter(Local<String> property,
                                Local<Value> value,
                                const AccessorInfo& info) {
   HandleScope scope;
-  String::Utf8Value title(value);
+  node::Utf8Value title(value);
   // TODO: protect with a lock
   uv_set_process_title(*title);
 }
@@ -2031,7 +2048,7 @@ static Handle<Value> EnvGetter(Local<String> property,
                                const AccessorInfo& info) {
   HandleScope scope;
 #ifdef __POSIX__
-  String::Utf8Value key(property);
+  node::Utf8Value key(property);
   const char* val = getenv(*key);
   if (val) {
     return scope.Close(String::New(val));
@@ -2060,8 +2077,8 @@ static Handle<Value> EnvSetter(Local<String> property,
                                const AccessorInfo& info) {
   HandleScope scope;
 #ifdef __POSIX__
-  String::Utf8Value key(property);
-  String::Utf8Value val(value);
+  node::Utf8Value key(property);
+  node::Utf8Value val(value);
   setenv(*key, *val, 1);
 #else  // _WIN32
   String::Value key(property);
@@ -2081,7 +2098,7 @@ static Handle<Integer> EnvQuery(Local<String> property,
                                 const AccessorInfo& info) {
   HandleScope scope;
 #ifdef __POSIX__
-  String::Utf8Value key(property);
+  node::Utf8Value key(property);
   if (getenv(*key)) {
     return scope.Close(Integer::New(0));
   }
@@ -2109,7 +2126,7 @@ static Handle<Boolean> EnvDeleter(Local<String> property,
                                   const AccessorInfo& info) {
   HandleScope scope;
 #ifdef __POSIX__
-  String::Utf8Value key(property);
+  node::Utf8Value key(property);
   if (!getenv(*key)) return False();
   unsetenv(*key); // can't check return value, it's void on some platforms
   return True();
@@ -2435,6 +2452,11 @@ Handle<Object> SetupProcessObject(int argc, char *argv[]) {
   // pre-set _events object for faster emit checks
   process->Set(String::NewSymbol("_events"), Object::New());
 
+  if (emitting_toplevel_domain_error_symbol.IsEmpty())
+    emitting_toplevel_domain_error_symbol =
+      NODE_PSYMBOL("_emittingTopLevelDomainError");
+  process->Set(emitting_toplevel_domain_error_symbol, False());
+
   return process;
 }
 
@@ -2542,6 +2564,8 @@ static void PrintHelp() {
          "  --trace-deprecation  show stack traces on deprecations\n"
          "  --v8-options         print v8 command line options\n"
          "  --max-stack-size=val set max v8 stack size (bytes)\n"
+         "  --enable-ssl2        enable ssl2\n"
+         "  --enable-ssl3        enable ssl3\n"
          "\n"
          "Environment variables:\n"
 #ifdef _WIN32
@@ -2574,6 +2598,12 @@ static void ParseArgs(int argc, char **argv) {
       const char *p = 0;
       p = 1 + strchr(arg, '=');
       max_stack_size = atoi(p);
+      argv[i] = const_cast<char*>("");
+    } else if (strcmp(arg, "--enable-ssl2") == 0) {
+      SSL2_ENABLE = true;
+      argv[i] = const_cast<char*>("");
+    } else if (strcmp(arg, "--enable-ssl3") == 0) {
+      SSL3_ENABLE = true;
       argv[i] = const_cast<char*>("");
     } else if (strcmp(arg, "--help") == 0 || strcmp(arg, "-h") == 0) {
       PrintHelp();
@@ -2893,7 +2923,7 @@ static Handle<Value> DebugEnd(const Arguments& args) {
 
 char** Init(int argc, char *argv[]) {
   // Initialize prog_start_time to get relative uptime.
-  uv_uptime(&prog_start_time);
+  prog_start_time = uv_now(uv_default_loop());
 
   // Make inherited handles noninheritable.
   uv_disable_stdio_inheritance();
@@ -2949,6 +2979,7 @@ char** Init(int argc, char *argv[]) {
   // Fetch a reference to the main isolate, so we have a reference to it
   // even when we need it to access it from another (debugger) thread.
   node_isolate = Isolate::GetCurrent();
+  node_isolate->SetAbortOnUncaughtException(ShouldAbortOnUncaughtException);
 
   // If the --debug flag was specified then initialize the debug thread.
   if (use_debug_agent) {
@@ -3044,7 +3075,13 @@ static char **copy_argv(int argc, char **argv) {
   return argv_copy;
 }
 
+
 int Start(int argc, char *argv[]) {
+  const char* replaceInvalid = getenv("NODE_INVALID_UTF8");
+
+  if (replaceInvalid == NULL)
+    WRITE_UTF8_FLAGS |= String::REPLACE_INVALID_UTF8;
+
   // Hack aroung with the argv pointer. Used for process.title = "blah".
   argv = uv_setup_args(argc, argv);
 
@@ -3057,6 +3094,12 @@ int Start(int argc, char *argv[]) {
   Init(argc, argv_copy);
 
   V8::Initialize();
+#if HAVE_OPENSSL
+  // V8 on Windows doesn't have a good source of entropy. Seed it from
+  // OpenSSL's pool.
+  V8::SetEntropySource(crypto::EntropySource);
+#endif
+
   {
     Locker locker;
     HandleScope handle_scope;

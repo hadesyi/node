@@ -6,9 +6,8 @@ var npm = require("../npm.js")
   , path = require("path")
   , log = require("npmlog")
   , uidNumber = require("uid-number")
-  , rm = require("rimraf")
+  , rm = require("./gently-rm.js")
   , readJson = require("read-package-json")
-  , cache = require("../cache.js")
   , myUid = process.getuid && process.getuid()
   , myGid = process.getgid && process.getgid()
   , tar = require("tar")
@@ -16,13 +15,14 @@ var npm = require("../npm.js")
   , fstream = require("fstream")
   , Packer = require("fstream-npm")
   , lifecycle = require("./lifecycle.js")
+  , locker = require("./locker.js")
 
 function lock(path, cb) {
-  return cache.lock('tar://' + path, cb)
+  return locker.lock('tar://' + path, cb)
 }
 
 function unlock(path, cb) {
-  return cache.unlock('tar://' + path, cb)
+  return locker.unlock('tar://' + path, cb)
 }
 
 if (process.env.SUDO_UID && myUid === 0) {
@@ -240,6 +240,7 @@ function gunzTarPerm (tarball, target, dMode, fMode, uid, gid, cb_) {
     extractOpts.gid = gid
   }
 
+  var sawIgnores = {}
   extractOpts.filter = function () {
     // symbolic links are not allowed in packages.
     if (this.type.match(/^.*Link$/)) {
@@ -248,6 +249,28 @@ function gunzTarPerm (tarball, target, dMode, fMode, uid, gid, cb_) {
               + " -> " + this.linkpath )
       return false
     }
+
+    // Note: This mirrors logic in the fs read operations that are
+    // employed during tarball creation, in the fstream-npm module.
+    // It is duplicated here to handle tarballs that are created
+    // using other means, such as system tar or git archive.
+    if (this.type === "File") {
+      var base = path.basename(this.path)
+      if (base === ".npmignore") {
+        sawIgnores[ this.path ] = true
+      } else if (base === ".gitignore") {
+        var npmignore = this.path.replace(/\.gitignore$/, ".npmignore")
+        if (sawIgnores[npmignore]) {
+          // Skip this one, already seen.
+          return false
+        } else {
+          // Rename, may be clobbered later.
+          this.path = npmignore
+          this._path = npmignore
+        }
+      }
+    }
+
     return true
   }
 
@@ -277,7 +300,8 @@ function gunzTarPerm (tarball, target, dMode, fMode, uid, gid, cb_) {
           cb(er)
         })
         .on("close", cb)
-    } else if (c.toString().match(/^package\//)) {
+    } else if (c.toString().match(/^package\//) ||
+               c.toString().match(/^pax_global_header/)) {
       // naked tar
       fst
         .pipe(tar.Extract(extractOpts))

@@ -102,6 +102,7 @@ TESTS= \
 	test/test-platform-output.o \
 	test/test-poll.o \
 	test/test-poll-close.o \
+	test/test-poll-closesocket.o \
 	test/test-process-title.o \
 	test/test-ref.o \
 	test/test-run-nowait.o \
@@ -109,6 +110,7 @@ TESTS= \
 	test/test-semaphore.o \
 	test/test-shutdown-close.o \
 	test/test-shutdown-eof.o \
+	test/test-shutdown-twice.o \
 	test/test-signal.o \
 	test/test-signal-multiple-loops.o \
 	test/test-spawn.o \
