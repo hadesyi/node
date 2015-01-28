@@ -8,22 +8,22 @@ timer 함수는 모두 전역객체이다. timer를 사용하기 위해 이 모�
 ## setTimeout(callback, delay, [arg], [...])
 
 `delay` 밀리 초 후에 `callback`을 한 번만 실행하도록 스케줄링한다. `clearTimeout()`과 사용할
-수 있도록 `timeoutId`를 반환한다. 선택적으로 콜백에 아규먼트를 전달할 수 있다.
+수 있도록 `timeoutObject`를 반환한다. 선택적으로 콜백에 아규먼트를 전달할 수 있다.
 
 콜백이 정확한 `delay` 밀리 초에 실행되지 않을 수도 있다는 점은 중요하다. - Node.js는 콜백이
 정확한 타이밍에 실행된다는 것을 보장하지 않고 차례대로 실행된다는 것도 보장하지 않는다. 콜백은
 지정한 시간과 가능한 한 가깝게 호출할 것이다.
 
-## clearTimeout(timeoutId)
+## clearTimeout(timeoutObject)
 
 타이머가 트리거되는 것을 막는다.
 
 ## setInterval(callback, delay, [arg], [...])
 
 `delay` 밀리 초마다 `callback` 실행을 반복하도록 스케줄링한다. `clearInterval()`에서
-사용할 수 있도록 `intervalId`를 반환한다. 선택적으로 콜백에 아규먼트를 전달할 수도 있다.
+사용할 수 있도록 `intervalObject`를 반환한다. 선택적으로 콜백에 아규먼트를 전달할 수도 있다.
 
-## clearInterval(intervalId)
+## clearInterval(intervalObject)
 
 인터벌의 실행을 멈춘다.
 
@@ -45,7 +45,7 @@ timer 함수는 모두 전역객체이다. timer를 사용하기 위해 이 모�
 ## setImmediate(callback, [arg], [...])
 
 I/O 이벤트 콜백 후와 `setTimeout`와 `setInterval` 이전에 `callback`을 "즉시" 실행하도록
-스케줄링한다. `clearImmediate()`와 사용할 수 있는 `immediateId`를 반환한다. 선택적으로
+스케줄링한다. `clearImmediate()`와 사용할 수 있는 `immediateObject`를 반환한다. 선택적으로
 콜백에 인자를 전달할 수도 있다.
 
 Immediate는 생성한 순서대로 큐에 들어가고 루프 이터레이션마나 하나씩 큐에서 빠진다. 이 부분이
@@ -54,6 +54,6 @@ Immediate는 생성한 순서대로 큐에 들어가고 루프 이터레이션�
 루프에 양보할 것이다. 실행하는 동안 순서가 유지되지만 다른 I/O 이벤트는 스케쥴된 두
 immediate 콜백사이에서 실행될 것이다.
 
-## clearImmediate(immediateId)
+## clearImmediate(immediateObject)
 
 immediate의 실행을 멈춘다.

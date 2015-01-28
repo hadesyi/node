@@ -38,9 +38,14 @@
 
 * `'hex'` - 각 바이트를 두 16진수 문자로 인코딩한다.
 
-`Buffer` 객체는 타입 있는 배열(typed array)과도 사용할 수 있다. 이때 버퍼 객체는 타입 있는
-배열을 지원하는 저장소로 사용하는 `ArrayBuffer`로 복제(clone)된다. 버퍼의 메모리와
-`ArrayBuffer`는 공유되지 않는다.
+`Buffer`로 타입 있는 배열(typed array)을 생성할 때는 다음을 주의해서 사용해라.
+
+1. 버퍼의 메모리는 복사되고 공유되지 않는다.
+
+2. 버퍼의 메모리는 바이트 어레이가 아니라 배열로 해석한다. 즉,
+   `new Uint32Array(new Buffer([1,2,3,4]))`는 하나의 `[0x1020304]`나
+   `[0x4030201]` 요소를 가진 `Uint32Array`가 아니라 `[1,2,3,4]` 네 요소를 가진
+   `Uint32Array`를 만든다.
 
 NOTE: Node.js v0.8은 복제하는 대신 단순히 `array.buffer`안에 버퍼에 대한 참조를 유지한다.
 
@@ -108,8 +113,18 @@ Buffer 클래스는 바이너리 데이터를 직접 다루는 글로벌 타입�
 * `start` 숫자, 선택사항, 기본값: 0
 * `end` 숫자, 선택사항, 기본값: `buffer.length`
 
-`start`(기본값은 `0`)부터 `end` (기본값은 `buffer.length`)까지 `encoding`로
-인코딩된 버퍼 데이터를 디코딩해서 문자열을 반환한다.
+지정한 캐릭터 인코딩으로 버퍼데이터를 디코딩해서 문자열을 반환한다. `encoding`이
+`undefined`이나 `null`이면 `encoding`은 기본값인 `'utf8'`이다. `start`와
+`end` 파라미터는 `undefined`일 때 기본값이 `0`과 `buffer.length`이다.
+
+    buf = new Buffer(26);
+    for (var i = 0 ; i < 26 ; i++) {
+      buf[i] = i + 97; // 97 is ASCII a
+    }
+    buf.toString('ascii'); // 출력: abcdefghijklmnopqrstuvwxyz
+    buf.toString('ascii',0,5); // 출력: abcde
+    buf.toString('utf8',0,5); // 출력: abcde
+    buf.toString(undefined,0,5); // 인코딩 기본값이 'utf8', 출력은 abcde
 
 위의 `buffer.write()` 예제를 봐라.
 
@@ -213,6 +228,16 @@ totalLength를 전달하지 않으면 list의 버퍼들에서 읽어드린다.
     // 1234
     // 1234
 
+`length` 프로퍼티가 불변이 아니므로 `length`의 값을 변경하면 undefined가 되거나
+일관되지 않은 동작이 일어날 수 있다. 그러므로 버퍼의 길이를 수정하고자 하는 애플리케이션은
+`length`를 읽기 전용으로 다루고 `buf.slice`를 사용해서 새로운 버퍼를 만들어야 한다.
+
+    buf = new Buffer(10);
+    buf.write("abcdefghj", 0, "ascii");
+    console.log(buf.length); // 10
+    buf = buf.slice(0,5);
+    console.log(buf.length); // 5
+
 ### buf.copy(targetBuffer, [targetStart], [sourceStart], [sourceEnd])
 
 * `targetBuffer` Buffer 객체 - 복사할 Buffer다
@@ -220,12 +245,9 @@ totalLength를 전달하지 않으면 list의 버퍼들에서 읽어드린다.
 * `sourceStart` 숫자, 선택사항, 기본값: 0
 * `sourceEnd` 숫자, 선택사항, 기본값: `buffer.length`
 
-버퍼들 간에 복사를 한다. 소스영역과 대상영역은 일치할 수도 있다.
-`targetStart`와 `sourceStart`의 기본값은 `0`이다.
-`sourceEnd`의 기본값은 `buffer.length`이다.
-
-`undefined`/`NaN`이나 범위를 벗어난(out of bound) 값을 전달하면
-각각의 기본값을 설정한 것과 같다.
+대상 메모리의 영역이 원래와 덮어쓰더라도 해당 버퍼의 영역의 데이터를 대상 버퍼의 영역으로 복사한다.
+`targetStart`나 `sourceStart`가 `undefined`이면 기본값은 `0`이지만 `sourceEnd`의
+기본값은 `buffer.length`이다.
 
 예제: 두 버퍼를 만들고 `buf1`의 16 바이트부터 19 바이트까지를 `buf2`의
 8번째 바이트 위치에 복사한다.
@@ -242,6 +264,19 @@ totalLength를 전달하지 않으면 list의 버퍼들에서 읽어드린다.
     console.log(buf2.toString('ascii', 0, 25));
 
     // !!!!!!!!qrst!!!!!!!!!!!!!
+
+예제: 버퍼를 하나 만들고 같은 버퍼에서 한 영역의 데이터를 다른 영역으로 덮어쓴다.
+
+    buf = new Buffer(26);
+
+    for (var i = 0 ; i < 26 ; i++) {
+      buf[i] = i + 97; // 97 is ASCII a
+    }
+
+    buf.copy(buf, 0, 4, 10);
+    console.log(buf.toString());
+
+    // efghijghijklmnopqrstuvwxyz
 
 
 ### buf.slice([start], [end])

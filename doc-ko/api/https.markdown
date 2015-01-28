@@ -122,8 +122,8 @@ options 아규먼트는 다음과 같다.
 - `rejectUnauthorized`: 이 값이 `true`이면 서버 인증서를 제공된 CA 리스트로
   검증한다. 검증이 실패했을 때 `'error'` 이벤트가 발생한다. 검증은 HTTP 요청을
   보내기 *전* 연결단계에서 이뤄진다. 기본값은 `true`이다.
-- `secureProtocol`: 사용할 SSL 방식. 예를 들어 SSL 버전 3을 사용하려면
-  `SSLv3_method`이다. 사용 가능한 값은 설치한 OpenSSL에 따라 다르고
+- `secureProtocol`: 사용할 SSL 방식. 예를 들어 TLS 버전 1을 사용하려면
+  `TLSv1_method`이다. 사용 가능한 값은 설치한 OpenSSL에 따라 다르고
   상수 [SSL_METHODS][]에 정의되어 있다.
 
 이러한 옵션들을 지정하려면 커스텀 `Agent`를 사용해라.

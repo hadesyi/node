@@ -24,9 +24,9 @@ FIN 패킷을 보내지 않는다. 소켓은 읽을 수 없는 상태가 되지�
 
     var net = require('net');
     var server = net.createServer(function(c) { //'connection' listener
-      console.log('server connected');
+      console.log('client connected');
       c.on('end', function() {
-        console.log('server disconnected');
+        console.log('client disconnected');
       });
       c.write('hello\r\n');
       c.pipe(c);
@@ -51,8 +51,12 @@ UNIX 도메인 소켓 서버에 접속하려면 `nc`를 사용해라.
 ## net.connect(options, [connectionListener])
 ## net.createConnection(options, [connectionListener])
 
-새로운 소켓 객체를 생성하고 전달한 위치로 소켓을 연다. 소켓 구성이 완료되었을 때
-['connect'][] 이벤트가 발생할 것이다.
+새로운 ['net.Socket'](#net_class_net_socket)를 반환하는 팩토리 메서드로
+제공된 주소와 포트로 연결한다.
+
+소켓 구성이 완료되었을 때 ['connect'][] 이벤트가 발생할 것이다.
+
+['net.Socket'](#net_class_net_socket)와 같은 이벤트를 가진다.
 
 TCP 소켓에서 `options` 아규먼트는 다음을 지정하는 객체여야 한다.
 
@@ -80,7 +84,7 @@ UNIX계열 소켓에서는 `options` 아규먼트는 다음을 지정하는 객�
     var net = require('net');
     var client = net.connect({port: 8124},
         function() { //'connect' listener
-      console.log('client connected');
+      console.log('connected to server!');
       client.write('world!\r\n');
     });
     client.on('data', function(data) {
@@ -88,7 +92,7 @@ UNIX계열 소켓에서는 `options` 아규먼트는 다음을 지정하는 객�
       client.end();
     });
     client.on('end', function() {
-      console.log('client disconnected');
+      console.log('disconnected from server');
     });
 
 `/tmp/echo.sock` 소켓에 연결하려면 두번째 줄을 다음과 같이 변경한다.
@@ -102,11 +106,15 @@ UNIX계열 소켓에서는 `options` 아규먼트는 다음을 지정하는 객�
 가정한다.
 `connectListener` 파라미터는 ['connect'][] 이벤트의 리스너로 추가될 것이다.
 
+새로운 ['net.Socket'](#net_class_net_socket)를 반환하는 팩토리 메서드다.
+
 ## net.connect(path, [connectListener])
 ## net.createConnection(path, [connectListener])
 
 `path`로 유닉스 소켓 연결을 생성한다.
 `connectListener` 파라미터는 ['connect'][] 이벤트의 리스너로 추가될 것이다.
+
+새로운 ['net.Socket'](#net_class_net_socket)를 반환하는 팩토리 메서드다.
 
 ## Class: net.Server
 
@@ -226,13 +234,13 @@ Windows에서는 파일스크립터에서 연결을 받아들이는 것을 지�
 `child_process.fork()`로 자식 프로세스에 소켓을 보냈을 때 이 값은 `null`이 된다.
 현재 활성화된 연결의 수를 얻거나 포크 하려면 대신 비동기 `server.getConnections`를 사용해라.
 
-`net.Server`는 다음 이벤트를 가진 [EventEmitter][]이다.
-
 ### server.getConnections(callback)
 
 비동기적으로 서버의 현재 연결 수를 가져온다. 포크(fork)하려보 소켓을 보냈을 때 동작한다.
 
 콜백은 두 개의 인자 `err`와 `count`를 받아야 한다.
+
+`net.Server`는 다음 이벤트를 가진 [EventEmitter][]이다.
 
 ### Event: 'listening'
 
@@ -504,5 +512,6 @@ input이 IP 버전 6 주소이면 true를 반환하고 IP 버전 6 주소가 아
 ['end']: #net_event_end
 [EventEmitter]: events.html#events_class_events_eventemitter
 ['listening']: #net_event_listening
+[server.getConnections()]: #net_server_getconnections_callback
 [Readable Stream]: stream.html#stream_readable_stream
 [stream.setEncoding()]: stream.html#stream_stream_setencoding_encoding

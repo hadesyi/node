@@ -10,13 +10,13 @@
 TLS/SSL는 공개키/개인 키 기반이다. 각 클라이언트와 서버는 개인 키를 반드시 가지고
 있어야 한다. 개인 키는 다음과 같이 생성한다.
 
-    openssl genrsa -out ryans-key.pem 1024
+    openssl genrsa -out ryans-key.pem 2048
 
 모든 서버와 몇몇 클라이언트는 인증서를 가질 필요가 있다. 인증서는 인증기관(Certificate
 Authority)이나 자체서명으로 서명된 공개키이다. "인증서 서명 요청(Certificate Signing
 Request)" (CSR) 파일을 생성하는 것이 인증서를 얻는 첫 단계이다. 다음과 같이 실행한다.
 
-    openssl req -new -key ryans-key.pem -out ryans-csr.pem
+    openssl req -new -sha256 -key ryans-key.pem -out ryans-csr.pem
 
 CSR로 자체서명 인증서를 생성하려면 다음과 같이 한다.
 
@@ -37,6 +37,34 @@ CSR로 자체서명 인증서를 생성하려면 다음과 같이 한다.
   - `certfile`: `cat ca1-cert.pem ca2-cert.pem > ca-cert.pem`와 같이 모든
     CA 인증서를 하나의 파일로 연결한다.
 
+## Protocol support
+
+Node.js는 기본적으로 SSLv2와 SSLv3를 지원하도록 컴파일되지만, 이 프로토콜들은 **비활성화된다**.
+이 프로토콜들은 보안이 취약하고 [CVE-2014-3566][]에 나왔듯이 쉽게 노출될 수 있다. 하지만
+일부 상황에서는 레거시 클라이언트/서버 환경에서(Internet Explorer 6 등) 문제가 될 수 있다.
+SSLv2나 SSLv3를 활성화하고자 한다면 각각 `--enable-ssl2`나 `--enable-ssl3` 옵션과 함께
+node를 실행해라. 차후 버전의 Node.js에서는 SSLv2와 SSLv3를 기본으로 컴파일하지 않을 것이다.
+
+명시적으로 `secureProtocol`을 `'SSLv3_method'`나 `'SSLv2_method'`로 지정해서 node가
+SSLv3나 SSLv2를 사용하도록 강제하는 방법도 있다.
+
+Node.js가 사용하는 기본 프로토콜 메서드는 `SSLv23_method`이고 더 정확하게는
+`AutoNegotiate_method`이다. 이 메서드는 가장 높은 수준에서 클라이언트가 지원하는 프로토콜까지
+시도하면서 협상할 것이다. 기본적인 보안을 위해 Node.js(v0.10.33부터)는 `secureOptions`을
+`SSL_OP_NO_SSLv3|SSL_OP_NO_SSLv2`로 설정해서 SSLv3와 SSLv2의 사용을 명시적으로
+비활성화한다.(`--enable-ssl3`나 `--enable-ssl2` 혹은 `secureProtocol`로
+`SSLv3_method`를 전달하지 않는 한)
+
+`secureOptions`를 설정했다면 이 설정을 오버라이드 하지 않을 것이다.
+
+이 동작 변경으로 다음과 같은 결과가 발생한다.
+
+ * 애플리케이션이 보안 서버로 동작한다면 `SSLv3`만 지원하는 클라이언트와는 이제 적절하게 연결을
+협상할 수 없고 연결을 거절할 것이다. 이 경우 서버는 `clientError` 이벤트를 발생시킬 것이고
+오류 메시지에는 `'wrong version number'`가 포함될 것이다.
+ * 애플리케이션이 보안 클라이언트로 동작하고 SSLv3보다 더 보안이 강한 방법을 지원하지 않는 서버와
+통신을 한다면 연결을 협상할 수 없고 실패할 것이다. 이 경우 클라이언트는 `error` 이벤트를
+발생시키고 오류 메시지에는 `'wrong version number'`가 포함될 것이다.
 
 ## Client-initiated renegotiation attack mitigation
 
@@ -159,6 +187,10 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
     `SSLv3_method`이다. 사용 가능한 값은 설치한 OpenSSL에 따라 다르고
     상수 [SSL_METHODS][]에 정의되어 있다.
 
+  - `secureOptions`: 서버 옵션을 설정한다. 예를 들어 SSLv4 프로토콜을 비활성화하려면
+    `SSL_OP_NO_SSLv3` 플래그를 설정해라. 사용가능한 옵션은 [SSL_CTX_set_options]를
+    참고해라.
+
 간단한 에코(echo) 서버의 예제다.
 
     var tls = require('tls');
@@ -238,7 +270,7 @@ NPN (Next Protocol Negotiation)와 SNI (Server Name Indication)는 TLS
   - `socket`: 새로운 소켓을 생성하는 대신 전달한 소켓으로 안전한 연결을 만든다.
     이 옵션을 지정하면 `host`와 `port`은 무시한다.
 
-  - `pfx`: PFX나 PKCS12 형식으로 개인 키, 인증서 서버의 CA 인증서를 담고 있는 문자열이나
+  - `pfx`: PFX나 PKCS12 형식으로 클라이언트의 개인 키, 인증서, CA cert를 담고 있는 문자열이나
    `Buffer`다.
 
   - `key`: PEM 형식으로 클라이언트의 개인 키를 담고 있는 문자열이나 `Buffer`다.
@@ -536,3 +568,5 @@ SSL_CIPHER_get_name()와 SSL_CIPHER_get_version()를 봐라.
 [Stream]: stream.html#stream_stream
 [SSL_METHODS]: http://www.openssl.org/docs/ssl/ssl.html#DEALING_WITH_PROTOCOL_METHODS
 [tls.Server]: #tls_class_tls_server
+[SSL_CTX_set_options]: https://www.openssl.org/docs/ssl/SSL_CTX_set_options.html
+[CVE-2014-3566]: https://access.redhat.com/articles/1232123

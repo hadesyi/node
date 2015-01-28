@@ -59,14 +59,13 @@ console 기능은 동기적이고 파이프인 경우(장시간 블락킹하는 
     }
     console.timeEnd('100-elements');
 
-## console.trace(label)
+## console.trace(message, [...])
 
-현지 위치의 stderr에 스택트레이스를 출력한다.
+현재 위치의 stderr에 스택트레이스를 출력한다.
 
-## console.assert(expression, [message])
+## console.assert(value, [message], [...])
 
-`expression`가 `false`이면 `message`로 AssertionError를 던지는 [assert.ok()][]와
-같다.
+[assert.ok()][]와 비슷하지만 error 메시지가 `util.format(message...)`로 포매팅된다.
 
 [assert.ok()]: assert.html#assert_assert_value_message_assert_ok_value_message
 [util.format()]: util.html#util_util_format_format

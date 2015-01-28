@@ -494,8 +494,8 @@ keep-alive 이점을 가지지만 여전히 keep-alive를 사용하는 HTTP 클�
 
 ### agent.maxSockets
 
-기본적으로 5로 설정되어 있다. 에이전트가 얼마나 많은 동시 소켓을 호스트당 열 수 있는지를
-결정한다.
+기본적으로 5로 설정되어 있다. 에이전트가 얼마나 많은 동시 소켓을 출처(origin)마다 열 수 있는지를
+결정한다. 출처는 'host:port'나 'host:port:localAddress' 조합이다.
 
 ### agent.sockets
 
@@ -824,8 +824,8 @@ request.connection.verifyPeer()와 request.connection.getPeerCertificate()를
 [Agent]: #http_class_http_agent
 [Buffer]: buffer.html#buffer_buffer
 [EventEmitter]: events.html#events_class_events_eventemitter
-[Readable Stream]: stream.html#stream_readable_stream
-[Writable Stream]: stream.html#stream_writable_stream
+[Readable Stream]: stream.html#stream_class_stream_readable
+[Writable Stream]: stream.html#stream_class_stream_writable
 [global Agent]: #http_http_globalagent
 [http.ClientRequest]: #http_class_http_clientrequest
 [http.IncomingMessage]: #http_http_incomingmessage

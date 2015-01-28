@@ -270,3 +270,22 @@ TTY일 때 사용할 수 있다.
       process.exit(0);
     });
 
+## readline.cursorTo(stream, x, y)
+
+해당 TTY 스트림에서 지정한 위치로 커서를 이동한다.
+
+## readline.moveCursor(stream, dx, dy)
+
+해당 TTY 스트림의 현재 위치에서 상대적인 위치로 커서를 이동한다.
+
+## readline.clearLine(stream, dir)
+
+해당 TTY 스트림의 현재 라인에서 지정한 방향으로 없앴다. `dir`은 다음 중 하나의 값이다.
+
+* `-1` - 커서에서 왼쪽으로
+* `1` - 커서에서 오른쪽으로
+* `0` - 라인 전체
+
+## readline.clearScreenDown(stream)
+
+커서가 있는 현재 위치아래의 화면을 없앤다.

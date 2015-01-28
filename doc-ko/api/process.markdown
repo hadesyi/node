@@ -105,7 +105,7 @@ Note:
 
 ## process.stdout
 
-`stdout`에 대한 `Writable Stream`이다.
+`stdout`(fd `1`의)에 대한 `Writable Stream`이다.
 
 예제: `console.log`의 정의
 
@@ -113,9 +113,13 @@ Note:
       process.stdout.write(d + '\n');
     };
 
-`process.stderr`와 `process.stdout`을 쓰기를 할 때 보통 블락킹된다는 점에서 Node의
-다른 스크림과는 다르다. 이 둘은 보통의 파일이나 TTY 파일 디스크립터를 참조할 때
-블락킹된다. 파이프를 참조하는 경우에는 다른 스크림처럼 넌블락킹이다.
+`process.stderr`와 `process.stdout`은 쓰기를 할 때 보통 블락킹되는 Node의 다름
+스트림과는 다르다.
+
+- 일반적인 파일이나 TTY 파일 디스크립터를 참조하는 경우 블락킹된다.
+- 파이프를 참조하는 경우
+  - Linux/Unix에서 블락킹된다.
+  - Windows에서는 다른 스트림처럼 논블락킹이다.
 
 Node가 TTY 컨텐스트로 실행되는지 확인하려면 `process.stderr`, `process.stdout`,
 `process.stdin`의 `isTTY` 프로퍼티를 읽어라.
@@ -134,31 +138,46 @@ Node가 TTY 컨텐스트로 실행되는지 확인하려면 `process.stderr`, `p
 
 ## process.stderr
 
-stderr에 대한 writable stream이다.
+stderr(fd `2`의)에 대한 writable stream이다.
 
-`process.stderr`와 `process.stdout`는 쓰기를 할 때 보통 블락킹된다는 점에서 Node의
-다른 스크림과는 다르다. 이 둘은 보통의 파일이나 TTY 파일 디스크립터를 참조할 때
-블락킹된다. 파이프를 참조하는 경우에는 다른 스크림처럼 넌블락킹이다.
+`process.stderr`와 `process.stdout`는 쓰기를 할 때 보통 블락킹되는 Node의 다른
+스트림과는 다르다.
+
+- 일반적인 파일이나 TTY 파일 디스크립터를 참조하는 경우 블락킹된다.
+- 파이프를 참조하는 경우
+  - Linux/Unix에서 블락킹된다.
+  - Windows에서는 다른 스트림처럼 논블락킹이다.
 
 
 ## process.stdin
 
-stdin에 대한 `Readable Stream`이다. stdin 스트림은 기본적으로 멈추기 때문에 stdin에서
-읽으려면 `process.stdin.resume()`를 호출해야 한다.
+stdin(fd `0`의)에 대한 `Readable Stream`이다.
 
 표준 입력을 열고 두 이벤트를 리스닝하는 예제:
 
-    process.stdin.resume();
     process.stdin.setEncoding('utf8');
 
-    process.stdin.on('data', function(chunk) {
-      process.stdout.write('data: ' + chunk);
+    process.stdin.on('readable', function() {
+      var chunk = process.stdin.read();
+      if (chunk !== null) {
+        process.stdout.write('data: ' + chunk);
+      }
     });
 
     process.stdin.on('end', function() {
       process.stdout.write('end');
     });
 
+Stream처럼 `process.stdin`도 Node v0.10 이전 버전에서 작성된 스크립트와 호환되는 "old"
+모드로 사용할 수 있다. 자세한 내용은
+[Stream compatibility](stream.html#stream_compatibility_with_older_node_versions)
+를 참고해라.
+
+"old" 스트림모드에서 stdin 스트림은 기본적으로 멈춰있으므로(paused) 스프림에서 읽어드리려면
+`process.stdin.resume()`를 반드시 호출해야 한다. `process.stdin.resume()`를 호출하면
+스트림을 "old" 모드로 전환한다는 점도 명심해라.
+
+새로운 프로젝트를 시작한다면 "구형" 스트림 보다는 "새로운" 스트림을 더 선호해야 한다.
 
 ## process.argv
 
@@ -239,6 +258,29 @@ process.argv는 다음과 같다.
 ## process.env
 
 사용자의 환경변수를 담고 있는 객체다. environ(7)를 봐라.
+
+이 객체의 예시는 다음과 같을 것이다.
+
+    { TERM: 'xterm-256color',
+      SHELL: '/usr/local/bin/bash',
+      USER: 'maciej',
+      PATH: '~/.bin/:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin',
+      PWD: '/Users/maciej',
+      EDITOR: 'vim',
+      SHLVL: '1',
+      HOME: '/Users/maciej',
+      LOGNAME: 'maciej',
+      _: '/usr/local/bin/node' }
+
+이 객체를 작성할 수 있지만, 변경사항은 프로세스 외부에는 반영되지 않을 것이다. 즉 다음 코드는
+동작하지 않는다.
+
+    node -e 'process.env.foo = "bar"' && echo $foo
+
+하지만 다음 코드는 동작한다.
+
+    process.env.foo = 'bar';
+    console.log(process.env.foo);
 
 
 ## process.exit([code])

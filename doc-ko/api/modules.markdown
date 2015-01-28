@@ -147,9 +147,9 @@ Interpret한다. 그리고 `.node` 파일은 컴파일한 addon 모듈이라서 
 상위 디렉터리에 있는 `/node_modules`에서 해당 모듈을 찾는다.
 
 만약 못 찾으면 상위 디렉터리에서 찾고, 그래도 못 찾으면 상위의 상위 디렉터리에서 찾는다.
-루트 디렉터리에 다다를 때까지 계속 찾는다.
+파일 시스템에서 루트 디렉터리에 다다를 때까지 계속 찾는다.
 
-예를 들어, `'home/ry/projects/foo.js'`라는 파일에서 `requre('bar.js')`라고 호출하면
+예를 들어, `'/home/ry/projects/foo.js'`라는 파일에서 `requre('bar.js')`라고 호출하면
 다음과 같은 순서로 모듈을 찾는다:
 
 * `/home/ry/projects/node_modules/bar.js`
@@ -357,7 +357,8 @@ require.resolve가 정확히 어떻게 동작하는지 슈도 코드로 살펴�
     LOAD_AS_FILE(X)
     1. If X is a file, load X as JavaScript text.  STOP
     2. If X.js is a file, load X.js as JavaScript text.  STOP
-    3. If X.node is a file, load X.node as binary addon.  STOP
+    3. If X.json is a file, parse X.json to a JavaScript Object.  STOP
+    4. If X.node is a file, load X.node as binary addon.  STOP
 
     LOAD_AS_DIRECTORY(X)
     1. If X/package.json is a file,
@@ -365,7 +366,8 @@ require.resolve가 정확히 어떻게 동작하는지 슈도 코드로 살펴�
        b. let M = X + (json main field)
        c. LOAD_AS_FILE(M)
     2. If X/index.js is a file, load X/index.js as JavaScript text.  STOP
-    3. If X/index.node is a file, load X/index.node as binary addon.  STOP
+    3. If X/index.json is a file, parse X/index.json to a JavaScript object. STOP
+    4. If X/index.node is a file, load X/index.node as binary addon.  STOP
 
     LOAD_NODE_MODULES(X, START)
     1. let DIRS=NODE_MODULES_PATHS(START)
@@ -375,15 +377,14 @@ require.resolve가 정확히 어떻게 동작하는지 슈도 코드로 살펴�
 
     NODE_MODULES_PATHS(START)
     1. let PARTS = path split(START)
-    2. let ROOT = index of first instance of "node_modules" in PARTS, or 0
-    3. let I = count of PARTS - 1
-    4. let DIRS = []
-    5. while I > ROOT,
+    2. let I = count of PARTS - 1
+    3. let DIRS = []
+    4. while I >= 0,
        a. if PARTS[I] = "node_modules" CONTINUE
        c. DIR = path join(PARTS[0 .. I] + "node_modules")
        b. DIRS = DIRS + DIR
        c. let I = I - 1
-    6. return DIRS
+    5. return DIRS
 
 ## Loading from the global folders
 

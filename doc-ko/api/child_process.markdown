@@ -83,11 +83,15 @@ ChildProcess 클래스는 직접 사용하도록 만들어진 것이 아니다. 
 
 * {Stream 객체}
 
-자식 프로세스의 `stdin`를 나타내는 `Writable Stream`이다. `end()`로
-이 스트림을 닫으면 종종 자식 프로세스가 종료되기도 한다.
-
-자식 프로세스의 stdio 스트림이 부모 프로세스와 공유한다면 이 값은 설정되지
+자식 프로세스의 `stdin`를 나타내는 `Writable Stream`이다. 자식 프로세스가
+이 입력을 읽으려고 기다리고 있다면 `end()`로 해당 스트림을 닫을 때까지 계속되지
 않을 것이다.
+
+자식 프로세스의 `stdio[0]`가 `'pipe'`로 설정해서 생성되지 않았다면 이 값은
+설정되지 않을 것이다.
+
+`child.stdin`는 `child.stdio[0]`의 단축프로퍼티다. 두 프로퍼티는 같은 객체를
+참조하거나 null을 참조할 것이다.
 
 ### child.stdout
 
@@ -95,8 +99,11 @@ ChildProcess 클래스는 직접 사용하도록 만들어진 것이 아니다. 
 
 자식 프로세스의 `stdout`를 나타내는 `Readable Stream`이다.
 
-자식 프로세스의 stdio 스트림이 부모 프로세스와 공유한다면 이 값은 설정되지
-않을 것이다.
+자식 프로세스의 `stdio[1]`가 `'pipe'`로 설정해서 생성되지 않았다면 이 값은
+설정되지 않을 것이다.
+
+`child.stdout`는 `child.stdio[1]`의 단축프로퍼티다. 두 프로퍼티는 같은 객체를
+참조하거나 null을 참조할 것이다.
 
 ### child.stderr
 
@@ -104,8 +111,42 @@ ChildProcess 클래스는 직접 사용하도록 만들어진 것이 아니다. 
 
 자식 프로세스의 `stderr`를 나타내는 `Readable Stream`이다.
 
-자식 프로세스의 stdio 스트림이 부모 프로세스와 공유한다면 이 값은 설정되지
-않을 것이다.
+자식 프로세스의 `stdio[2]`가 `'pipe'`로 설정해서 생성되지 않았다면 이 값은
+설정되지 않을 것이다.
+
+`child.stderr`는 `child.stdio[2]`의 단축프로퍼티다. 두 프로퍼티는 같은 객체를
+참조하거나 null을 참조할 것이다.
+
+### child.stdio
+
+* {Array}
+
+자식 프로세스로의 파이프의 빈약한 배열로 [stdio](#child_process_options_stdio)
+옵션에서 `'pipe'`로 설정된
+[spawn](#child_process_child_process_spawn_command_args_options)의 위치에
+대응된다.
+streams 0-2도 각각 ChildProcess.stdin, ChildProcess.stdout,
+ChildProcess.stderr로 사용할 수 있다.
+
+아래 예제는 자식의 fd `1`만 파이프로 설정했으므로 부모의 `child.stdio[1]`만 스트림이고
+배열의 다른 값은 모두 `null`이다.
+
+    child = child_process.spawn("ls", {
+        stdio: [
+          0, // 자식에 부모의 stdin을 사용한다
+          'pipe', // 자식의 stdout를 부모로 파이프 연결한다
+          fs.openSync("err.out", "w") // 자식의 stderr는 파일로 직접 연결한다
+        ]
+    });
+
+    assert.equal(child.stdio[0], null);
+    assert.equal(child.stdio[0], child.stdin);
+
+    assert(child.stdout);
+    assert.equal(child.stdio[1], child.stdout);
+
+    assert.equal(child.stdio[2], null);
+    assert.equal(child.stdio[2], child.stderr);
 
 ### child.pid
 
@@ -277,6 +318,7 @@ ChildProcess 클래스는 직접 사용하도록 만들어진 것이 아니다. 
 메시지를 받는 프로세스에 더는 메시지가 없을 때 'disconnect' 이벤트가 발생할 것이고
 대부분을 즉각적으로 발생한다.
 
+자식 프로세스가 부모와 연결된 IPC 채널을 하나라도 열고 있다면(예시 `fork()`)
 자식 프로세스에서 `process.disconnect()`를 호출할 수도 있다.
 
 ## child_process.spawn(command, [args], [options])
@@ -285,11 +327,13 @@ ChildProcess 클래스는 직접 사용하도록 만들어진 것이 아니다. 
 * `args` {배열} 문자열 아규먼트의 리스트
 * `options` {객체}
   * `cwd` {문자열} 자식 프로세스의 현재 워킹 디렉토리
-  * `stdio` {배열|문자열} 자식의 stdio 설정. (하단을 참고)
-  * `customFds` {배열} **폐기됨** stdio에 사용할 자식 프로세스의
-    파일 디스크립터 (하단을 참고)
   * `env` {객체} 환경변수 키-밸류 쌍
-  * `detached` {불리언} 자식이 프로세스 그룹의 리더가 될 것이다. (하단을 참고)
+  * `stdio` {배열|문자열} 자식의 stdio 설정.
+    ([하단]((#child_process_options_stdio))을 참고)
+  * `customFds` {배열} **폐기됨** stdio에 사용할 자식 프로세스의
+    파일 디스크립터 ([하단]((#child_process_options_customFds))을 참고)
+  * `detached` {불리언} 자식이 프로세스 그룹의 리더가 될 것이다.
+    ([하단]((#child_process_options_detached))을 참고)
   * `uid` {숫자} 프로세스의 사용자 id를 설정한다. (setuid(2) 참고.)
   * `gid` {숫자} 프로세스의 그룹 id를 설정한다. (setgid(2) 참고.)
 * return: {ChildProcess 객체}
@@ -303,8 +347,11 @@ ChildProcess 클래스는 직접 사용하도록 만들어진 것이 아니다. 
       env: process.env
     }
 
-`cwd`로 프로세스가 생성되는(spawn)가 생성되는 워킹 디렉터리를 지정할 수 있다.
-`env`를 사용해서 새로운 프로세스에서 볼 수 있는 환경 변수를 지정한다.
+프로세스가 생성되는 워킹 디렉터리를 지정할 때 `cwd`를 사용한다.
+지정하지 않으면 기본값으로 현재 워킹디렉터리를 사용한다.
+
+새로운 프로세스에서 사용할 수 있는 환경변수를 지정할 때 `env`를 사용하고
+기본적으로 `process.env`이다.
 
 다음은 `ls -lh /usr`를 실행하고 `stdout`, `stderr`와 종료 코드를 잡는 예제다.
 
@@ -359,24 +406,16 @@ ChildProcess 클래스는 직접 사용하도록 만들어진 것이 아니다. 
     });
 
 
-실패한 실행을 확인하는 예제.
+### options.stdio
 
-    var spawn = require('child_process').spawn,
-        child = spawn('bad_command');
+간단하게 `stdio` 인자도 다음 문자열 중 하나가 될 수 있다.
 
-    child.stderr.setEncoding('utf8');
-    child.stderr.on('data', function (data) {
-      if (/^execvp\(\)/.test(data)) {
-        console.log('Failed to start child process.');
-      }
-    });
+* `'pipe'` - `['pipe', 'pipe', 'pipe']`, 이는 기본값이다
+* `'ignore'` - `['ignore', 'ignore', 'ignore']`
+* `'inherit'` - `[process.stdin, process.stdout, process.stderr]`나 `[0,1,2]`
 
-spawn이 비어 있는 옵션 객체를 받으면 `process.env`를 사용하는 대신 비어있는
-환경변수를 가진 프로세스를 생성(spawn)할 것이다. 이는 폐기된 API와 관련된 하위
-호환성때문에 존재하는 것이다.
-
-`child_process.spawn()`의 'stdio' 옵션은 자식 프로세스의 fd에 대응하는 각 인덱스
-배열이다. 값은 다음 중 하나이다.
+그렇지 않으면 `child_process.spawn()`의 'stdio' 옵션은 자식 프로세스의 fd에 대응하는
+각 인덱스 배열이다. 값은 다음 중 하나이다.
 
 1. `'pipe'` - 자식프로세스와 부모프로세스 간의 파이프를 생성한다.
    파이프의 부모 쪽은 `ChildProcess.stdio[fd]`처럼 `child_process` 객체의 프로퍼티로
@@ -400,12 +439,6 @@ spawn이 비어 있는 옵션 객체를 받으면 `process.env`를 사용하는 
 6. `null`, `undefined` - 기본값을 사용한다. stdio fd 0, 1, 2(즉 stdin, stdout,
    stderr)에 대한 파이프를 생성한다. fd 3 이상에 대한 기본값은 `'ignore'`이다.
 
-간단하게 `stdio` 아규먼트는 배열보다는 다음 문자열 중의 하나가 될 수도 있다.
-
-* `ignore` - `['ignore', 'ignore', 'ignore']`
-* `pipe` - `['pipe', 'pipe', 'pipe']`
-* `inherit` - `[process.stdin, process.stdout, process.stderr]`나 `[0,1,2]`
-
 예제:
 
     var spawn = require('child_process').spawn;
@@ -419,6 +452,8 @@ spawn이 비어 있는 옵션 객체를 받으면 `process.env`를 사용하는 
     // startd 방식의 인터페이스를 제공하는 프로그램과 상호작용하기 위해
     // 여분의 fd=4를 연다
     spawn('prg', [], { stdio: ['pipe', null, null, null, 'pipe'] });
+
+### options.detached
 
 `detached` 옵션을 설정하면 자식 프로세스가 새로운 프로세스 그룹의 리더가 될 것이다.
 이는 부모가 종료된 후에도 자식 프로세스가 계속해서 동작할 수 있게 한다.
@@ -444,6 +479,8 @@ spawn이 비어 있는 옵션 객체를 받으면 `process.env`를 사용하는 
 오랫동안 동작하는 프로세스를 시작하려고 `detached` 옵션을 사용해도 `stdio` 설정을 부모에
 접속하지 않도록 하지 않으면 프로세스는 백그라운드에서 동작하지 않을 것이다. 부모의
 `stdio`를 상속받았다면 자식은 제어하는 터미널에 연결된 채로 유지될 것이다.
+
+### options.customFds
 
 자식 프로세스의 stdio에 특정 파일 디스크립터를 지정하는 폐기된 옵션인 `customFds`가
 있다. 이 API는 모든 플랫폼에서 사용할 수 있는 것이 아니라서 삭제되었다.
@@ -484,8 +521,8 @@ spawn이 비어 있는 옵션 객체를 받으면 `process.env`를 사용하는 
     });
 
 콜백은 `(error, stdout, stderr)` 아규먼트를 받는다. 성공했을 때 `error`는 `null`이
-된다. 오류가 있으면 `error`는 `Error`의 인스턴스가 되고 `err.code`는 자식 프로세스의
-종료코드가 되고 `err.signal`은 프로세스를 종료하는 신호로 설정될 것이다.
+된다. 오류가 있으면 `error`는 `Error`의 인스턴스가 되고 `error.code`는 자식 프로세스의
+종료코드가 되고 `error.signal`은 프로세스를 종료하는 신호로 설정될 것이다.
 
 두 번째 선택적인 아규먼트는 여러 가지 옵션을 지정한다. 기본 옵션은 다음과 같다.
 
@@ -530,7 +567,6 @@ spawn이 비어 있는 옵션 객체를 받으면 `process.env`를 사용하는 
 * `options` {객체}
   * `cwd` {문자열} 자식프로세스의 현재 워킹 디렉토리
   * `env` {객체} 환경변수의 키-밸류 쌍
-  * `encoding` {문자열} (기본값: 'utf8')
   * `execPath` {String} 자식 프로세스를 생성하는 데 사용하는 실행 가능한 경로
   * `execArgv` {Array} 실행파일에 전달하는 문자열 인자 목록
     (기본값: `process.execArgv`)

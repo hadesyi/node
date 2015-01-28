@@ -149,8 +149,17 @@ OpenSSL 최근 릴리즈에서는 `openssl list-cipher-algorithms`로 사용할 
 [buffer](buffer.html)이어야 한다.
 
 이는 읽고 쓸 수 있는 [stream](stream.html)이다. 해시를 계산하는데 작성된 데이터를 사용한다.
-스트림의 쓰기 가능한 쪽이 종료되면 계산된 해시 다이제스트를 얻을 때 `read()` 메서드를 사용해라.
-레거시 `update`와 `digest` 메서드도 지원한다.
+스트림의 쓰기 가능한 쪽이 종료되면 계산된 암호화된 콘텐츠를 얻을 때 `read()` 메서드를 사용해라.
+레거시 `update`와 `final` 메서드도 지원한다.
+
+Note: `createCipher`는 다이제스트 알고리즘을 MD5로 설정하고 OpenSSL 함수
+[EVP_BytesToKey][]로 salt없이 한번 반복해서 키를 생성한다. 같은 비밀번호는 항상 같은 키를
+생성하기 때문에 salt가 없어서 딕션어리 공격이 가능하다. 적은 반복횟수와 암호학적으로 안전하지 않은
+해시 알고리즘은 비밀번호를 아주 빠르게 검사할 수 있다.
+
+OpenSSL의 권고사항에서 EVP_BytesToKey대신 pbkdf2를 사용하기를 권장하고 있으며
+[crypto.pbkdf2][]로 직접 키와 iv를 생성하고 cipher 스트림을 생성할 때
+[createCipheriv()][]를 사용하기를 권장한다.
 
 ## crypto.createCipheriv(algorithm, key, iv)
 
@@ -478,3 +487,5 @@ Buffer를 얻을 것이고 Verify 객체에 Buffer를 제공할 것이다.
 [diffieHellman.setPublicKey()]: #crypto_diffiehellman_setpublickey_public_key_encoding
 [RFC 2412]: http://www.rfc-editor.org/rfc/rfc2412.txt
 [RFC 3526]: http://www.rfc-editor.org/rfc/rfc3526.txt
+[crypto.pbkdf2]: #crypto_crypto_pbkdf2_password_salt_iterations_keylen_callback
+[EVP_BytesToKey]: https://www.openssl.org/docs/crypto/EVP_BytesToKey.html

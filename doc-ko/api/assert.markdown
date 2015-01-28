@@ -42,7 +42,7 @@ value가 참인지 검사한다. 이는 `assert.equal(true, !!value, message);`�
 
 ## assert.throws(block, [error], [message])
 
-`block`이 오류는 던지기를 기대한다. `error`는 생성자, 정규표현식, 유효성 검사 함수가
+`block`이 오류는 던지기를 기대한다. `error`는 생성자, `RegExp`, 유효성 검사 함수가
 될 수 있다.
 
 생성자의 인스턴스인지 테스트한다.
@@ -79,7 +79,7 @@ RegExp를 사용해서 오류 메시지를 검증한다.
 
 ## assert.doesNotThrow(block, [message])
 
-`block`이 오류를 던지지 않기를 기대한다. 자세한 내용은 assert.throws를 참고해라.
+`block`이 오류를 던지지 않기를 기대한다. 자세한 내용은 `assert.throws`를 참고해라.
 
 ## assert.ifError(value)
 

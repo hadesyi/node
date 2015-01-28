@@ -31,7 +31,9 @@ EventEmitter 클래스에 접근하려면 `require('events').EventEmitter`를 �
 ### emitter.addListener(event, listener)
 ### emitter.on(event, listener)
 
-지정한 event에 대한 리스너 배열의 끝에 listener를 추가한다.
+지정한 `event`에 대한 리스너 배열의 끝에 listener를 추가한다.
+이미 `listener`가 추가되었는지는 검사하지 않는다. 같은 조합으로 `event`와 `listener`를
+여러 번 호출하면 `listener`가 여러 번 추가된다.
 
     server.on('connection', function (stream) {
       console.log('someone connected!');
@@ -62,12 +64,17 @@ event에 **일회성** listener를 추가한다. 이 리스너는
     // ...
     server.removeListener('connection', callback);
 
+`removeListener`는 리스너 배열에서 많아야 한 리스너의 한 인스턴스를 제거할 것이다.
+지정한 `event`의 리스너 배열에 하나의 리스너를 여러 번 추가했다면 각 인스턴스를 제거하려면
+`removeListener`를 여러 번 호출해야 한다.
+
 이미터를 반환하므로 호출을 체인으로 연결할 수 있다.
 
 ### emitter.removeAllListeners([event])
 
 event를 지정하지 않으면 모든 리스너를 제거하고 event를 지정하면 지정한 이벤트의
-모든 리스너를 제거한다.
+모든 리스너를 제거한다. 다른 코드에서 추가한 리스너를 제거하는 것은 좋은 생각이 아니고
+특히 직접 만들지 않은 이미터라면(예: 소켓이나 파일 시스템) 더 좋은 생각이 아니다.
 
 이미터를 반환하므로 호출을 체인으로 연결할 수 있다.
 
@@ -108,10 +115,13 @@ event를 지정하지 않으면 모든 리스너를 제거하고 event를 지정
 이 이벤트를 새로운 리스너가 어딘가에 추가될 때마다 발생한다.
 `emitter.listeners(event)`가 반환한 리스트에 `listener`있는지는 알려주지 않는다.
 
+리스너가 추가될 때마다 이 이벤트가 발생한다. 이 이벤트가 발생할 때 해당 `event`의 리스너 배열에
+아직 리스너가 추가되지 않았을 수도 있다.
+
 ### Event: 'removeListener'
 
 * `event` {String} The event name
 * `listener` {Function} The event handler function
 
 이 이벤트는 리스너를 제거할 때마다 발생한다.
-`emitter.listeners(event)`가 반환한 리스트에 `listener`있는지는 알려주지 않는다.
+이 이벤트가 발생할 때 해당 `event`의 리스너 배열에서 이 리스너가 아직 제거되지 않았을 수도 있다.

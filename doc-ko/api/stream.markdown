@@ -142,7 +142,7 @@ readable.on('data', function(chunk) {
 
 #### Event: 'end'
 
-더는 데이터가 없으면 이 이벤트가 발생한다.
+읽을 데이터가 더이상 없으면 이 이벤트가 발생한다.
 
 데이터를 완전히 소비하지 않는 한 `end` 이벤트는 **발생하지 않는다**. 이는 flowing
 모드로 바꾸거나 끝까지 반복해서 `read()`를 호출해서 데이터를 모두 소비할 수 있다.
@@ -163,6 +163,8 @@ readable.on('end', function() {
 이 이벤트를 발생할 것이다.
 
 #### Event: 'error'
+
+* {Error Object}
 
 데이터를 받을 때 오류가 있으면 발생한다.
 
@@ -476,11 +478,10 @@ function writeOneMillionTimes(writer, data, encoding, callback) {
 
 ```javascript
 // 'hello, '를 작성한 뒤 'world!'로 종료한다.
-http.createServer(function (req, res) {
-  res.write('hello, ');
-  res.end('world!');
-  // 더는 데이터를 작성할 수 없다!
-});
+var file = fs.createWriteStream('example.txt');
+file.write('hello, ');
+file.end('world!');
+// 더는 데이터를 작성할 수 없다!
 ```
 
 #### Event: 'finish'
@@ -534,6 +535,8 @@ reader.unpipe(writer);
 ```
 
 #### Event: 'error'
+
+* {Error object}
 
 데이터를 쓰거나 파이프로 연결할 때 오류가 발생하면 이 이벤트가 발생한다.
 
@@ -902,6 +905,9 @@ SourceWrapper.prototype._read = function(size) {
     Buffer 레벨. 기본값=16kb
   * `decodeStrings` {Boolean} 문자열을 [`_write()`][]에 전달하기 전에
     Buffer로 디코딩할 것인지 여부.  기본값=true
+  * `objectMode` {Boolean} `write(anyObj)`가 유효한 작업인지 아닌지 여부.
+    설정하면 `Buffer` / `String` 데이터만이 아니라 임의의 데이터를 작성할 수
+    있다. 기본값=false
 
 Writable 클래스를 확장한 클래스에서는 버퍼링 설정이 적절하게 초기화될 수 있도록
 꼭 생성자를 호출해라.
@@ -990,7 +996,7 @@ Transform 클래스를 확장한 클래스에서는 버퍼링 설정을 적절�
 * `encoding` {String} 청크가 문자열인 경우 이 인코딩 타입이다.
   (`decodeStrings` 청크가 버퍼이면 무시한다.)
 * `callback` {Function} 제공된 청크의 처리가 끝났을 때 이 함수를 호출한다.
-  (선택적으로 오류 인자와 함께)
+  (선택적으로 오류 인자와 데이터와 함께)
 
 Note: **이 함수는 절대로 직접 호출하지 말아야 한다.**  자식 클래스가 구현하거나
 내부 Transform 클래스 메서드만 호출해야 한다.
@@ -1006,7 +1012,19 @@ Note: **이 함수는 절대로 직접 호출하지 말아야 한다.**  자식 
 원하는지에 따라 `transform.push(outputChunk)`를 0번이나 여러 번 호출해라.
 
 현재 청크가 완전히 소비되었을 때만 callback 함수를 호출한다. 특정 입력 청크의
-결과와 출력이 같을 수도 있고 같지 않을 수도 있다.
+결과와 출력이 같을 수도 있고 같지 않을 수도 있다. callback 함수에 두번째 인자를
+제공하면 push 메서드에 전달될 것이다. 다시 말하면 다음 둘은 같다.
+
+```javascript
+transform.prototype._transform = function (data, encoding, callback) {
+  this.push(data);
+  callback();
+}
+
+transform.prototype._transform = function (data, encoding, callback) {
+  callback(null, data);
+}
+```
 
 이 메서드는 메서드를 정의한 클래스 내부에서 사용하고 사용자 프로그램이 직접 호출하면
 안되기 때문에 언더스코어로 시작한다. 하지만 자신의 확장 클래스에서 이 메서드를
@@ -1033,6 +1051,12 @@ Note: **이 함수는 절대로 직접 호출하지 말아야 한다.**  자식 
 이 메서드는 메서드를 정의한 클래스 내부에서 사용하고 사용자 프로그램이 직접 호출하면
 안되기 때문에 언더스코어로 시작한다. 하지만 자신의 확장 클래스에서 이 메서드를
 오버라이드할 수 있다.
+
+#### Events: 'finish' and 'end'
+
+[`finish`][]와 [`end`][] 이벤트는 부모의 Writable 클래스와 Readable 클래스 에서
+각각 온다. `.end()`가 호출되고 `_transform`가 모든 청크를 처리한 다음에 `finish`이벤트가
+발생한다. `end`는 `_flush`가 호출되었을 때 콜백에 이어서 모든 데이터가 출력된 후에 발생한다.
 
 #### Example: `SimpleProtocol` parser v2
 
@@ -1351,6 +1375,8 @@ JSONParseStream.prototype._flush = function(cb) {
 [Writable]: #stream_class_stream_writable
 [Duplex]: #stream_class_stream_duplex
 [Transform]: #stream_class_stream_transform
+[`end`]: #stream_event_end
+[`finish`]: #stream_event_finish
 [`_read(size)`]: #stream_readable_read_size_1
 [`_read()`]: #stream_readable_read_size_1
 [_read]: #stream_readable_read_size_1
