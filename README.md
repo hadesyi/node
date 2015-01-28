@@ -16,3 +16,4 @@ node.js API 문서의 한글 번역
 * [v0.10.7](https://github.com/outsideris/node/tree/v0.10.7-ko)
 * [v0.10.18](https://github.com/outsideris/node/tree/v0.10.18-ko)
 * [v0.10.25](https://github.com/outsideris/node/tree/v0.10.25-ko)
+* [v0.10.35](https://github.com/outsideris/node/tree/v0.10.35-ko)
